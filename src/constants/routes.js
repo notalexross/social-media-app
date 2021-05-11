@@ -1,0 +1,5 @@
+export const DASHBOARD = '/'
+export const SIGN_IN = '/signin'
+export const SIGN_UP = '/signup'
+export const PROFILES = '/p'
+export const NOT_FOUND = '/404'
