@@ -12,7 +12,3 @@ const firebaseConfig = {
 }
 
 firebase.initializeApp(firebaseConfig)
-
-const { FieldValue } = firebase.firestore
-
-export { firebase, FieldValue }
