@@ -1,32 +1,63 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useHistory } from 'react-router-dom'
+import { signIn } from '../services/firebase'
+import { isValidSignInInputs } from '../utils'
 import useTitle from '../hooks/use-title'
 import * as ROUTES from '../constants/routes'
 import logo from '../images/logo.png'
 
 export default function SignIn() {
   useTitle('Login')
+  const history = useHistory()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  const isValidInputs = isValidSignInInputs({ email, password })
+
+  const handleSignIn = event => {
+    event.preventDefault()
+
+    signIn({ email, password })
+      .then(() => {
+        history.push(ROUTES.DASHBOARD)
+      })
+      .catch(err => {
+        setPassword('')
+        setError(err.message)
+      })
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="w-full max-w-xs">
         <div className="mb-4 p-4 border rounded bg-white">
           <h1 className="mt-2 mb-4">
-            <img className="mx-auto w-1/2" src={logo} alt="Logo" />
+            <img className="mx-auto w-36" src={logo} alt="Logo" />
           </h1>
-          <form className="flex flex-col">
+          {error && <p className="mb-4 text-center text-xs text-red-500">{error}</p>}
+          <form className="flex flex-col" onSubmit={handleSignIn}>
             <input
               className="mb-2 px-4 py-2.5 border rounded bg-gray-50 text-sm"
               type="text"
               placeholder="Email address"
               aria-label="enter your email address"
+              value={email}
+              onChange={({ target }) => setEmail(target.value)}
             />
             <input
               className="mb-2 px-4 py-2.5 border rounded bg-gray-50 text-sm"
               type="password"
               placeholder="Password"
               aria-label="enter your password"
+              value={password}
+              onChange={({ target }) => setPassword(target.value)}
             />
-            <button className="p-1 rounded bg-blue-500 font-bold text-white" type="submit">
+            <button
+              className="p-1 rounded bg-blue-500 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={!isValidInputs}
+            >
               Log In
             </button>
           </form>
