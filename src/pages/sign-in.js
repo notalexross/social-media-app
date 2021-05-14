@@ -35,7 +35,15 @@ export default function SignIn() {
           <h1 className="mt-2 mb-4">
             <img className="mx-auto w-36" src={logo} alt="Logo" />
           </h1>
-          {error && <p className="mb-4 text-center text-xs text-red-500">{error}</p>}
+          {error && (
+            <p
+              className="mb-4 text-center text-xs text-red-500"
+              role="alert"
+              aria-label="error message"
+            >
+              {error}
+            </p>
+          )}
           <form className="flex flex-col" onSubmit={handleSignIn}>
             <input
               className="mb-2 px-4 py-2.5 border rounded bg-gray-50 text-sm"
@@ -56,6 +64,7 @@ export default function SignIn() {
             <button
               className="p-1 rounded bg-blue-500 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed"
               type="submit"
+              aria-label="sign in"
               disabled={!isValidInputs}
             >
               Log In
@@ -65,7 +74,7 @@ export default function SignIn() {
         <div className="p-4 border rounded bg-white text-center text-sm">
           <p>
             {"Don't have an account? "}
-            <Link className="font-bold text-blue-500" to={ROUTES.SIGN_UP}>
+            <Link className="font-bold text-blue-500" to={ROUTES.SIGN_UP} aria-label="sign up">
               Sign up
             </Link>
           </p>
