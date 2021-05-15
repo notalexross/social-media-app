@@ -6,7 +6,33 @@ describe(`${signIn.name}`, () => {
     await expect(signIn).rejects.toThrowError('Invalid data supplied.')
   })
 
-  describe('with valid arguments', () => {
+  test('given incorrect email, throws error', async () => {
+    const options = {
+      email: 'wrongemail@email.com',
+      password: 'password'
+    }
+
+    const result = signIn(options)
+
+    await expect(result).rejects.toThrowError(
+      'There is no user record corresponding to this identifier. The user may have been deleted.'
+    )
+  })
+
+  test('given incorrect password, throws error', async () => {
+    const options = {
+      email: 'email@email.com',
+      password: 'wrongpassword'
+    }
+
+    const result = signIn(options)
+
+    await expect(result).rejects.toThrowError(
+      'The password is invalid or the user does not have a password.'
+    )
+  })
+
+  describe('with correct credentials', () => {
     const options = {
       email: 'email@email.com',
       password: 'password'
