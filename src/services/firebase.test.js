@@ -11,8 +11,6 @@ describe(`${isUsernameTaken.name}`, () => {
   test('given valid arguments, calls firebase methods', async () => {
     await isUsernameTaken('username')
 
-    expect(mockFunctions.firestore).toBeCalledTimes(1)
-    expect(mockFunctions.collection).toBeCalledTimes(1)
     expect(mockFunctions.where).toBeCalledTimes(1)
     expect(mockFunctions.get).toBeCalledTimes(1)
   })
@@ -78,14 +76,10 @@ describe(`${signUp.name}`, () => {
     test('calls firebase methods', async () => {
       await signUp(options)
 
-      expect(mockFunctions.firestore).toBeCalledTimes(3)
-      expect(mockFunctions.collection).toBeCalledTimes(3)
       expect(mockFunctions.where).toBeCalledTimes(1)
       expect(mockFunctions.get).toBeCalledTimes(1)
       expect(mockFunctions.auth).toBeCalledTimes(1)
-      expect(mockFunctions.updateProfile).toBeCalledTimes(1)
       expect(mockFunctions.createUserWithEmailAndPassword).toBeCalledTimes(1)
-      expect(mockFunctions.doc).toBeCalledTimes(2)
       expect(mockFunctions.set).toBeCalledTimes(2)
       expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
     })

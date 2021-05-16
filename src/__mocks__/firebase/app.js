@@ -8,11 +8,7 @@ const user = {
 const collections = {
   users: {
     [user.uid]: {
-      email: user.email
-    }
-  },
-  'users-public': {
-    [user.uid]: {
+      email: user.email,
       username: user.username,
       usernameLowerCase: user.username.toLowerCase()
     }
@@ -86,9 +82,11 @@ const where = jest.fn(function (field, operator, value) {
 
 const add = jest.fn(() => Promise.resolve())
 
-const doc = jest.fn(() => ({ set }))
+let collection
 
-const collection = jest.fn(id => ({
+const doc = jest.fn(() => ({ set, collection }))
+
+collection = jest.fn(id => ({
   data: collections[id],
   where,
   add,

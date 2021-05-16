@@ -1,13 +1,23 @@
 import firebase from 'firebase/app'
 import { isValidSignUpInputs, isValidSignInInputs } from '../utils'
 
+const firestore = firebase.firestore()
+const usersQuery = firestore.collection('users')
+
+function getUserQueries(uid) {
+  const publicQuery = usersQuery.doc(uid)
+  const privateQuery = firestore.collection(`users/${uid}/private`).doc('details')
+  const followersQuery = firestore.collection(`users/${uid}/followers`)
+  const followingQuery = firestore.collection(`users/${uid}/following`)
+
+  return { publicQuery, privateQuery, followersQuery, followingQuery }
+}
+
 export async function isUsernameTaken(username = '') {
-  const isTaken = await firebase
-    .firestore()
-    .collection('users-public')
+  const isTaken = await usersQuery
     .where('usernameLowerCase', '==', username.toLowerCase())
     .get()
-    .then(collection => collection.docs.length > 0)
+    .then(snap => snap.docs.length > 0)
 
   return isTaken
 }
@@ -30,22 +40,20 @@ export async function signUp({ username, fullName, email, password } = {}) {
   return firebase
     .auth()
     .createUserWithEmailAndPassword(email, password)
-    .then(({ user }) => {
-      user.updateProfile({
-        displayName: username
-      })
+    .then(async ({ user }) => {
+      const { publicQuery, privateQuery } = getUserQueries(user.uid)
+      const avatar = user.photoUrl || null
 
-      firebase.firestore().collection('users-public').doc(user.uid).set({
+      publicQuery.set({
+        dateCreated: firebase.firestore.FieldValue.serverTimestamp(),
         username,
         usernameLowerCase: username.toLowerCase(),
-        followers: []
+        avatar
       })
 
-      firebase.firestore().collection('users').doc(user.uid).set({
-        dateCreated: firebase.firestore.FieldValue.serverTimestamp(),
+      privateQuery.set({
         fullName,
-        email: user.email,
-        following: []
+        email: user.email
       })
     })
 }
