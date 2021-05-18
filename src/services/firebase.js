@@ -13,6 +13,10 @@ function getUserQueries(uid) {
   return { publicQuery, privateQuery, followersQuery, followingQuery }
 }
 
+export function onAuthStateChanged(callback) {
+  return firebase.auth().onAuthStateChanged(user => callback(user || {}))
+}
+
 export async function isUsernameTaken(username = '') {
   const isTaken = await usersQuery
     .where('usernameLowerCase', '==', username.toLowerCase())
