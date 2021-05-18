@@ -15,7 +15,32 @@ const collections = {
   }
 }
 
+const userCredentials = {
+  uid: user.uid,
+  email: user.email
+}
+
+class FirebaseEventTarget extends EventTarget {
+  signIn = () => {
+    this.dispatchEvent(new CustomEvent('change', { detail: userCredentials }))
+  }
+
+  signOut = () => {
+    this.dispatchEvent(new CustomEvent('change', { detail: null }))
+  }
+}
+
+const firebaseEventTarget = new FirebaseEventTarget()
+
 const updateProfile = jest.fn(() => {})
+
+const createUserWithEmailAndPassword = jest.fn(email => Promise.resolve({
+  user: {
+    uid: 'mock user id',
+    email: email.toLowerCase(),
+    updateProfile
+  }
+}))
 
 const signInWithEmailAndPassword = jest.fn(
   (email, password) => new Promise((resolve, reject) => {
@@ -31,25 +56,33 @@ const signInWithEmailAndPassword = jest.fn(
       reject(new Error('The password is invalid or the user does not have a password.'))
     }
 
-    resolve()
+    firebaseEventTarget.signIn()
+    resolve(userCredentials)
   })
 )
 
-const createUserWithEmailAndPassword = jest.fn(email => Promise.resolve({
-  user: {
-    uid: 'mock user id',
-    email: email.toLowerCase(),
-    updateProfile
-  }
-}))
+const signOut = jest.fn(() => {
+  firebaseEventTarget.signOut()
+})
+
+const handleAuthStateChanged = jest.fn((callback, { detail }) => callback(detail))
+
+const onAuthStateChanged = jest.fn(callback => {
+  const handleChange = event => handleAuthStateChanged(callback, event)
+
+  firebaseEventTarget.addEventListener('change', handleChange)
+
+  return () => firebaseEventTarget.removeEventListener('change', handleChange)
+})
 
 const auth = jest.fn(() => ({
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  signOut,
+  onAuthStateChanged
 }))
 
-// eslint-disable-next-line func-names
-const get = jest.fn(function () {
+const get = jest.fn(function get() {
   const response = [...this._docs]
   response.docs = this._docs
 
@@ -58,8 +91,7 @@ const get = jest.fn(function () {
 
 const set = jest.fn(() => {})
 
-// eslint-disable-next-line func-names
-const where = jest.fn(function (field, operator, value) {
+const where = jest.fn(function where(field, operator, value) {
   const matchingEntries = Object.entries(this.data).filter(([_, entry]) => {
     switch (operator) {
       case '==':
@@ -109,8 +141,11 @@ const firebase = {
 
 const mockFunctions = {
   updateProfile,
-  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  handleAuthStateChanged,
+  onAuthStateChanged,
   auth,
   get,
   firestore,
