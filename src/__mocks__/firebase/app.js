@@ -1,3 +1,6 @@
+/* eslint-disable func-names */
+/* eslint-disable no-underscore-dangle */
+
 const user = {
   uid: '1',
   email: 'email@email.com',
@@ -5,12 +8,39 @@ const user = {
   username: 'Username'
 }
 
-const collections = {
+const database = {
   users: {
-    [user.uid]: {
-      email: user.email,
-      username: user.username,
-      usernameLowerCase: user.username.toLowerCase()
+    _docs: {
+      [user.uid]: {
+        _collections: {
+          private: {
+            _docs: {
+              details: {
+                _fields: {
+                  fullName: 'Forename Surname',
+                  email: user.email
+                }
+              }
+            }
+          },
+          followers: {
+            _docs: {
+              2: {},
+              3: {}
+            }
+          },
+          following: {
+            _docs: {
+              3: {},
+              4: {}
+            }
+          }
+        },
+        _fields: {
+          username: user.username,
+          usernameLowerCase: user.username.toLowerCase()
+        }
+      }
     }
   }
 }
@@ -82,60 +112,123 @@ const auth = jest.fn(() => ({
   onAuthStateChanged
 }))
 
-const get = jest.fn(function get() {
-  const response = [...this._docs]
-  response.docs = this._docs
+let collection
+
+const get = jest.fn(function () {
+  let response
+  if ('_docs' in this) {
+    // collection().get()
+    response = {
+      docs: Object.entries(this._docs).map(([id, doc]) => ({ id, data: () => doc._fields }))
+    }
+  } else if ('_fields' in this) {
+    // doc().get()
+    response = {
+      id: this._id,
+      data: () => this._fields,
+      _collections: this._collections
+    }
+  } else if ('_id' in this) {
+    // doc('unknown doc').get()
+    response = {
+      id: this._id,
+      data: () => []
+    }
+  } else {
+    throw new Error('Missing or insufficient permissions')
+  }
 
   return Promise.resolve(response)
 })
 
+const onSnapshot = jest.fn(function (callback) {
+  this.get().then(callback)
+
+  return () => {}
+})
+
 const set = jest.fn(() => {})
 
-const where = jest.fn(function where(field, operator, value) {
-  const matchingEntries = Object.entries(this.data).filter(([_, entry]) => {
+const update = jest.fn()
+
+const doc = jest.fn(function (id) {
+  return {
+    _fields: this._docs[id]?._fields,
+    _id: id,
+    _collections: this._docs[id]?._collections || {},
+    get,
+    onSnapshot,
+    set,
+    update,
+    collection
+  }
+})
+
+const where = jest.fn(function (field, operator, value) {
+  const docs = Object.entries(this._docs).filter(([_, entry]) => {
     switch (operator) {
       case '==':
-        return entry[field] === value
+        return entry._fields[field] === value
       default:
         return false
     }
   })
 
-  const docs = matchingEntries.map(([id, doc]) => ({
-    id,
-    data: () => doc
-  }))
-
   return {
-    _docs: docs,
-    get
+    _docs: Object.fromEntries(docs),
+    get,
+    onSnapshot
   }
 })
 
 const add = jest.fn(() => Promise.resolve())
 
-let collection
+collection = jest.fn(function (path) {
+  const parts = path.split('/')
+  const [part1, part2, ...restParts] = parts
 
-const doc = jest.fn(() => ({ set, collection }))
+  if (parts.length % 2 === 0) {
+    throw new Error(
+      `Invalid collection reference. Collection references must have an odd number of segments, but ${path} has ${parts.length}`
+    )
+  }
 
-collection = jest.fn(id => ({
-  data: collections[id],
-  where,
-  add,
-  doc
-}))
+  if (part2) {
+    return this.collection(part1).doc(part2).collection(restParts.join('/'))
+  }
+
+  return {
+    _docs: this._collections[path]?._docs || {},
+    where,
+    add,
+    doc,
+    get,
+    onSnapshot
+  }
+})
 
 const serverTimestamp = jest.fn(() => 'mock server timestamp')
 
-const firestore = jest.fn(() => ({ collection }))
+const firestore = jest.fn(() => ({ _collections: database, collection }))
 
 firestore.FieldValue = { serverTimestamp }
+
+const put = jest.fn()
+
+const getDownloadURL = jest.fn(() => 'mock download url')
+
+const child = jest.fn(() => ({ put, getDownloadURL }))
+
+const ref = jest.fn(() => ({ child }))
+
+const storage = jest.fn(() => ({ ref }))
 
 const initializeApp = jest.fn()
 
 const firebase = {
   auth,
   firestore,
+  storage,
   initializeApp
 }
 
@@ -148,13 +241,19 @@ const mockFunctions = {
   onAuthStateChanged,
   auth,
   get,
-  firestore,
+  onSnapshot,
   set,
   add,
   where,
   doc,
   collection,
+  firestore,
   serverTimestamp,
+  ref,
+  child,
+  getDownloadURL,
+  put,
+  storage,
   initializeApp
 }
 
