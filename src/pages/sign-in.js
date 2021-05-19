@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useHistory } from 'react-router-dom'
 import { signIn } from '../services/firebase'
 import { isValidSignInInputs } from '../utils'
-import useTitle from '../hooks/use-title'
+import { useTitle } from '../hooks'
 import * as ROUTES from '../constants/routes'
 import logo from '../images/logo.png'
 
