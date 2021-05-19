@@ -13,6 +13,69 @@ function getUserQueries(uid) {
   return { publicQuery, privateQuery, followersQuery, followingQuery }
 }
 
+function getPublicDetails(uid) {
+  const { publicQuery } = getUserQueries(uid)
+
+  return publicQuery.get().then(doc => doc.data())
+}
+
+function getPrivateDetails(uid) {
+  const { privateQuery } = getUserQueries(uid)
+
+  return privateQuery.get().then(doc => doc.data())
+}
+
+function getFollowers(uid) {
+  const { followersQuery } = getUserQueries(uid)
+
+  return followersQuery.get().then(snap => ({ followers: snap.docs.map(doc => doc.id) }))
+}
+
+function getFollowing(uid) {
+  const { followingQuery } = getUserQueries(uid)
+
+  return followingQuery.get().then(snap => ({ following: snap.docs.map(doc => doc.id) }))
+}
+
+function settledQueriesReducer(acc, { value, status, reason }) {
+  if (status === 'rejected') {
+    console.error(reason)
+
+    return acc
+  }
+
+  return { ...acc, ...value }
+}
+
+export function getUserById(uid, { includePrivate = false } = {}) {
+  const queries = [getPublicDetails(uid), getFollowers(uid), getFollowing(uid)]
+
+  if (includePrivate) {
+    queries.push(getPrivateDetails(uid))
+  }
+
+  return Promise.allSettled(queries).then(results => ({
+    uid,
+    ...results.reduce(settledQueriesReducer, {})
+  }))
+}
+
+export function onUserUpdated(uid, callback, { includePrivate = false } = {}) {
+  const { publicQuery, privateQuery, followersQuery, followingQuery } = getUserQueries(uid)
+
+  const listeners = [
+    publicQuery.onSnapshot(snap => callback({ uid, ...snap.data() })),
+    followersQuery.onSnapshot(snap => callback({ uid, followers: snap.docs.map(doc => doc.id) })),
+    followingQuery.onSnapshot(snap => callback({ uid, following: snap.docs.map(doc => doc.id) }))
+  ]
+
+  if (includePrivate) {
+    listeners.push(privateQuery.onSnapshot(snap => callback({ uid, ...snap.data() })))
+  }
+
+  return () => listeners.forEach(listener => listener())
+}
+
 export function onAuthStateChanged(callback) {
   return firebase.auth().onAuthStateChanged(user => callback(user || {}))
 }
