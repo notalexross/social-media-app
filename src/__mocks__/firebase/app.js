@@ -3,6 +3,7 @@
 
 const user = {
   uid: '1',
+  fullName: 'Forename Surname',
   email: 'email@email.com',
   password: 'password',
   username: 'Username'
@@ -17,7 +18,7 @@ const database = {
             _docs: {
               details: {
                 _fields: {
-                  fullName: 'Forename Surname',
+                  fullName: user.fullName,
                   email: user.email
                 }
               }
@@ -141,10 +142,12 @@ const get = jest.fn(function () {
   return Promise.resolve(response)
 })
 
+const onSnapshotCleanupFunction = jest.fn()
+
 const onSnapshot = jest.fn(function (callback) {
   this.get().then(callback)
 
-  return () => {}
+  return onSnapshotCleanupFunction
 })
 
 const set = jest.fn(() => {})
@@ -241,6 +244,7 @@ const mockFunctions = {
   onAuthStateChanged,
   auth,
   get,
+  onSnapshotCleanupFunction,
   onSnapshot,
   set,
   add,

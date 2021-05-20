@@ -1,5 +1,132 @@
 import { mockFunctions } from 'firebase/app'
-import { isUsernameTaken, signUp, signIn } from './firebase'
+import { getUserById, onUserUpdated, isUsernameTaken, signUp, signIn } from './firebase'
+
+describe(`${getUserById.name}`, () => {
+  const uid = '1'
+
+  describe('without options', () => {
+    let result
+
+    beforeEach(() => {
+      result = getUserById(uid)
+    })
+
+    test('calls firestore methods', () => {
+      expect(mockFunctions.get).toHaveBeenCalledTimes(3)
+    })
+
+    test('returns a promise', () => {
+      expect(result).toBeInstanceOf(Promise)
+    })
+
+    test('returns correct data', async () => {
+      expect(await result).toEqual({
+        uid: '1',
+        username: 'Username',
+        usernameLowerCase: 'username',
+        followers: ['2', '3'],
+        following: ['3', '4']
+      })
+    })
+  })
+
+  describe('with private data', () => {
+    let result
+
+    beforeEach(() => {
+      const options = { includePrivate: true }
+      result = getUserById(uid, options)
+    })
+
+    test('calls firestore methods', () => {
+      expect(mockFunctions.get).toHaveBeenCalledTimes(4)
+    })
+
+    test('returns correct data', async () => {
+      expect(await result).toEqual({
+        uid: '1',
+        username: 'Username',
+        usernameLowerCase: 'username',
+        followers: ['2', '3'],
+        following: ['3', '4'],
+        email: 'email@email.com',
+        fullName: 'Forename Surname'
+      })
+    })
+  })
+})
+
+describe(`${onUserUpdated.name}`, () => {
+  const callback = jest.fn()
+  const uid = '1'
+
+  describe('without options', () => {
+    let result
+
+    beforeEach(() => {
+      result = onUserUpdated(uid, callback)
+    })
+
+    test('calls firestore methods', () => {
+      expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(3)
+    })
+
+    test('calls callback with correct data', () => {
+      expect(callback).toBeCalledTimes(3)
+      expect(callback).toHaveBeenCalledWith({
+        uid,
+        username: 'Username',
+        usernameLowerCase: 'username'
+      })
+      expect(callback).toHaveBeenCalledWith({ uid, followers: ['2', '3'] })
+      expect(callback).toHaveBeenCalledWith({ uid, following: ['3', '4'] })
+    })
+
+    test('returns a cleanup function', () => {
+      result()
+
+      expect(typeof result).toBe('function')
+      expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(3)
+    })
+  })
+
+  describe('with private data', () => {
+    let result
+
+    beforeEach(() => {
+      const options = { includePrivate: true }
+      result = onUserUpdated(uid, callback, options)
+    })
+
+    test('calls firestore methods', () => {
+      expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(4)
+    })
+
+    test('calls callback with correct data', () => {
+      expect(callback).toBeCalledTimes(4)
+      expect(callback).toHaveBeenCalledWith({
+        uid,
+        username: 'Username',
+        usernameLowerCase: 'username'
+      })
+      expect(callback).toHaveBeenCalledWith({ uid, followers: ['2', '3'] })
+      expect(callback).toHaveBeenCalledWith({ uid, following: ['3', '4'] })
+
+      expect(callback).toHaveBeenCalledWith({
+        uid,
+        fullName: 'Forename Surname',
+        email: 'email@email.com'
+      })
+    })
+
+    test('returns a cleanup function', () => {
+      result()
+
+      expect(typeof result).toBe('function')
+      expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(4)
+    })
+  })
+})
 
 describe(`${isUsernameTaken.name}`, () => {
   test('given no arguments, returns false', async () => {
