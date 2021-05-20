@@ -103,6 +103,8 @@ const onAuthStateChanged = jest.fn(callback => {
 
   firebaseEventTarget.addEventListener('change', handleChange)
 
+  callback(null)
+
   return () => firebaseEventTarget.removeEventListener('change', handleChange)
 })
 
