@@ -2,6 +2,8 @@ import firebase from 'firebase/app'
 import { isValidSignUpInputs, isValidSignInInputs } from '../utils'
 
 const firestore = firebase.firestore()
+const auth = firebase.auth()
+const { FieldValue } = firebase.firestore
 const usersQuery = firestore.collection('users')
 
 function getUserQueries(uid) {
@@ -96,6 +98,23 @@ function listenLikedPosts(uid, callback) {
   )
 }
 
+async function getUserId(username) {
+  const { uid, publicData } = await usersQuery
+    .where('deleted', '==', false)
+    .where('usernameLowerCase', '==', username.toLowerCase())
+    .get()
+    .then(snap => ({
+      uid: snap.docs[0]?.id,
+      publicData: snap.docs[0]?.data()
+    }))
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+
+  return { uid, publicData }
+}
+
 export function getUserById(
   uid,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
@@ -142,6 +161,41 @@ export function onUserUpdated(
   return () => listeners.forEach(listener => listener())
 }
 
+function createUserInDB(uid, { avatar = '', email = '', fullName = '', username = '' } = {}) {
+  const { publicQuery, privateQuery, followingQuery, likedPostsQuery } = getUserQueries(uid)
+  const batch = firestore.batch()
+
+  batch.set(publicQuery, {
+    avatar,
+    createdAt: FieldValue.serverTimestamp(),
+    deleted: false,
+    followersCount: 0,
+    username,
+    usernameLowerCase: username.toLowerCase()
+  })
+
+  batch.set(privateQuery, {
+    email,
+    fullName
+  })
+
+  batch.set(followingQuery, {
+    uids: []
+  })
+
+  batch.set(likedPostsQuery, {
+    postIds: []
+  })
+
+  return batch
+    .commit()
+    .then(() => publicQuery)
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+}
+
 export function onAuthStateChanged(callback) {
   return firebase.auth().onAuthStateChanged(user => callback(user || {}))
 }
@@ -150,13 +204,8 @@ export async function signOut() {
   return firebase.auth().signOut()
 }
 
-export async function isUsernameTaken(username = '') {
-  const isTaken = await usersQuery
-    .where('usernameLowerCase', '==', username.toLowerCase())
-    .get()
-    .then(snap => snap.docs.length > 0)
-
-  return isTaken
+export async function isUsernameAvailable(username = '') {
+  return getUserId(username).then(user => user.uid === undefined)
 }
 
 export async function signUp({ username, fullName, email, password } = {}) {
@@ -170,29 +219,18 @@ export async function signUp({ username, fullName, email, password } = {}) {
     throw new Error('Username must only be made up of letters, numbers, and underscores.')
   }
 
-  if (await isUsernameTaken(username)) {
+  if (!(await isUsernameAvailable(username))) {
     throw new Error(`The username "${username}" is already taken.`)
   }
 
-  return firebase
-    .auth()
-    .createUserWithEmailAndPassword(email, password)
-    .then(async ({ user }) => {
-      const { publicQuery, privateQuery } = getUserQueries(user.uid)
-      const avatar = user.photoUrl || null
+  const { user } = await auth.createUserWithEmailAndPassword(email, password)
 
-      publicQuery.set({
-        dateCreated: firebase.firestore.FieldValue.serverTimestamp(),
-        username,
-        usernameLowerCase: username.toLowerCase(),
-        avatar
-      })
-
-      privateQuery.set({
-        fullName,
-        email: user.email
-      })
-    })
+  return createUserInDB(user.uid, {
+    avatar: user.photoUrl,
+    email,
+    fullName,
+    username
+  })
 }
 
 export async function signIn({ email, password } = {}) {
