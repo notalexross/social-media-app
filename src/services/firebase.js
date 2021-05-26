@@ -8,69 +8,135 @@ function getUserQueries(uid) {
   const publicQuery = usersQuery.doc(uid)
   const privateQuery = firestore.collection(`users/${uid}/private`).doc('details')
   const followersQuery = firestore.collection(`users/${uid}/followers`)
-  const followingQuery = firestore.collection(`users/${uid}/following`)
+  const followingQuery = firestore.collection(`users/${uid}/following`).doc('details')
+  const likedPostsQuery = firestore.collection(`users/${uid}/likedPosts`).doc('details')
 
-  return { publicQuery, privateQuery, followersQuery, followingQuery }
+  return { publicQuery, privateQuery, followersQuery, followingQuery, likedPostsQuery }
 }
 
 function getPublicDetails(uid) {
-  const { publicQuery } = getUserQueries(uid)
-
-  return publicQuery.get().then(doc => doc.data())
+  return getUserQueries(uid)
+    .publicQuery.get()
+    .then(doc => doc.data())
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
 }
 
 function getPrivateDetails(uid) {
-  const { privateQuery } = getUserQueries(uid)
-
-  return privateQuery.get().then(doc => doc.data())
-}
-
-function getFollowers(uid) {
-  const { followersQuery } = getUserQueries(uid)
-
-  return followersQuery.get().then(snap => ({ followers: snap.docs.map(doc => doc.id) }))
+  return getUserQueries(uid)
+    .privateQuery.get()
+    .then(doc => doc.data())
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
 }
 
 function getFollowing(uid) {
-  const { followingQuery } = getUserQueries(uid)
-
-  return followingQuery.get().then(snap => ({ following: snap.docs.map(doc => doc.id) }))
+  return getUserQueries(uid)
+    .followingQuery.get()
+    .then(doc => ({ following: doc.data()?.uids }))
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
 }
 
-function settledQueriesReducer(acc, { value, status, reason }) {
-  if (status === 'rejected') {
-    console.error(reason)
-
-    return acc
-  }
-
-  return { ...acc, ...value }
+function getLikedPosts(uid) {
+  return getUserQueries(uid)
+    .likedPostsQuery.get()
+    .then(doc => ({ likedPosts: doc.data()?.postIds }))
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
 }
 
-export function getUserById(uid, { includePrivate = false } = {}) {
-  const queries = [getPublicDetails(uid), getFollowers(uid), getFollowing(uid)]
+function listenPublicDetails(uid, callback) {
+  return getUserQueries(uid).publicQuery.onSnapshot(snap => {
+    callback({ uid, ...snap.data() })
+  })
+}
+
+function listenPrivateDetails(uid, callback) {
+  return getUserQueries(uid).privateQuery.onSnapshot(
+    snap => {
+      callback({ uid, ...snap.data() })
+    },
+    error => {
+      console.error(error)
+      console.error(new Error(error))
+    }
+  )
+}
+
+function listenFollowing(uid, callback) {
+  return getUserQueries(uid).followingQuery.onSnapshot(
+    snap => {
+      callback({ uid, following: snap.data()?.uids })
+    },
+    error => {
+      console.error(error)
+      console.error(new Error(error))
+    }
+  )
+}
+
+function listenLikedPosts(uid, callback) {
+  return getUserQueries(uid).likedPostsQuery.onSnapshot(
+    snap => {
+      callback({ uid, likedPosts: snap.data()?.postIds })
+    },
+    error => {
+      console.error(error)
+      console.error(new Error(error))
+    }
+  )
+}
+
+export function getUserById(
+  uid,
+  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+) {
+  const queries = [getPublicDetails(uid)]
 
   if (includePrivate) {
     queries.push(getPrivateDetails(uid))
   }
 
-  return Promise.allSettled(queries).then(results => ({
+  if (includeFollowing) {
+    queries.push(getFollowing(uid))
+  }
+
+  if (includeLikedPosts) {
+    queries.push(getLikedPosts(uid))
+  }
+
+  return Promise.all(queries).then(results => ({
     uid,
-    ...results.reduce(settledQueriesReducer, {})
+    ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {})
   }))
 }
 
-export function onUserUpdated(uid, callback, { includePrivate = false } = {}) {
-  const { publicQuery, privateQuery, followersQuery, followingQuery } = getUserQueries(uid)
-
-  const listeners = [
-    publicQuery.onSnapshot(snap => callback({ uid, ...snap.data() })),
-    followersQuery.onSnapshot(snap => callback({ uid, followers: snap.docs.map(doc => doc.id) })),
-    followingQuery.onSnapshot(snap => callback({ uid, following: snap.docs.map(doc => doc.id) }))
-  ]
+export function onUserUpdated(
+  uid,
+  callback,
+  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+) {
+  const listeners = [listenPublicDetails(uid, callback)]
 
   if (includePrivate) {
-    listeners.push(privateQuery.onSnapshot(snap => callback({ uid, ...snap.data() })))
+    listeners.push(listenPrivateDetails(uid, callback))
+  }
+
+  if (includeFollowing) {
+    listeners.push(listenFollowing(uid, callback))
+  }
+
+  if (includeLikedPosts) {
+    listeners.push(listenLikedPosts(uid, callback))
   }
 
   return () => listeners.forEach(listener => listener())

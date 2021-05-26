@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { getUserById, onUserUpdated } from '../services/firebase'
 
-export default function useUser(uid, { includePrivate = false, subscribe = false } = {}) {
+export default function useUser(
+  uid,
+  {
+    subscribe = false,
+    includePrivate = false,
+    includeFollowing = false,
+    includeLikedPosts = false
+  } = {}
+) {
   const [userDetails, setUserDetails] = useState({})
 
   useEffect(() => {
@@ -10,11 +18,15 @@ export default function useUser(uid, { includePrivate = false, subscribe = false
     if (uid) {
       if (subscribe) {
         return onUserUpdated(uid, changes => setUserDetails(state => ({ ...state, ...changes })), {
-          includePrivate
+          includePrivate,
+          includeFollowing,
+          includeLikedPosts
         })
       }
 
-      getUserById(uid, { includePrivate }).then(data => isCurrent && setUserDetails(data))
+      getUserById(uid, { includePrivate, includeFollowing, includeLikedPosts })
+        .then(data => isCurrent && setUserDetails(data))
+        .catch(console.error)
     } else {
       setUserDetails({})
     }
@@ -22,7 +34,7 @@ export default function useUser(uid, { includePrivate = false, subscribe = false
     return () => {
       isCurrent = false
     }
-  }, [includePrivate, subscribe, uid])
+  }, [includeFollowing, includeLikedPosts, includePrivate, subscribe, uid])
 
   return userDetails
 }
