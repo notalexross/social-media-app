@@ -3,6 +3,9 @@
 
 const user = {
   uid: '1',
+  avatar: '',
+  createdAt: '',
+  deleted: false,
   fullName: 'Forename Surname',
   email: 'email@email.com',
   password: 'password',
@@ -32,12 +35,19 @@ const database = {
           },
           following: {
             _docs: {
-              3: {},
-              4: {}
+              details: {
+                _fields: {
+                  uids: [1, 2]
+                }
+              }
             }
           }
         },
         _fields: {
+          avatar: user.avatar,
+          createdAt: user.createdAt,
+          deleted: user.deleted,
+          followersCount: 2,
           username: user.username,
           usernameLowerCase: user.username.toLowerCase()
         }
@@ -181,6 +191,7 @@ const where = jest.fn(function (field, operator, value) {
 
   return {
     _docs: Object.fromEntries(docs),
+    where,
     get,
     onSnapshot
   }
