@@ -212,9 +212,25 @@ collection = jest.fn(function (path) {
   }
 })
 
+const batch = jest.fn(() => ({
+  _tasks: [],
+  set(documentRef, data) {
+    return this._tasks.push(() => documentRef.set(data))
+  },
+  update(documentRef, data) {
+    return this._tasks.push(() => documentRef.update(data))
+  },
+  delete(documentRef) {
+    return this._tasks.push(() => documentRef.delete())
+  },
+  commit() {
+    return Promise.all(this._tasks.map(task => task()))
+  }
+}))
+
 const serverTimestamp = jest.fn(() => 'mock server timestamp')
 
-const firestore = jest.fn(() => ({ _collections: database, collection }))
+const firestore = jest.fn(() => ({ _collections: database, collection, batch }))
 
 firestore.FieldValue = { serverTimestamp }
 
