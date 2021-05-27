@@ -2,14 +2,40 @@
 /* eslint-disable no-underscore-dangle */
 
 const user = {
-  uid: '1',
+  uid: 'user1',
   avatar: '',
   createdAt: '',
   deleted: false,
   fullName: 'Forename Surname',
   email: 'email@email.com',
   password: 'password',
-  username: 'Username'
+  username: 'Username',
+  following: ['user3', 'user4'],
+  followers: ['user2', 'user3'],
+  likedPosts: ['post1', 'post2']
+}
+
+const posts = {
+  post1: {
+    attachment: '',
+    createdAt: '',
+    deleted: false,
+    message: 'mock message',
+    owner: 'user1',
+    replies: ['post2'],
+    replyTo: '',
+    likes: ['user1', 'user2']
+  },
+  post2: {
+    attachment: '',
+    createdAt: '',
+    deleted: false,
+    message: 'mock message',
+    owner: 'user2',
+    replies: [],
+    replyTo: 'post1',
+    likes: ['user1']
+  }
 }
 
 const database = {
@@ -29,15 +55,23 @@ const database = {
           },
           followers: {
             _docs: {
-              2: {},
-              3: {}
+              ...Object.fromEntries(user.followers.map(followerId => [followerId, {}]))
             }
           },
           following: {
             _docs: {
               details: {
                 _fields: {
-                  uids: [1, 2]
+                  uids: user.following
+                }
+              }
+            }
+          },
+          likedPosts: {
+            _docs: {
+              details: {
+                _fields: {
+                  postIds: user.likedPosts
                 }
               }
             }
@@ -47,11 +81,35 @@ const database = {
           avatar: user.avatar,
           createdAt: user.createdAt,
           deleted: user.deleted,
-          followersCount: 2,
+          followersCount: user.followers.length,
           username: user.username,
           usernameLowerCase: user.username.toLowerCase()
         }
       }
+    }
+  },
+  posts: {
+    _docs: {
+      ...Object.keys(posts).reduce((acc, postId) => {
+        const { likes, ...post } = posts[postId]
+
+        return {
+          ...acc,
+          [postId]: {
+            _collections: {
+              likes: {
+                _docs: {
+                  ...Object.fromEntries(likes.map(likerId => [likerId, {}]))
+                }
+              }
+            },
+            _fields: {
+              ...post,
+              likesCount: likes.length
+            }
+          }
+        }
+      }, {})
     }
   }
 }

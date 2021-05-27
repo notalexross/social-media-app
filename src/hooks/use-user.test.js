@@ -12,7 +12,7 @@ function Component({ uid, options }) {
 
 test('given null uid, after having already passed a uid, returns empty data', async () => {
   function Wrapper() {
-    const [uid, setUid] = useState('1')
+    const [uid, setUid] = useState('user1')
 
     useEffect(() => {
       setTimeout(() => {
@@ -35,12 +35,12 @@ test('given null uid, after having already passed a uid, returns empty data', as
 describe('without including private data', () => {
   describe('without subscribe', () => {
     test('returns correct data', async () => {
-      const uid = '1'
+      const uid = 'user1'
       const options = { includePrivate: false, subscribe: false }
 
       render(<Component uid={uid} options={options} />)
 
-      expect(await screen.findByText('uid: 1')).toBeInTheDocument()
+      expect(await screen.findByText('uid: user1')).toBeInTheDocument()
       expect(await screen.findByText('username: Username')).toBeInTheDocument()
       expect(screen.queryByText('email: email@email.com')).not.toBeInTheDocument()
     })
@@ -48,12 +48,12 @@ describe('without including private data', () => {
 
   describe('with subscribe', () => {
     test('returns correct data', async () => {
-      const uid = '1'
+      const uid = 'user1'
       const options = { includePrivate: false, subscribe: true }
 
       render(<Component uid={uid} options={options} />)
 
-      expect(await screen.findByText('uid: 1')).toBeInTheDocument()
+      expect(await screen.findByText('uid: user1')).toBeInTheDocument()
       expect(await screen.findByText('username: Username')).toBeInTheDocument()
       expect(screen.queryByText('email: email@email.com')).not.toBeInTheDocument()
     })
@@ -63,12 +63,12 @@ describe('without including private data', () => {
 describe('with private data', () => {
   describe('without subscribe', () => {
     test('returns correct data', async () => {
-      const uid = '1'
+      const uid = 'user1'
       const options = { includePrivate: true, subscribe: false }
 
       render(<Component uid={uid} options={options} />)
 
-      expect(await screen.findByText('uid: 1')).toBeInTheDocument()
+      expect(await screen.findByText('uid: user1')).toBeInTheDocument()
       expect(await screen.findByText('username: Username')).toBeInTheDocument()
       expect(await screen.findByText('fullName: Forename Surname')).toBeInTheDocument()
       expect(await screen.findByText('email: email@email.com')).toBeInTheDocument()
@@ -77,12 +77,12 @@ describe('with private data', () => {
 
   describe('with subscribe', () => {
     test('returns correct data', async () => {
-      const uid = '1'
+      const uid = 'user1'
       const options = { includePrivate: true, subscribe: true }
 
       render(<Component uid={uid} options={options} />)
 
-      expect(await screen.findByText('uid: 1')).toBeInTheDocument()
+      expect(await screen.findByText('uid: user1')).toBeInTheDocument()
       expect(await screen.findByText('username: Username')).toBeInTheDocument()
       expect(await screen.findByText('fullName: Forename Surname')).toBeInTheDocument()
       expect(await screen.findByText('email: email@email.com')).toBeInTheDocument()

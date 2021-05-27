@@ -2,7 +2,7 @@ import { mockFunctions } from 'firebase/app'
 import { getUserById, onUserUpdated, isUsernameAvailable, signUp, signIn } from './firebase'
 
 describe(`${getUserById.name}`, () => {
-  const uid = '1'
+  const uid = 'user1'
 
   describe('without options', () => {
     let result
@@ -21,7 +21,7 @@ describe(`${getUserById.name}`, () => {
 
     test('returns correct data', async () => {
       expect(await result).toEqual({
-        uid: '1',
+        uid: 'user1',
         avatar: '',
         createdAt: '',
         deleted: false,
@@ -46,7 +46,7 @@ describe(`${getUserById.name}`, () => {
 
     test('returns correct data', async () => {
       expect(await result).toEqual({
-        uid: '1',
+        uid: 'user1',
         avatar: '',
         createdAt: '',
         deleted: false,
@@ -62,7 +62,7 @@ describe(`${getUserById.name}`, () => {
 
 describe(`${onUserUpdated.name}`, () => {
   const callback = jest.fn()
-  const uid = '1'
+  const uid = 'user1'
 
   describe('without options', () => {
     let result
