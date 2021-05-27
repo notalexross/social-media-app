@@ -226,6 +226,54 @@ function createUserInDB(uid, { avatar = '', email = '', fullName = '', username 
     })
 }
 
+function updateUserInDB(uid, updates = {}) {
+  const { publicQuery, privateQuery } = getUserQueries(uid)
+  const publicKeys = ['avatar', 'deleted', 'username']
+  const privateKeys = ['email', 'fullName']
+
+  const publicUpdates = publicKeys.reduce(
+    (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
+    {}
+  )
+
+  const privateUpdates = privateKeys.reduce(
+    (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
+    {}
+  )
+
+  if (publicUpdates.username) {
+    publicUpdates.usernameLowerCase = publicUpdates.username.toLowerCase()
+  }
+
+  const promises = []
+
+  if (Object.keys(publicUpdates).length) {
+    promises.push(
+      publicQuery.update({
+        ...publicUpdates,
+        lastUpdatedAt: FieldValue.serverTimestamp()
+      })
+    )
+  }
+
+  if (Object.keys(privateUpdates).length) {
+    promises.push(
+      privateQuery.update({
+        ...privateUpdates,
+        lastUpdatedAt: FieldValue.serverTimestamp()
+      })
+    )
+  }
+
+  if (promises.length) {
+    return Promise.all(promises).catch(err => {
+      throw new Error(err)
+    })
+  }
+
+  return Promise.reject(new Error(`No valid updates were supplied for user with id "${uid}".`))
+}
+
 export function onAuthStateChanged(callback) {
   return firebase.auth().onAuthStateChanged(user => callback(user || {}))
 }
@@ -269,4 +317,18 @@ export async function signIn({ email, password } = {}) {
   }
 
   return firebase.auth().signInWithEmailAndPassword(email, password)
+}
+
+/**
+ * @param {Object} updates
+ * @param {String} updates.avatar
+ * @param {Boolean} updates.deleted
+ * @param {String} updates.username
+ * @param {String} updates.email
+ * @param {String} updates.fullName
+ */
+export function editUser(updates = {}) {
+  const { currentUser } = auth
+
+  return updateUserInDB(currentUser.uid, updates)
 }
