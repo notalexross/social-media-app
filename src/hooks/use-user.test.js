@@ -32,13 +32,12 @@ test('given null uid, after having already passed a uid, returns empty data', as
   })
 })
 
-describe('without including private data', () => {
+describe('with default inclusions', () => {
   describe('without subscribe', () => {
     test('returns correct data', async () => {
       const uid = 'user1'
-      const options = { includePrivate: false, subscribe: false }
 
-      render(<Component uid={uid} options={options} />)
+      render(<Component uid={uid} />)
 
       expect(await screen.findByText('uid: user1')).toBeInTheDocument()
       expect(await screen.findByText('username: Username')).toBeInTheDocument()
@@ -49,7 +48,7 @@ describe('without including private data', () => {
   describe('with subscribe', () => {
     test('returns correct data', async () => {
       const uid = 'user1'
-      const options = { includePrivate: false, subscribe: true }
+      const options = { subscribe: true }
 
       render(<Component uid={uid} options={options} />)
 
@@ -60,11 +59,11 @@ describe('without including private data', () => {
   })
 })
 
-describe('with private data', () => {
+describe('with private data included', () => {
   describe('without subscribe', () => {
     test('returns correct data', async () => {
       const uid = 'user1'
-      const options = { includePrivate: true, subscribe: false }
+      const options = { includePrivate: true }
 
       render(<Component uid={uid} options={options} />)
 
@@ -86,6 +85,38 @@ describe('with private data', () => {
       expect(await screen.findByText('username: Username')).toBeInTheDocument()
       expect(await screen.findByText('fullName: Forename Surname')).toBeInTheDocument()
       expect(await screen.findByText('email: email@email.com')).toBeInTheDocument()
+    })
+  })
+})
+
+describe('with following and likedPosts included', () => {
+  describe('without subscribe', () => {
+    test('returns correct data', async () => {
+      const uid = 'user1'
+      const options = { includeFollowing: true, includeLikedPosts: true }
+
+      render(<Component uid={uid} options={options} />)
+
+      expect(await screen.findByText('uid: user1')).toBeInTheDocument()
+      expect(await screen.findByText('username: Username')).toBeInTheDocument()
+      expect(await screen.findByText('following: user3,user4')).toBeInTheDocument()
+      expect(await screen.findByText('likedPosts: post1,post2')).toBeInTheDocument()
+      expect(screen.queryByText('email: email@email.com')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('with subscribe', () => {
+    test('returns correct data', async () => {
+      const uid = 'user1'
+      const options = { includeFollowing: true, includeLikedPosts: true, subscribe: true }
+
+      render(<Component uid={uid} options={options} />)
+
+      expect(await screen.findByText('uid: user1')).toBeInTheDocument()
+      expect(await screen.findByText('username: Username')).toBeInTheDocument()
+      expect(await screen.findByText('following: user3,user4')).toBeInTheDocument()
+      expect(await screen.findByText('likedPosts: post1,post2')).toBeInTheDocument()
+      expect(screen.queryByText('email: email@email.com')).not.toBeInTheDocument()
     })
   })
 })

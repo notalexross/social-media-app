@@ -20,7 +20,7 @@ describe(`${getUserById.name}`, () => {
     })
 
     test('returns correct data', async () => {
-      expect(await result).toEqual({
+      await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',
         createdAt: '',
@@ -45,7 +45,7 @@ describe(`${getUserById.name}`, () => {
     })
 
     test('returns correct data', async () => {
-      expect(await result).toEqual({
+      await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',
         createdAt: '',
@@ -55,6 +55,33 @@ describe(`${getUserById.name}`, () => {
         followersCount: 2,
         email: 'email@email.com',
         fullName: 'Forename Surname'
+      })
+    })
+  })
+
+  describe('with following and likedPosts data', () => {
+    let result
+
+    beforeEach(() => {
+      const options = { includeFollowing: true, includeLikedPosts: true }
+      result = getUserById(uid, options)
+    })
+
+    test('calls firestore methods', () => {
+      expect(mockFunctions.get).toHaveBeenCalledTimes(3)
+    })
+
+    test('returns correct data', async () => {
+      await expect(result).resolves.toEqual({
+        uid: 'user1',
+        avatar: '',
+        createdAt: '',
+        deleted: false,
+        username: 'Username',
+        usernameLowerCase: 'username',
+        followersCount: 2,
+        following: ['user3', 'user4'],
+        likedPosts: ['post1', 'post2']
       })
     })
   })
@@ -132,6 +159,49 @@ describe(`${onUserUpdated.name}`, () => {
 
       expect(typeof result).toBe('function')
       expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('with following and likedPosts data', () => {
+    let result
+
+    beforeEach(() => {
+      const options = { includeFollowing: true, includeLikedPosts: true }
+      result = onUserUpdated(uid, callback, options)
+    })
+
+    test('calls firestore methods', () => {
+      expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(3)
+    })
+
+    test('calls callback with correct data', () => {
+      expect(callback).toBeCalledTimes(3)
+      expect(callback).toHaveBeenCalledWith({
+        uid: 'user1',
+        avatar: '',
+        createdAt: '',
+        deleted: false,
+        username: 'Username',
+        usernameLowerCase: 'username',
+        followersCount: 2
+      })
+
+      expect(callback).toHaveBeenCalledWith({
+        uid,
+        following: ['user3', 'user4']
+      })
+
+      expect(callback).toHaveBeenCalledWith({
+        uid,
+        likedPosts: ['post1', 'post2']
+      })
+    })
+
+    test('returns a cleanup function', () => {
+      result()
+
+      expect(typeof result).toBe('function')
+      expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(3)
     })
   })
 })
