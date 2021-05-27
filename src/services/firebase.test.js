@@ -1,5 +1,12 @@
 import { mockFunctions } from 'firebase/app'
-import { getUserById, onUserUpdated, isUsernameAvailable, signUp, signIn } from './firebase'
+import {
+  getUserById,
+  getUserByUsername,
+  onUserUpdated,
+  isUsernameAvailable,
+  signUp,
+  signIn
+} from './firebase'
 
 describe(`${getUserById.name}`, () => {
   const uid = 'user1'
@@ -83,6 +90,56 @@ describe(`${getUserById.name}`, () => {
         following: ['user3', 'user4'],
         likedPosts: ['post1', 'post2']
       })
+    })
+  })
+})
+
+describe(`${getUserByUsername.name}`, () => {
+  test('returns a promise', () => {
+    const result = getUserByUsername('username')
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given username does not exist, throws error', async () => {
+    const result = getUserByUsername('untakenUsername')
+
+    await expect(result).rejects.toThrowError('User with username "untakenUsername" not found.')
+  })
+
+  test('given username exists, returns user data', async () => {
+    const result = getUserByUsername('username')
+
+    await expect(result).resolves.toEqual({
+      uid: 'user1',
+      avatar: '',
+      createdAt: '',
+      deleted: false,
+      username: 'Username',
+      usernameLowerCase: 'username',
+      followersCount: 2
+    })
+  })
+
+  test('given all inclusions, returns all data', async () => {
+    const result = getUserByUsername('username', {
+      includePrivate: true,
+      includeFollowing: true,
+      includeLikedPosts: true
+    })
+
+    await expect(result).resolves.toEqual({
+      uid: 'user1',
+      avatar: '',
+      createdAt: '',
+      deleted: false,
+      username: 'Username',
+      usernameLowerCase: 'username',
+      followersCount: 2,
+      email: 'email@email.com',
+      fullName: 'Forename Surname',
+      following: ['user3', 'user4'],
+      likedPosts: ['post1', 'post2']
     })
   })
 })
