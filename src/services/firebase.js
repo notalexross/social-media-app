@@ -139,6 +139,36 @@ export function getUserById(
   }))
 }
 
+export async function getUserByUsername(
+  username,
+  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+) {
+  const { uid, publicData } = await getUserId(username)
+
+  if (uid === undefined) {
+    throw new Error(`User with username "${username}" not found.`)
+  }
+
+  const queries = [publicData]
+
+  if (includePrivate) {
+    queries.push(getPrivateDetails(uid))
+  }
+
+  if (includeFollowing) {
+    queries.push(getFollowing(uid))
+  }
+
+  if (includeLikedPosts) {
+    queries.push(getLikedPosts(uid))
+  }
+
+  return Promise.all(queries).then(results => ({
+    uid,
+    ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {})
+  }))
+}
+
 export function onUserUpdated(
   uid,
   callback,
