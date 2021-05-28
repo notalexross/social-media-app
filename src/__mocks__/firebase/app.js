@@ -230,6 +230,7 @@ const doc = jest.fn(function (id) {
     _fields: this._docs[id]?._fields,
     _id: id,
     _collections: this._docs[id]?._collections || {},
+    id: id || 'mockId',
     get,
     onSnapshot,
     set,
@@ -300,9 +301,12 @@ const batch = jest.fn(() => ({
 
 const serverTimestamp = jest.fn(() => 'mock server timestamp')
 
+const arrayUnion = jest.fn()
+const arrayRemove = jest.fn()
+
 const firestore = jest.fn(() => ({ _collections: database, collection, batch }))
 
-firestore.FieldValue = { serverTimestamp }
+firestore.FieldValue = { serverTimestamp, arrayUnion, arrayRemove }
 
 const put = jest.fn()
 
@@ -342,6 +346,8 @@ const mockFunctions = {
   collection,
   firestore,
   serverTimestamp,
+  arrayUnion,
+  arrayRemove,
   ref,
   child,
   getDownloadURL,

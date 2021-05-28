@@ -6,7 +6,8 @@ import {
   isUsernameAvailable,
   signUp,
   signIn,
-  editUser
+  editUser,
+  addPost
 } from './firebase'
 
 describe(`${getUserById.name}`, () => {
@@ -434,5 +435,40 @@ describe(`${editUser.name}`, () => {
 
     expect(mockFunctions.update).toBeCalledTimes(2)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
+  })
+})
+
+describe(`${addPost.name}`, () => {
+  test('returns a promise', () => {
+    const result = addPost({ message: 'message' })
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given post has no content, throws error', async () => {
+    const result = addPost()
+
+    await expect(result).rejects.toThrowError(
+      'A post must have at least an attachment or a message.'
+    )
+  })
+
+  test('given post has content, resolves and calls firebase methods', async () => {
+    const result = addPost({ message: 'message' })
+
+    await expect(result).resolves.toBe('mockId')
+    expect(mockFunctions.set).toBeCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+    expect(mockFunctions.update).not.toHaveBeenCalled()
+  })
+
+  test('given post has content and is a reply, resolves and calls firebase methods', async () => {
+    const result = addPost({ message: 'message', replyTo: 'post1' })
+
+    await expect(result).resolves.toBe('mockId')
+    expect(mockFunctions.set).toBeCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
   })
 })
