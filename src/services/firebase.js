@@ -17,6 +17,13 @@ function getUserQueries(uid) {
   return { publicQuery, privateQuery, followersQuery, followingQuery, likedPostsQuery }
 }
 
+function getPostQueries(postId) {
+  const postQuery = postsQuery.doc(postId)
+  const likesQuery = postQuery.collection('likes')
+
+  return { postQuery, likesQuery }
+}
+
 function getPublicDetails(uid) {
   return getUserQueries(uid)
     .publicQuery.get()
@@ -310,6 +317,25 @@ function createPostInDB(uid, { attachment = '', message = '', replyTo = '' } = {
   return Promise.reject(new Error('A post must have at least an attachment or a message.'))
 }
 
+function updatePostInDB(postId, updates = {}) {
+  const { postQuery } = getPostQueries(postId)
+  const postKeys = ['attachment', 'deleted', 'message']
+
+  const postUpdates = postKeys.reduce(
+    (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
+    {}
+  )
+
+  if (Object.keys(postUpdates).length) {
+    return postQuery.update({
+      ...postUpdates,
+      lastEditedAt: FieldValue.serverTimestamp()
+    })
+  }
+
+  return Promise.reject(new Error(`No valid updates were supplied for post with id "${postId}".`))
+}
+
 export function onAuthStateChanged(callback) {
   return firebase.auth().onAuthStateChanged(user => callback(user || {}))
 }
@@ -373,4 +399,14 @@ export function addPost({ message = '', attachment = '', replyTo = '' } = {}) {
   const { currentUser } = auth
 
   return createPostInDB(currentUser.uid, { attachment, message, replyTo })
+}
+
+/**
+ * @param {Object} updates
+ * @param {String} updates.attachment
+ * @param {Boolean} updates.deleted
+ * @param {String} updates.message
+ */
+export function editPost(postId, updates = {}) {
+  return updatePostInDB(postId, updates)
 }
