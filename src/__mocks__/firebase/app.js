@@ -177,6 +177,7 @@ const onAuthStateChanged = jest.fn(callback => {
 })
 
 const auth = jest.fn(() => ({
+  currentUser: { uid: user.uid },
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -334,6 +335,7 @@ const mockFunctions = {
   onSnapshotCleanupFunction,
   onSnapshot,
   set,
+  update,
   add,
   where,
   doc,

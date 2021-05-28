@@ -5,7 +5,8 @@ import {
   onUserUpdated,
   isUsernameAvailable,
   signUp,
-  signIn
+  signIn,
+  editUser
 } from './firebase'
 
 describe(`${getUserById.name}`, () => {
@@ -396,5 +397,42 @@ describe(`${signIn.name}`, () => {
       expect(mockFunctions.auth).toBeCalledTimes(1)
       expect(mockFunctions.signInWithEmailAndPassword).toBeCalledTimes(1)
     })
+  })
+})
+
+describe(`${editUser.name}`, () => {
+  test('returns a promise', () => {
+    const result = editUser({ username: 'NewUsername' })
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given no updates supplied, throws error', async () => {
+    const result = editUser()
+
+    await expect(result).rejects.toThrowError(
+      'No valid updates were supplied for user with id "user1".'
+    )
+  })
+
+  test('given public details updated, calls firestore update method once', () => {
+    editUser({ username: 'NewUsername' })
+
+    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+  })
+
+  test('given private details updated, calls firestore update method once', () => {
+    editUser({ fullName: 'NewForename NewSurname' })
+
+    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+  })
+
+  test('given mixed details updated, calls firestore update method twice', () => {
+    editUser({ username: 'NewUsername', fullName: 'NewForename NewSurname' })
+
+    expect(mockFunctions.update).toBeCalledTimes(2)
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
   })
 })
