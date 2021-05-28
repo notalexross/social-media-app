@@ -5,6 +5,7 @@ const firestore = firebase.firestore()
 const auth = firebase.auth()
 const { FieldValue } = firebase.firestore
 const usersQuery = firestore.collection('users')
+const postsQuery = firestore.collection('posts')
 
 function getUserQueries(uid) {
   const publicQuery = usersQuery.doc(uid)
@@ -274,6 +275,41 @@ function updateUserInDB(uid, updates = {}) {
   return Promise.reject(new Error(`No valid updates were supplied for user with id "${uid}".`))
 }
 
+function createPostInDB(uid, { attachment = '', message = '', replyTo = '' } = {}) {
+  const post = postsQuery.doc()
+  const batch = firestore.batch()
+
+  if (attachment || message) {
+    batch.set(post, {
+      attachment,
+      createdAt: FieldValue.serverTimestamp(),
+      deleted: false,
+      likesCount: 0,
+      message,
+      owner: uid,
+      replies: [],
+      replyTo
+    })
+
+    if (replyTo) {
+      const replyToPost = postsQuery.doc(replyTo)
+      batch.update(replyToPost, {
+        replies: FieldValue.arrayUnion(post.id)
+      })
+    }
+
+    return batch
+      .commit()
+      .then(() => post.id)
+      .catch(error => {
+        console.error(error)
+        throw new Error(error)
+      })
+  }
+
+  return Promise.reject(new Error('A post must have at least an attachment or a message.'))
+}
+
 export function onAuthStateChanged(callback) {
   return firebase.auth().onAuthStateChanged(user => callback(user || {}))
 }
@@ -331,4 +367,10 @@ export function editUser(updates = {}) {
   const { currentUser } = auth
 
   return updateUserInDB(currentUser.uid, updates)
+}
+
+export function addPost({ message = '', attachment = '', replyTo = '' } = {}) {
+  const { currentUser } = auth
+
+  return createPostInDB(currentUser.uid, { attachment, message, replyTo })
 }
