@@ -7,7 +7,8 @@ import {
   signUp,
   signIn,
   editUser,
-  addPost
+  addPost,
+  editPost
 } from './firebase'
 
 describe(`${getUserById.name}`, () => {
@@ -470,5 +471,29 @@ describe(`${addPost.name}`, () => {
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
     expect(mockFunctions.update).toBeCalledTimes(1)
     expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
+  })
+})
+
+describe(`${editPost.name}`, () => {
+  test('returns a promise', () => {
+    const result = editPost('post1', { message: 'new message' })
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given no updates, throws error', async () => {
+    const result = editPost('post1')
+
+    await expect(result).rejects.toThrowError(
+      'No valid updates were supplied for post with id "post1".'
+    )
+  })
+
+  test('given updates, resolves and calls firebase methods', async () => {
+    const result = editPost('post1', { message: 'new message' })
+
+    await expect(result).resolves.toBeUndefined()
+    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
   })
 })

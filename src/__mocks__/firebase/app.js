@@ -223,7 +223,7 @@ const onSnapshot = jest.fn(function (callback) {
 
 const set = jest.fn(() => {})
 
-const update = jest.fn()
+const update = jest.fn(() => Promise.resolve())
 
 const doc = jest.fn(function (id) {
   return {
