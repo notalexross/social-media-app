@@ -457,3 +457,9 @@ export function followUser(uid) {
 
   return updateFollowInDB('follow', currentUser.uid, uid)
 }
+
+export function unfollowUser(uid) {
+  const { currentUser } = auth
+
+  return updateFollowInDB('unfollow', currentUser.uid, uid)
+}
