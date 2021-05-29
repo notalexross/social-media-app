@@ -336,6 +336,47 @@ function updatePostInDB(postId, updates = {}) {
   return Promise.reject(new Error(`No valid updates were supplied for post with id "${postId}".`))
 }
 
+export function updateFollowInDB(type, followerUid, followedUid) {
+  if (typeof followedUid !== 'string' || !followedUid.length) {
+    return Promise.reject(new Error('Invalid user ID supplied.'))
+  }
+
+  const batch = firestore.batch()
+  const { followingQuery } = getUserQueries(followerUid)
+  const { publicQuery, followersQuery } = getUserQueries(followedUid)
+
+  let increment
+  if (type === 'unfollow') {
+    increment = -1
+    batch.delete(followersQuery.doc(followerUid))
+    batch.update(followingQuery, {
+      uids: FieldValue.arrayRemove(followedUid)
+    })
+  } else if (type === 'follow') {
+    increment = 1
+    batch.set(followersQuery.doc(followerUid), {})
+    batch.update(followingQuery, {
+      uids: FieldValue.arrayUnion(followedUid)
+    })
+  } else {
+    return Promise.reject(new Error('Invalid type supplied.'))
+  }
+
+  if (increment) {
+    batch.update(publicQuery, {
+      followersCount: FieldValue.increment(increment)
+    })
+  }
+
+  return batch
+    .commit()
+    .then(() => publicQuery.id)
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+}
+
 export function onAuthStateChanged(callback) {
   return firebase.auth().onAuthStateChanged(user => callback(user || {}))
 }
@@ -409,4 +450,10 @@ export function addPost({ message = '', attachment = '', replyTo = '' } = {}) {
  */
 export function editPost(postId, updates = {}) {
   return updatePostInDB(postId, updates)
+}
+
+export function followUser(uid) {
+  const { currentUser } = auth
+
+  return updateFollowInDB('follow', currentUser.uid, uid)
 }
