@@ -131,7 +131,7 @@ class FirebaseEventTarget extends EventTarget {
 
 const firebaseEventTarget = new FirebaseEventTarget()
 
-const updateProfile = jest.fn(() => {})
+const updateProfile = jest.fn(() => Promise.resolve())
 
 const createUserWithEmailAndPassword = jest.fn(email => Promise.resolve({
   user: {
@@ -162,6 +162,8 @@ const signInWithEmailAndPassword = jest.fn(
 
 const signOut = jest.fn(() => {
   firebaseEventTarget.signOut()
+
+  return Promise.resolve()
 })
 
 const handleAuthStateChanged = jest.fn((callback, { detail }) => callback(detail))
@@ -184,30 +186,25 @@ const auth = jest.fn(() => ({
   onAuthStateChanged
 }))
 
-let collection
-
 const get = jest.fn(function () {
   let response
   if ('_docs' in this) {
-    // collection().get()
     response = {
       docs: Object.entries(this._docs).map(([id, doc]) => ({ id, data: () => doc._fields }))
     }
   } else if ('_fields' in this) {
-    // doc().get()
     response = {
       id: this._id,
       data: () => this._fields,
       _collections: this._collections
     }
   } else if ('_id' in this) {
-    // doc('unknown doc').get()
     response = {
       id: this._id,
       data: () => []
     }
   } else {
-    throw new Error('Missing or insufficient permissions')
+    return Promise.reject(new Error('Missing or insufficient permissions.'))
   }
 
   return Promise.resolve(response)
@@ -224,6 +221,8 @@ const onSnapshot = jest.fn(function (callback) {
 const set = jest.fn(() => Promise.resolve())
 const update = jest.fn(() => Promise.resolve())
 const docDelete = jest.fn(() => Promise.resolve())
+
+let collection
 
 const doc = jest.fn(function (id) {
   return {
@@ -266,7 +265,7 @@ collection = jest.fn(function (path) {
 
   if (parts.length % 2 === 0) {
     throw new Error(
-      `Invalid collection reference. Collection references must have an odd number of segments, but ${path} has ${parts.length}`
+      `Invalid collection reference. Collection references must have an odd number of segments, but ${path} has ${parts.length}.`
     )
   }
 
@@ -300,23 +299,18 @@ const batch = jest.fn(() => ({
   }
 }))
 
+const firestore = jest.fn(() => ({ _collections: database, collection, batch }))
+
 const serverTimestamp = jest.fn(() => 'mock server timestamp')
 const arrayUnion = jest.fn()
 const arrayRemove = jest.fn()
 const increment = jest.fn()
-
-const firestore = jest.fn(() => ({ _collections: database, collection, batch }))
-
 firestore.FieldValue = { serverTimestamp, arrayUnion, arrayRemove, increment }
 
 const put = jest.fn()
-
 const getDownloadURL = jest.fn(() => 'mock download url')
-
 const child = jest.fn(() => ({ put, getDownloadURL }))
-
 const ref = jest.fn(() => ({ child }))
-
 const storage = jest.fn(() => ({ ref }))
 
 const initializeApp = jest.fn()

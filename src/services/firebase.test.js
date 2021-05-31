@@ -398,7 +398,6 @@ describe(`${signIn.name}`, () => {
     test('calls firebase methods', async () => {
       await signIn(options)
 
-      expect(mockFunctions.auth).toBeCalledTimes(1)
       expect(mockFunctions.signInWithEmailAndPassword).toBeCalledTimes(1)
     })
   })

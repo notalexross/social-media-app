@@ -378,11 +378,11 @@ export function updateFollowInDB(type, followerUid, followedUid) {
 }
 
 export function onAuthStateChanged(callback) {
-  return firebase.auth().onAuthStateChanged(user => callback(user || {}))
+  return auth.onAuthStateChanged(user => callback(user || {}))
 }
 
 export async function signOut() {
-  return firebase.auth().signOut()
+  return auth.signOut()
 }
 
 export async function isUsernameAvailable(username = '') {
@@ -419,7 +419,7 @@ export async function signIn({ email, password } = {}) {
     throw new Error('Invalid data supplied.')
   }
 
-  return firebase.auth().signInWithEmailAndPassword(email, password)
+  return auth.signInWithEmailAndPassword(email, password)
 }
 
 /**
@@ -433,13 +433,13 @@ export async function signIn({ email, password } = {}) {
 export function editUser(updates = {}) {
   const { currentUser } = auth
 
-  return updateUserInDB(currentUser.uid, updates)
+  return updateUserInDB(currentUser?.uid, updates)
 }
 
 export function addPost({ message = '', attachment = '', replyTo = '' } = {}) {
   const { currentUser } = auth
 
-  return createPostInDB(currentUser.uid, { attachment, message, replyTo })
+  return createPostInDB(currentUser?.uid, { attachment, message, replyTo })
 }
 
 /**
@@ -455,11 +455,11 @@ export function editPost(postId, updates = {}) {
 export function followUser(uid) {
   const { currentUser } = auth
 
-  return updateFollowInDB('follow', currentUser.uid, uid)
+  return updateFollowInDB('follow', currentUser?.uid, uid)
 }
 
 export function unfollowUser(uid) {
   const { currentUser } = auth
 
-  return updateFollowInDB('unfollow', currentUser.uid, uid)
+  return updateFollowInDB('unfollow', currentUser?.uid, uid)
 }
