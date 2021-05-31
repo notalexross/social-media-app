@@ -8,7 +8,8 @@ import {
   signIn,
   editUser,
   addPost,
-  editPost
+  editPost,
+  followUser,
 } from './firebase'
 
 describe(`${getUserById.name}`, () => {
@@ -495,5 +496,35 @@ describe(`${editPost.name}`, () => {
     await expect(result).resolves.toBeUndefined()
     expect(mockFunctions.update).toBeCalledTimes(1)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+  })
+})
+
+describe(`${followUser.name}`, () => {
+  test('returns a promise', () => {
+    const uid = 'user2'
+
+    const result = followUser(uid)
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given no uid, throws error', async () => {
+    const result = followUser()
+
+    await expect(result).rejects.toThrowError('Invalid user ID supplied.')
+  })
+
+  test('given uid, resolves and calls firebase methods', async () => {
+    const uid = 'user2'
+
+    const result = followUser(uid)
+
+    await expect(result).resolves.toBe(uid)
+    expect(mockFunctions.increment).toBeCalledTimes(1)
+    expect(mockFunctions.increment).toBeCalledWith(1)
+    expect(mockFunctions.update).toBeCalledTimes(2)
+    expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
+    expect(mockFunctions.arrayUnion).toBeCalledWith(uid)
+    expect(mockFunctions.set).toBeCalledTimes(1)
   })
 })

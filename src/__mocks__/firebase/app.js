@@ -221,8 +221,7 @@ const onSnapshot = jest.fn(function (callback) {
   return onSnapshotCleanupFunction
 })
 
-const set = jest.fn(() => {})
-
+const set = jest.fn(() => Promise.resolve())
 const update = jest.fn(() => Promise.resolve())
 
 const doc = jest.fn(function (id) {
@@ -300,13 +299,13 @@ const batch = jest.fn(() => ({
 }))
 
 const serverTimestamp = jest.fn(() => 'mock server timestamp')
-
 const arrayUnion = jest.fn()
 const arrayRemove = jest.fn()
+const increment = jest.fn()
 
 const firestore = jest.fn(() => ({ _collections: database, collection, batch }))
 
-firestore.FieldValue = { serverTimestamp, arrayUnion, arrayRemove }
+firestore.FieldValue = { serverTimestamp, arrayUnion, arrayRemove, increment }
 
 const put = jest.fn()
 
@@ -348,6 +347,7 @@ const mockFunctions = {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
+  increment,
   ref,
   child,
   getDownloadURL,
