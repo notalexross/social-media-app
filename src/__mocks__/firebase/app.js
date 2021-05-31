@@ -223,6 +223,7 @@ const onSnapshot = jest.fn(function (callback) {
 
 const set = jest.fn(() => Promise.resolve())
 const update = jest.fn(() => Promise.resolve())
+const docDelete = jest.fn(() => Promise.resolve())
 
 const doc = jest.fn(function (id) {
   return {
@@ -234,6 +235,7 @@ const doc = jest.fn(function (id) {
     onSnapshot,
     set,
     update,
+    delete: docDelete,
     collection
   }
 })
@@ -339,6 +341,7 @@ const mockFunctions = {
   onSnapshot,
   set,
   update,
+  docDelete,
   add,
   where,
   doc,

@@ -10,6 +10,7 @@ import {
   addPost,
   editPost,
   followUser,
+  unfollowUser
 } from './firebase'
 
 describe(`${getUserById.name}`, () => {
@@ -526,5 +527,35 @@ describe(`${followUser.name}`, () => {
     expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
     expect(mockFunctions.arrayUnion).toBeCalledWith(uid)
     expect(mockFunctions.set).toBeCalledTimes(1)
+  })
+})
+
+describe(`${unfollowUser.name}`, () => {
+  test('returns a promise', () => {
+    const uid = 'user2'
+
+    const result = unfollowUser(uid)
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given no uid, throws error', async () => {
+    const result = unfollowUser()
+
+    await expect(result).rejects.toThrowError('Invalid user ID supplied.')
+  })
+
+  test('given uid, resolves and calls firebase methods', async () => {
+    const uid = 'user2'
+
+    const result = unfollowUser(uid)
+
+    await expect(result).resolves.toBe(uid)
+    expect(mockFunctions.increment).toBeCalledTimes(1)
+    expect(mockFunctions.increment).toBeCalledWith(-1)
+    expect(mockFunctions.update).toBeCalledTimes(2)
+    expect(mockFunctions.arrayRemove).toBeCalledTimes(1)
+    expect(mockFunctions.arrayRemove).toBeCalledWith(uid)
+    expect(mockFunctions.docDelete).toBeCalledTimes(1)
   })
 })
