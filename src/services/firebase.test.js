@@ -12,6 +12,7 @@ import {
   followUser,
   unfollowUser,
   likePost,
+  unlikePost
 } from './firebase'
 
 describe(`${getUserById.name}`, () => {
@@ -587,5 +588,35 @@ describe(`${likePost.name}`, () => {
     expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
     expect(mockFunctions.arrayUnion).toBeCalledWith(postId)
     expect(mockFunctions.set).toBeCalledTimes(1)
+  })
+})
+
+describe(`${unlikePost.name}`, () => {
+  test('returns a promise', () => {
+    const postId = 'post3'
+
+    const result = unlikePost(postId)
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given no postId, throws error', async () => {
+    const result = unlikePost()
+
+    await expect(result).rejects.toThrowError('Invalid post ID supplied.')
+  })
+
+  test('given postId, resolves and calls firebase methods', async () => {
+    const postId = 'post3'
+
+    const result = unlikePost(postId)
+
+    await expect(result).resolves.toBe(postId)
+    expect(mockFunctions.increment).toBeCalledTimes(1)
+    expect(mockFunctions.increment).toBeCalledWith(-1)
+    expect(mockFunctions.update).toBeCalledTimes(2)
+    expect(mockFunctions.arrayRemove).toBeCalledTimes(1)
+    expect(mockFunctions.arrayRemove).toBeCalledWith(postId)
+    expect(mockFunctions.docDelete).toBeCalledTimes(1)
   })
 })
