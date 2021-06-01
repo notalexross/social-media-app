@@ -377,6 +377,47 @@ export function updateFollowInDB(type, followerUid, followedUid) {
     })
 }
 
+export function updateLikeInDB(type, likerUid, postId) {
+  if (typeof postId !== 'string' || !postId.length) {
+    return Promise.reject(new Error('Invalid post ID supplied.'))
+  }
+
+  const batch = firestore.batch()
+  const { postQuery, likesQuery } = getPostQueries(postId)
+  const { likedPostsQuery } = getUserQueries(likerUid)
+
+  let increment
+  if (type === 'unlike') {
+    increment = -1
+    batch.delete(likesQuery.doc(likerUid))
+    batch.update(likedPostsQuery, {
+      postIds: FieldValue.arrayRemove(postId)
+    })
+  } else if (type === 'like') {
+    increment = 1
+    batch.set(likesQuery.doc(likerUid), {})
+    batch.update(likedPostsQuery, {
+      postIds: FieldValue.arrayUnion(postId)
+    })
+  } else {
+    return Promise.reject(new Error('Invalid type supplied.'))
+  }
+
+  if (increment) {
+    batch.update(postQuery, {
+      likesCount: FieldValue.increment(increment)
+    })
+  }
+
+  return batch
+    .commit()
+    .then(() => postQuery.id)
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+}
+
 export function onAuthStateChanged(callback) {
   return auth.onAuthStateChanged(user => callback(user || {}))
 }
@@ -462,4 +503,10 @@ export function unfollowUser(uid) {
   const { currentUser } = auth
 
   return updateFollowInDB('unfollow', currentUser?.uid, uid)
+}
+
+export function likePost(postId) {
+  const { currentUser } = auth
+
+  return updateLikeInDB('like', currentUser?.uid, postId)
 }
