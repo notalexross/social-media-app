@@ -510,3 +510,9 @@ export function likePost(postId) {
 
   return updateLikeInDB('like', currentUser?.uid, postId)
 }
+
+export function unlikePost(postId) {
+  const { currentUser } = auth
+
+  return updateLikeInDB('unlike', currentUser?.uid, postId)
+}
