@@ -240,7 +240,7 @@ const doc = jest.fn(function (id) {
 })
 
 const where = jest.fn(function (field, operator, value) {
-  const docs = Object.entries(this._docs).filter(([_, entry]) => {
+  const docs = Object.entries(this._docs).filter(([, entry]) => {
     switch (operator) {
       case '==':
         return entry._fields[field] === value
