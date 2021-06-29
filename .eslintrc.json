@@ -3,19 +3,29 @@
     "browser": true,
     "es2021": true
   },
-  "extends": ["react-app", "react-app/jest", "airbnb"],
+  "extends": ["react-app", "react-app/jest", "airbnb-typescript"],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
     },
     "ecmaVersion": 12,
-    "sourceType": "module"
+    "sourceType": "module",
+    "project": "./tsconfig.eslint.json"
   },
   "plugins": ["react"],
-  "ignorePatterns": ["/build"],
+  "ignorePatterns": ["/build", "/coverage"],
   "rules": {
+    "@typescript-eslint/comma-dangle": ["error", "never"],
+    "@typescript-eslint/lines-between-class-members": [
+      "error",
+      "always",
+      {
+        "exceptAfterSingleLine": true
+      }
+    ],
+    "@typescript-eslint/semi": ["error", "never"],
+    "@typescript-eslint/type-annotation-spacing": ["error", { "after": true }],
     "arrow-parens": ["error", "as-needed"],
-    "comma-dangle": ["error", "never"],
     "linebreak-style": 0,
     "max-len": [
       "error",
@@ -46,7 +56,6 @@
       }
     ],
     "no-unused-expressions": ["error", { "allowShortCircuit": true, "allowTernary": true }],
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "ignoreRestSiblings": true }],
     "object-curly-newline": ["error", { "consistent": true }],
     "operator-linebreak": ["error", "after"],
     "padding-line-between-statements": [
@@ -63,10 +72,19 @@
       },
       { "blankLine": "any", "prev": ["export", "import"], "next": ["export", "import"] }
     ],
-    "react/react-in-jsx-scope": "off",
     "react/jsx-filename-extension": "off",
     "react/jsx-props-no-spreading": "off",
     "react/prop-types": "off",
-    "semi": ["error", "never"]
-  }
+    "react/react-in-jsx-scope": "off",
+    "react/require-default-props": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+      ]
+    }
+  ]
 }
