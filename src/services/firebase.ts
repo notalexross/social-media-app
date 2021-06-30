@@ -1,13 +1,47 @@
 import firebase from 'firebase/app'
 import { isValidSignUpInputs, isValidSignInInputs } from '../utils'
 
+type UserPublic = {
+  avatar: string | null
+  deleted: boolean
+  username: string
+  usernameLowerCase: string
+}
+
+type UserPrivate = {
+  email: string
+  fullName: string
+}
+
+type UserFollowing = { following: string[] }
+type UserLikedPosts = { likedPosts: string[] }
+type UserCreatable = Partial<Omit<Omit<UserPublic & UserPrivate, 'usernameLowerCase'>, 'deleted'>>
+type UserUpdatable = Partial<Omit<UserPublic & UserPrivate, 'usernameLowerCase'>>
+type UserQuery = Promise<
+  UserPublic | UserPrivate | UserFollowing | UserLikedPosts
+>
+
+export type User = Partial<
+  UserPublic & UserPrivate & UserFollowing & UserLikedPosts
+> & { uid: string }
+
+type Post = {
+  attachment: string,
+  deleted: boolean,
+  message: string,
+  replyTo: string
+}
+
+type PostCreatable = Partial<Omit<Post, 'deleted'>> & ({ message: string } | { attachment: string })
+type PostUpdatable = Partial<Omit<Post, 'replyTo'>>
+
 const firestore = firebase.firestore()
 const auth = firebase.auth()
 const { FieldValue } = firebase.firestore
 const usersQuery = firestore.collection('users')
 const postsQuery = firestore.collection('posts')
 
-function getUserQueries(uid) {
+function getUserQueries(uid: string) {
   const publicQuery = usersQuery.doc(uid)
   const privateQuery = firestore.collection(`users/${uid}/private`).doc('details')
   const followersQuery = firestore.collection(`users/${uid}/followers`)
@@ -17,117 +51,127 @@ function getUserQueries(uid) {
   return { publicQuery, privateQuery, followersQuery, followingQuery, likedPostsQuery }
 }
 
-function getPostQueries(postId) {
+function getPostQueries(postId: string) {
   const postQuery = postsQuery.doc(postId)
   const likesQuery = postQuery.collection('likes')
 
   return { postQuery, likesQuery }
 }
 
-function getPublicDetails(uid) {
+function getPublicDetails(uid: string): Promise<UserPublic> {
   return getUserQueries(uid)
     .publicQuery.get()
-    .then(doc => doc.data())
+    .then(doc => doc.data() as UserPublic)
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
 }
 
-function getPrivateDetails(uid) {
+function getPrivateDetails(uid: string): Promise<UserPrivate> {
   return getUserQueries(uid)
     .privateQuery.get()
-    .then(doc => doc.data())
+    .then(doc => doc.data() as UserPrivate)
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
 }
 
-function getFollowing(uid) {
+function getFollowing(uid: string): Promise<UserFollowing> {
   return getUserQueries(uid)
     .followingQuery.get()
-    .then(doc => ({ following: doc.data()?.uids }))
+    .then(doc => ({ following: doc.data()?.uids as string[] }))
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
 }
 
-function getLikedPosts(uid) {
+function getLikedPosts(uid: string): Promise<UserLikedPosts> {
   return getUserQueries(uid)
     .likedPostsQuery.get()
-    .then(doc => ({ likedPosts: doc.data()?.postIds }))
+    .then(doc => ({ likedPosts: doc.data()?.postIds as string[] }))
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
 }
 
-function listenPublicDetails(uid, callback) {
+function listenPublicDetails(
+  uid: string,
+  callback: (details: { uid: string } & UserPublic) => void
+): () => void {
   return getUserQueries(uid).publicQuery.onSnapshot(snap => {
-    callback({ uid, ...snap.data() })
+    callback({ uid, ...snap.data() as UserPublic })
   })
 }
 
-function listenPrivateDetails(uid, callback) {
+function listenPrivateDetails(
+  uid: string,
+  callback: (details: { uid: string } & UserPrivate) => void
+): () => void {
   return getUserQueries(uid).privateQuery.onSnapshot(
     snap => {
-      callback({ uid, ...snap.data() })
+      callback({ uid, ...snap.data() as UserPrivate })
     },
     error => {
       console.error(error)
-      console.error(new Error(error))
+      console.error(new Error(error.message))
     }
   )
 }
 
-function listenFollowing(uid, callback) {
+function listenFollowing(
+  uid: string,
+  callback: (details: { uid: string } & UserFollowing) => void
+): () => void {
   return getUserQueries(uid).followingQuery.onSnapshot(
     snap => {
-      callback({ uid, following: snap.data()?.uids })
+      callback({ uid, following: snap.data()?.uids as string[] })
     },
     error => {
       console.error(error)
-      console.error(new Error(error))
+      console.error(new Error(error.message))
     }
   )
 }
 
-function listenLikedPosts(uid, callback) {
+function listenLikedPosts(
+  uid: string,
+  callback: (details: { uid: string } & UserLikedPosts) => void
+): () => void {
   return getUserQueries(uid).likedPostsQuery.onSnapshot(
     snap => {
-      callback({ uid, likedPosts: snap.data()?.postIds })
+      callback({ uid, likedPosts: snap.data()?.postIds as string[] })
     },
     error => {
       console.error(error)
-      console.error(new Error(error))
+      console.error(new Error(error.message))
     }
   )
 }
 
-async function getUserId(username) {
-  const { uid, publicData } = await usersQuery
+function getUserId(username: string): Promise<{ uid: string } & UserPublic> {
+  return usersQuery
     .where('deleted', '==', false)
     .where('usernameLowerCase', '==', username.toLowerCase())
     .get()
     .then(snap => ({
       uid: snap.docs[0]?.id,
-      publicData: snap.docs[0]?.data()
+      ...snap.docs[0]?.data() as UserPublic
     }))
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
-
-  return { uid, publicData }
 }
 
 export function getUserById(
-  uid,
+  uid: string,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
-) {
-  const queries = [getPublicDetails(uid)]
+): Promise<User> {
+  const queries: UserQuery[] = [getPublicDetails(uid)]
 
   if (includePrivate) {
     queries.push(getPrivateDetails(uid))
@@ -148,16 +192,16 @@ export function getUserById(
 }
 
 export async function getUserByUsername(
-  username,
+  username: string,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
-) {
-  const { uid, publicData } = await getUserId(username)
+): Promise<User> {
+  const { uid, ...publicData } = await getUserId(username)
 
   if (uid === undefined) {
     throw new Error(`User with username "${username}" not found.`)
   }
 
-  const queries = [publicData]
+  const queries: (UserQuery | UserPublic)[] = [publicData]
 
   if (includePrivate) {
     queries.push(getPrivateDetails(uid))
@@ -178,10 +222,10 @@ export async function getUserByUsername(
 }
 
 export function onUserUpdated(
-  uid,
-  callback,
+  uid: string,
+  callback: (details: User) => void,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
-) {
+): () => void {
   const listeners = [listenPublicDetails(uid, callback)]
 
   if (includePrivate) {
@@ -199,7 +243,10 @@ export function onUserUpdated(
   return () => listeners.forEach(listener => listener())
 }
 
-function createUserInDB(uid, { avatar = '', email = '', fullName = '', username = '' } = {}) {
+function createUserInDB(
+  uid: string,
+  { avatar = '', email = '', fullName = '', username = '' }: UserCreatable
+): Promise<void> {
   const { publicQuery, privateQuery, followingQuery, likedPostsQuery } = getUserQueries(uid)
   const batch = firestore.batch()
 
@@ -227,24 +274,23 @@ function createUserInDB(uid, { avatar = '', email = '', fullName = '', username 
 
   return batch
     .commit()
-    .then(() => publicQuery)
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
 }
 
-function updateUserInDB(uid, updates = {}) {
+async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void> {
   const { publicQuery, privateQuery } = getUserQueries(uid)
-  const publicKeys = ['avatar', 'deleted', 'username']
-  const privateKeys = ['email', 'fullName']
+  const publicKeys = ['avatar', 'deleted', 'username'] as const
+  const privateKeys = ['email', 'fullName'] as const
 
-  const publicUpdates = publicKeys.reduce(
+  const publicUpdates: Partial<UserPublic> = publicKeys.reduce(
     (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
     {}
   )
 
-  const privateUpdates = privateKeys.reduce(
+  const privateUpdates: Partial<UserPrivate> = privateKeys.reduce(
     (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
     {}
   )
@@ -253,7 +299,7 @@ function updateUserInDB(uid, updates = {}) {
     publicUpdates.usernameLowerCase = publicUpdates.username.toLowerCase()
   }
 
-  const promises = []
+  const promises: Promise<void>[] = []
 
   if (Object.keys(publicUpdates).length) {
     promises.push(
@@ -273,16 +319,19 @@ function updateUserInDB(uid, updates = {}) {
     )
   }
 
-  if (promises.length) {
-    return Promise.all(promises).catch(err => {
-      throw new Error(err)
-    })
+  if (!promises.length) {
+    throw new Error(`No valid updates were supplied for user with id "${uid}".`)
   }
 
-  return Promise.reject(new Error(`No valid updates were supplied for user with id "${uid}".`))
+  await Promise.all(promises).catch(err => {
+    throw new Error(err)
+  })
 }
 
-function createPostInDB(uid, { attachment = '', message = '', replyTo = '' } = {}) {
+function createPostInDB(
+  uid: string,
+  { attachment = '', message = '', replyTo = '' }: PostCreatable
+): Promise<string> {
   const post = postsQuery.doc()
   const batch = firestore.batch()
 
@@ -317,11 +366,11 @@ function createPostInDB(uid, { attachment = '', message = '', replyTo = '' } = {
   return Promise.reject(new Error('A post must have at least an attachment or a message.'))
 }
 
-function updatePostInDB(postId, updates = {}) {
+function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
   const { postQuery } = getPostQueries(postId)
-  const postKeys = ['attachment', 'deleted', 'message']
+  const postKeys = ['attachment', 'deleted', 'message'] as const
 
-  const postUpdates = postKeys.reduce(
+  const postUpdates: PostUpdatable = postKeys.reduce(
     (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
     {}
   )
@@ -336,8 +385,12 @@ function updatePostInDB(postId, updates = {}) {
   return Promise.reject(new Error(`No valid updates were supplied for post with id "${postId}".`))
 }
 
-export function updateFollowInDB(type, followerUid, followedUid) {
-  if (typeof followedUid !== 'string' || !followedUid.length) {
+export function updateFollowInDB(
+  type: 'unfollow' | 'follow',
+  followerUid: string,
+  followedUid: string
+): Promise<void> {
+  if (!followedUid.length) {
     return Promise.reject(new Error('Invalid user ID supplied.'))
   }
 
@@ -370,15 +423,18 @@ export function updateFollowInDB(type, followerUid, followedUid) {
 
   return batch
     .commit()
-    .then(() => publicQuery.id)
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
 }
 
-export function updateLikeInDB(type, likerUid, postId) {
-  if (typeof postId !== 'string' || !postId.length) {
+export function updateLikeInDB(
+  type: 'unlike' | 'like',
+  likerUid: string,
+  postId: string
+): Promise<void> {
+  if (!postId.length) {
     return Promise.reject(new Error('Invalid post ID supplied.'))
   }
 
@@ -411,27 +467,38 @@ export function updateLikeInDB(type, likerUid, postId) {
 
   return batch
     .commit()
-    .then(() => postQuery.id)
     .catch(error => {
       console.error(error)
       throw new Error(error)
     })
 }
 
-export function onAuthStateChanged(callback) {
+export function onAuthStateChanged(
+  callback: (user: Partial<firebase.User>) => void
+): firebase.Unsubscribe {
   return auth.onAuthStateChanged(user => callback(user || {}))
 }
 
-export async function signOut() {
+export async function signOut(): Promise<void> {
   return auth.signOut()
 }
 
-export async function isUsernameAvailable(username = '') {
+export async function isUsernameAvailable(username = ''): Promise<boolean> {
   return getUserId(username).then(user => user.uid === undefined)
 }
 
-export async function signUp({ username, fullName, email, password } = {}) {
-  const isValidUsername = username && username.match(/[A-z0-9_]/g).length === username.length
+export async function signUp({
+  username,
+  fullName,
+  email,
+  password
+}: {
+  username: string
+  fullName: string
+  email: string
+  password: string
+}): Promise<string> {
+  const isValidUsername = username && username.match(/[A-z0-9_]/g)?.length === username.length
 
   if (!isValidSignUpInputs({ username, fullName, email, password })) {
     throw new Error('Invalid data supplied.')
@@ -447,15 +514,23 @@ export async function signUp({ username, fullName, email, password } = {}) {
 
   const { user } = await auth.createUserWithEmailAndPassword(email, password)
 
-  return createUserInDB(user.uid, {
-    avatar: user.photoUrl,
+  if (!user) {
+    throw new Error('Failed to create user.')
+  }
+
+  await createUserInDB(user.uid, {
+    avatar: user.photoURL,
     email,
     fullName,
     username
   })
+
+  return user.uid
 }
 
-export async function signIn({ email, password } = {}) {
+export async function signIn(
+  { email, password }: { email: string, password: string }
+): Promise<firebase.auth.UserCredential> {
   if (!isValidSignInInputs({ email, password })) {
     throw new Error('Invalid data supplied.')
   }
@@ -463,56 +538,70 @@ export async function signIn({ email, password } = {}) {
   return auth.signInWithEmailAndPassword(email, password)
 }
 
-/**
- * @param {Object} updates
- * @param {String} updates.avatar
- * @param {Boolean} updates.deleted
- * @param {String} updates.username
- * @param {String} updates.email
- * @param {String} updates.fullName
- */
-export function editUser(updates = {}) {
+export async function editUser(updates: UserUpdatable): Promise<void> {
   const { currentUser } = auth
 
-  return updateUserInDB(currentUser?.uid, updates)
+  if (!currentUser) {
+    throw new Error('No user.')
+  }
+
+  return updateUserInDB(currentUser.uid, updates)
 }
 
-export function addPost({ message = '', attachment = '', replyTo = '' } = {}) {
+export async function addPost({
+  message = '',
+  attachment = '',
+  replyTo = ''
+}: PostCreatable): Promise<string> {
   const { currentUser } = auth
 
-  return createPostInDB(currentUser?.uid, { attachment, message, replyTo })
+  if (!currentUser) {
+    throw new Error('No user.')
+  }
+
+  return createPostInDB(currentUser.uid, { attachment, message, replyTo })
 }
 
-/**
- * @param {Object} updates
- * @param {String} updates.attachment
- * @param {Boolean} updates.deleted
- * @param {String} updates.message
- */
-export function editPost(postId, updates = {}) {
+export function editPost(postId: string, updates: PostUpdatable): Promise<void> {
   return updatePostInDB(postId, updates)
 }
 
-export function followUser(uid) {
+export async function followUser(uid: string): Promise<void> {
   const { currentUser } = auth
 
-  return updateFollowInDB('follow', currentUser?.uid, uid)
+  if (!currentUser) {
+    throw new Error('No user.')
+  }
+
+  return updateFollowInDB('follow', currentUser.uid, uid)
 }
 
-export function unfollowUser(uid) {
+export async function unfollowUser(uid: string): Promise<void> {
   const { currentUser } = auth
 
-  return updateFollowInDB('unfollow', currentUser?.uid, uid)
+  if (!currentUser) {
+    throw new Error('No user.')
+  }
+
+  return updateFollowInDB('unfollow', currentUser.uid, uid)
 }
 
-export function likePost(postId) {
+export async function likePost(postId: string): Promise<void> {
   const { currentUser } = auth
 
-  return updateLikeInDB('like', currentUser?.uid, postId)
+  if (!currentUser) {
+    throw new Error('No user.')
+  }
+
+  return updateLikeInDB('like', currentUser.uid, postId)
 }
 
-export function unlikePost(postId) {
+export async function unlikePost(postId: string): Promise<void> {
   const { currentUser } = auth
 
-  return updateLikeInDB('unlike', currentUser?.uid, postId)
+  if (!currentUser) {
+    throw new Error('No user.')
+  }
+
+  return updateLikeInDB('unlike', currentUser.uid, postId)
 }
