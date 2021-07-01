@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
+import type { User } from '../services/firebase'
 import { getUserById, onUserUpdated } from '../services/firebase'
 
 export default function useUser(
-  uid,
+  uid: string | undefined,
   {
     subscribe = false,
     includePrivate = false,
     includeFollowing = false,
     includeLikedPosts = false
   } = {}
-) {
-  const [userDetails, setUserDetails] = useState({})
+): Partial<User> {
+  const [userDetails, setUserDetails] = useState<Partial<User>>({})
 
   useEffect(() => {
     let isCurrent = true
