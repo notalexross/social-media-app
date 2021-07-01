@@ -17,18 +17,16 @@ type UserFollowing = { following: string[] }
 type UserLikedPosts = { likedPosts: string[] }
 type UserCreatable = Partial<Omit<Omit<UserPublic & UserPrivate, 'usernameLowerCase'>, 'deleted'>>
 type UserUpdatable = Partial<Omit<UserPublic & UserPrivate, 'usernameLowerCase'>>
-type UserQuery = Promise<
-  UserPublic | UserPrivate | UserFollowing | UserLikedPosts
->
+type UserQuery = Promise<UserPublic | UserPrivate | UserFollowing | UserLikedPosts>
 
-export type User = Partial<
-  UserPublic & UserPrivate & UserFollowing & UserLikedPosts
-> & { uid: string }
+export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedPosts> & {
+  uid: string
+}
 
 type Post = {
-  attachment: string,
-  deleted: boolean,
-  message: string,
+  attachment: string
+  deleted: boolean
+  message: string
   replyTo: string
 }
 
@@ -103,7 +101,7 @@ function listenPublicDetails(
   callback: (details: { uid: string } & UserPublic) => void
 ): () => void {
   return getUserQueries(uid).publicQuery.onSnapshot(snap => {
-    callback({ uid, ...snap.data() as UserPublic })
+    callback({ uid, ...(snap.data() as UserPublic) })
   })
 }
 
@@ -113,7 +111,7 @@ function listenPrivateDetails(
 ): () => void {
   return getUserQueries(uid).privateQuery.onSnapshot(
     snap => {
-      callback({ uid, ...snap.data() as UserPrivate })
+      callback({ uid, ...(snap.data() as UserPrivate) })
     },
     error => {
       console.error(error)
@@ -159,7 +157,7 @@ function getUserId(username: string): Promise<{ uid: string } & UserPublic> {
     .get()
     .then(snap => ({
       uid: snap.docs[0]?.id,
-      ...snap.docs[0]?.data() as UserPublic
+      ...(snap.docs[0]?.data() as UserPublic)
     }))
     .catch(error => {
       console.error(error)
@@ -272,12 +270,10 @@ function createUserInDB(
     postIds: []
   })
 
-  return batch
-    .commit()
-    .catch(error => {
-      console.error(error)
-      throw new Error(error)
-    })
+  return batch.commit().catch(error => {
+    console.error(error)
+    throw new Error(error)
+  })
 }
 
 async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void> {
@@ -421,12 +417,10 @@ export function updateFollowInDB(
     })
   }
 
-  return batch
-    .commit()
-    .catch(error => {
-      console.error(error)
-      throw new Error(error)
-    })
+  return batch.commit().catch(error => {
+    console.error(error)
+    throw new Error(error)
+  })
 }
 
 export function updateLikeInDB(
@@ -465,12 +459,10 @@ export function updateLikeInDB(
     })
   }
 
-  return batch
-    .commit()
-    .catch(error => {
-      console.error(error)
-      throw new Error(error)
-    })
+  return batch.commit().catch(error => {
+    console.error(error)
+    throw new Error(error)
+  })
 }
 
 export function onAuthStateChanged(
@@ -528,9 +520,13 @@ export async function signUp({
   return user.uid
 }
 
-export async function signIn(
-  { email, password }: { email: string, password: string }
-): Promise<firebase.auth.UserCredential> {
+export async function signIn({
+  email,
+  password
+}: {
+  email: string
+  password: string
+}): Promise<firebase.auth.UserCredential> {
   if (!isValidSignInInputs({ email, password })) {
     throw new Error('Invalid data supplied.')
   }
