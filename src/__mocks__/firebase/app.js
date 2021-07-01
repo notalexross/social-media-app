@@ -294,8 +294,8 @@ const batch = jest.fn(() => ({
   delete(documentRef) {
     return this._tasks.push(() => documentRef.delete())
   },
-  commit() {
-    return Promise.all(this._tasks.map(task => task()))
+  async commit() {
+    await Promise.all(this._tasks.map(task => task()))
   }
 }))
 
