@@ -298,8 +298,17 @@ describe(`${isUsernameAvailable.name}`, () => {
 })
 
 describe(`${signUp.name}`, () => {
-  test('given no arguments, throws error', async () => {
-    await expect(signUp).rejects.toThrowError('Invalid data supplied.')
+  test('given invalid email, throws error', async () => {
+    const options = {
+      fullName: 'forename surname',
+      username: 'user name',
+      email: 'email@',
+      password: 'password'
+    }
+
+    const result = signUp(options)
+
+    await expect(result).rejects.toThrowError('Invalid data supplied.')
   })
 
   test('given invalid username, throws error', async () => {
@@ -355,8 +364,15 @@ describe(`${signUp.name}`, () => {
 })
 
 describe(`${signIn.name}`, () => {
-  test('given no arguments, throws error', async () => {
-    await expect(signIn).rejects.toThrowError('Invalid data supplied.')
+  test('given invalid email, throws error', async () => {
+    const options = {
+      email: 'email@',
+      password: 'password'
+    }
+
+    const result = signIn(options)
+
+    await expect(result).rejects.toThrowError('Invalid data supplied.')
   })
 
   test('given incorrect email, throws error', async () => {
@@ -413,7 +429,7 @@ describe(`${editUser.name}`, () => {
   })
 
   test('given no updates supplied, throws error', async () => {
-    const result = editUser()
+    const result = editUser({})
 
     await expect(result).rejects.toThrowError(
       'No valid updates were supplied for user with id "user1".'
@@ -450,7 +466,7 @@ describe(`${addPost.name}`, () => {
   })
 
   test('given post has no content, throws error', async () => {
-    const result = addPost()
+    const result = addPost({})
 
     await expect(result).rejects.toThrowError(
       'A post must have at least an attachment or a message.'
@@ -485,7 +501,7 @@ describe(`${editPost.name}`, () => {
   })
 
   test('given no updates, throws error', async () => {
-    const result = editPost('post1')
+    const result = editPost('post1', {})
 
     await expect(result).rejects.toThrowError(
       'No valid updates were supplied for post with id "post1".'
@@ -511,7 +527,7 @@ describe(`${followUser.name}`, () => {
   })
 
   test('given no uid, throws error', async () => {
-    const result = followUser()
+    const result = followUser('')
 
     await expect(result).rejects.toThrowError('Invalid user ID supplied.')
   })
@@ -521,7 +537,7 @@ describe(`${followUser.name}`, () => {
 
     const result = followUser(uid)
 
-    await expect(result).resolves.toBe(uid)
+    await expect(result).resolves.toBeUndefined()
     expect(mockFunctions.increment).toBeCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(1)
     expect(mockFunctions.update).toBeCalledTimes(2)
@@ -541,7 +557,7 @@ describe(`${unfollowUser.name}`, () => {
   })
 
   test('given no uid, throws error', async () => {
-    const result = unfollowUser()
+    const result = unfollowUser('')
 
     await expect(result).rejects.toThrowError('Invalid user ID supplied.')
   })
@@ -551,7 +567,7 @@ describe(`${unfollowUser.name}`, () => {
 
     const result = unfollowUser(uid)
 
-    await expect(result).resolves.toBe(uid)
+    await expect(result).resolves.toBeUndefined()
     expect(mockFunctions.increment).toBeCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(-1)
     expect(mockFunctions.update).toBeCalledTimes(2)
@@ -571,7 +587,7 @@ describe(`${likePost.name}`, () => {
   })
 
   test('given no postId, throws error', async () => {
-    const result = likePost()
+    const result = likePost('')
 
     await expect(result).rejects.toThrowError('Invalid post ID supplied.')
   })
@@ -581,7 +597,7 @@ describe(`${likePost.name}`, () => {
 
     const result = likePost(postId)
 
-    await expect(result).resolves.toBe(postId)
+    await expect(result).resolves.toBeUndefined()
     expect(mockFunctions.increment).toBeCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(1)
     expect(mockFunctions.update).toBeCalledTimes(2)
@@ -601,7 +617,7 @@ describe(`${unlikePost.name}`, () => {
   })
 
   test('given no postId, throws error', async () => {
-    const result = unlikePost()
+    const result = unlikePost('')
 
     await expect(result).rejects.toThrowError('Invalid post ID supplied.')
   })
@@ -611,7 +627,7 @@ describe(`${unlikePost.name}`, () => {
 
     const result = unlikePost(postId)
 
-    await expect(result).resolves.toBe(postId)
+    await expect(result).resolves.toBeUndefined()
     expect(mockFunctions.increment).toBeCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(-1)
     expect(mockFunctions.update).toBeCalledTimes(2)
