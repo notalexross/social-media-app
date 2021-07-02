@@ -6,7 +6,7 @@ import { useTitle } from '../hooks'
 import * as ROUTES from '../constants/routes'
 import logo from '../images/logo.png'
 
-export default function SignIn() {
+export default function SignIn(): JSX.Element {
   useTitle('Login')
   const history = useHistory()
   const [email, setEmail] = useState('')
@@ -15,14 +15,14 @@ export default function SignIn() {
 
   const isValidInputs = isValidSignInInputs({ email, password })
 
-  const handleSignIn = event => {
+  const handleSignIn: React.FormEventHandler<HTMLFormElement> = event => {
     event.preventDefault()
 
     signIn({ email, password })
       .then(() => {
         history.push(ROUTES.DASHBOARD)
       })
-      .catch(err => {
+      .catch((err: Error) => {
         setPassword('')
         setError(err.message)
       })
