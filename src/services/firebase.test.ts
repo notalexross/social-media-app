@@ -1,4 +1,5 @@
-import { mockFunctions } from 'firebase/app'
+// eslint-disable-next-line jest/no-mocks-import
+import { mockFunctions } from '../__mocks__/firebase/app'
 import {
   getUserById,
   getUserByUsername,
@@ -19,7 +20,7 @@ describe(`${getUserById.name}`, () => {
   const uid = 'user1'
 
   describe('without options', () => {
-    let result
+    let result: ReturnType<typeof getUserById>
 
     beforeEach(() => {
       result = getUserById(uid)
@@ -47,7 +48,7 @@ describe(`${getUserById.name}`, () => {
   })
 
   describe('with private data', () => {
-    let result
+    let result: ReturnType<typeof getUserById>
 
     beforeEach(() => {
       const options = { includePrivate: true }
@@ -74,7 +75,7 @@ describe(`${getUserById.name}`, () => {
   })
 
   describe('with following and likedPosts data', () => {
-    let result
+    let result: ReturnType<typeof getUserById>
 
     beforeEach(() => {
       const options = { includeFollowing: true, includeLikedPosts: true }
@@ -156,7 +157,7 @@ describe(`${onUserUpdated.name}`, () => {
   const uid = 'user1'
 
   describe('without options', () => {
-    let result
+    let result: ReturnType<typeof onUserUpdated>
 
     beforeEach(() => {
       result = onUserUpdated(uid, callback)
@@ -188,7 +189,7 @@ describe(`${onUserUpdated.name}`, () => {
   })
 
   describe('with private data', () => {
-    let result
+    let result: ReturnType<typeof onUserUpdated>
 
     beforeEach(() => {
       const options = { includePrivate: true }
@@ -227,7 +228,7 @@ describe(`${onUserUpdated.name}`, () => {
   })
 
   describe('with following and likedPosts data', () => {
-    let result
+    let result: ReturnType<typeof onUserUpdated>
 
     beforeEach(() => {
       const options = { includeFollowing: true, includeLikedPosts: true }
@@ -436,22 +437,22 @@ describe(`${editUser.name}`, () => {
     )
   })
 
-  test('given public details updated, calls firestore update method once', () => {
-    editUser({ username: 'NewUsername' })
+  test('given public details updated, calls firestore update method once', async () => {
+    await editUser({ username: 'NewUsername' })
 
     expect(mockFunctions.update).toBeCalledTimes(1)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
   })
 
-  test('given private details updated, calls firestore update method once', () => {
-    editUser({ fullName: 'NewForename NewSurname' })
+  test('given private details updated, calls firestore update method once', async () => {
+    await editUser({ fullName: 'NewForename NewSurname' })
 
     expect(mockFunctions.update).toBeCalledTimes(1)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
   })
 
-  test('given mixed details updated, calls firestore update method twice', () => {
-    editUser({ username: 'NewUsername', fullName: 'NewForename NewSurname' })
+  test('given mixed details updated, calls firestore update method twice', async () => {
+    await editUser({ username: 'NewUsername', fullName: 'NewForename NewSurname' })
 
     expect(mockFunctions.update).toBeCalledTimes(2)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
@@ -466,7 +467,7 @@ describe(`${addPost.name}`, () => {
   })
 
   test('given post has no content, throws error', async () => {
-    const result = addPost({})
+    const result = addPost({ message: '' })
 
     await expect(result).rejects.toThrowError(
       'A post must have at least an attachment or a message.'
