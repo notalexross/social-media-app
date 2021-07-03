@@ -9,7 +9,7 @@ const Profile = lazy(() => import('./pages/profile'))
 const Dashboard = lazy(() => import('./pages/dashboard'))
 const NotFound = lazy(() => import('./pages/not-found'))
 
-export default function App() {
+export default function App(): JSX.Element {
   return (
     <Router>
       <UserContextProvider>
