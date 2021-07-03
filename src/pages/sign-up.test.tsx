@@ -1,6 +1,8 @@
-import { BrowserRouter as Router, mockFunctions } from 'react-router-dom'
+import { BrowserRouter as Router } from 'react-router-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+// eslint-disable-next-line jest/no-mocks-import
+import { mockFunctions } from '../__mocks__/react-router-dom'
 import SignUp from './sign-up'
 
 beforeEach(() => {
