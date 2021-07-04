@@ -1,4 +1,6 @@
-const reportWebVitals = onPerfEntry => {
+import type { ReportHandler } from 'web-vitals'
+
+const reportWebVitals = (onPerfEntry?: ReportHandler): void => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
       getCLS(onPerfEntry)
@@ -6,7 +8,7 @@ const reportWebVitals = onPerfEntry => {
       getFCP(onPerfEntry)
       getLCP(onPerfEntry)
       getTTFB(onPerfEntry)
-    })
+    }).catch(console.error)
   }
 }
 
