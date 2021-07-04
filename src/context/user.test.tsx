@@ -7,9 +7,13 @@ function Component() {
   const data = useContext(UserContext)
   const { user, ...details } = data
 
-  return Object.entries(details).map(([key, value]) => (
-    <p key={key}>{`${key}: ${value}`}</p>
-  ))
+  return (
+    <>
+      {Object.entries(details).map(([key, value]) => (
+        <p key={key}>{`${key}: ${JSON.stringify(value)}`}</p>
+      ))}
+    </>
+  )
 }
 
 test('on sign in, user details are provided', async () => {
@@ -19,11 +23,9 @@ test('on sign in, user details are provided', async () => {
     </UserContextProvider>
   )
 
-  await waitFor(() => {
-    signIn({ email: 'email@email.com', password: 'password' })
-  })
+  await waitFor(() => signIn({ email: 'email@email.com', password: 'password' }))
 
-  expect(await screen.findByText('fullName: Forename Surname')).toBeInTheDocument()
+  expect(await screen.findByText('fullName: "Forename Surname"')).toBeInTheDocument()
 })
 
 test('on sign out, no details are provided', async () => {
@@ -33,15 +35,11 @@ test('on sign out, no details are provided', async () => {
     </UserContextProvider>
   )
 
-  await waitFor(() => {
-    signIn({ email: 'email@email.com', password: 'password' })
-  })
+  await waitFor(() => signIn({ email: 'email@email.com', password: 'password' }))
 
-  expect(await screen.findByText('fullName: Forename Surname')).toBeInTheDocument()
+  expect(await screen.findByText('fullName: "Forename Surname"')).toBeInTheDocument()
 
-  await waitFor(() => {
-    signOut()
-  })
+  await waitFor(() => signOut())
 
-  expect(screen.queryByText('fullName: Forename Surname')).not.toBeInTheDocument()
+  expect(screen.queryByText('fullName: "Forename Surname"')).not.toBeInTheDocument()
 })

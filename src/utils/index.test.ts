@@ -15,7 +15,7 @@ describe(`${isValidSignUpInputs.name}`, () => {
   })
 
   test('given no arguments, returns false', () => {
-    const result = isValidSignUpInputs()
+    const result = isValidSignUpInputs({})
 
     expect(result).toBe(false)
   })
@@ -47,7 +47,7 @@ describe(`${isValidSignInInputs.name}`, () => {
   })
 
   test('given no arguments, returns false', () => {
-    const result = isValidSignInInputs()
+    const result = isValidSignInInputs({})
 
     expect(result).toBe(false)
   })

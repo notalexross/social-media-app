@@ -1,4 +1,5 @@
-import { mockFunctions } from 'firebase/app'
+// eslint-disable-next-line jest/no-mocks-import
+import { mockFunctions } from '../__mocks__/firebase/app'
 
 test('calls firebase.initializeApp', () => {
   jest.isolateModules(() => {
