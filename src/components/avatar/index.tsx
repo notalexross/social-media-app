@@ -42,8 +42,21 @@ function AvatarImageWrapper({
         onClick={handleClick}
         aria-label="upload new avatar"
       >
-        <input ref={inputRef} className="hidden" type="file" accept="image/*" onChange={handleChange} />
-        {isUpdating ? <div className="opacity-50">{children}</div> : children}
+        <input
+          ref={inputRef}
+          className="hidden"
+          type="file"
+          accept="image/*"
+          onChange={handleChange}
+          data-testid="upload"
+        />
+        {isUpdating ? (
+          <div className="opacity-50" data-testid="updating">
+            {children}
+          </div>
+        ) : (
+          children
+        )}
       </button>
     </>
   ) : (
@@ -67,9 +80,9 @@ export default function Avatar({
 }: AvatarProps): JSX.Element {
   let image: JSX.Element | null = null
   if (src) {
-    image = <img className="w-full h-full object-cover" src={src} alt={alt} />
+    image = <img className="w-full h-full object-cover" src={src} alt={alt} data-testid="image" />
   } else if (src === null) {
-    image = <UserIcon role="img" aria-label={alt} />
+    image = <UserIcon role="img" aria-label={alt} data-testid="icon" />
   }
 
   return (
