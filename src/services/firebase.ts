@@ -34,6 +34,7 @@ type PostCreatable = Partial<Omit<Post, 'deleted'>> & ({ message: string } | { a
 type PostUpdatable = Partial<Omit<Post, 'replyTo'>>
 
 const firestore = firebase.firestore()
+const storage = firebase.storage()
 const auth = firebase.auth()
 const { FieldValue } = firebase.firestore
 const usersQuery = firestore.collection('users')
@@ -463,6 +464,34 @@ export function updateLikeInDB(
     console.error(error)
     throw new Error(error)
   })
+}
+
+async function uploadFile(path: string, file: File): Promise<string> {
+  try {
+    const storagePathRef = storage.ref().child(path)
+
+    await storagePathRef.put(file)
+
+    return (await storagePathRef.getDownloadURL()) as string
+  } catch (error) {
+    console.error(error)
+    throw new Error(error)
+  }
+}
+
+export async function updateAvatar(uid: string, imageFile: File): Promise<string> {
+  const { publicQuery } = getUserQueries(uid)
+  const avatar = await uploadFile(`avatars/${uid}`, imageFile).catch(error => {
+    console.error(error)
+    throw new Error(error)
+  })
+
+  await publicQuery.update({ avatar }).catch(error => {
+    console.error(error)
+    throw new Error(error)
+  })
+
+  return avatar
 }
 
 export function onAuthStateChanged(
