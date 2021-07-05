@@ -1,3 +1,8 @@
+import { useTitle } from '../hooks'
+import { Header } from '../components'
+
 export default function Dashboard(): JSX.Element {
-  return <h1>dashboard</h1>
+  useTitle('Dashboard')
+
+  return <Header />
 }
