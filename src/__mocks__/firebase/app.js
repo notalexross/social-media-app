@@ -4,7 +4,7 @@
 const user = {
   uid: 'user1',
   avatar: '',
-  createdAt: '',
+  createdAt: '0',
   deleted: false,
   fullName: 'Forename Surname',
   email: 'email@email.com',
@@ -18,7 +18,7 @@ const user = {
 const posts = {
   post1: {
     attachment: '',
-    createdAt: '',
+    createdAt: '1',
     deleted: false,
     message: 'mock message',
     owner: 'user1',
@@ -28,7 +28,7 @@ const posts = {
   },
   post2: {
     attachment: '',
-    createdAt: '',
+    createdAt: '2',
     deleted: false,
     message: 'mock message',
     owner: 'user2',
@@ -40,77 +40,63 @@ const posts = {
 
 const database = {
   users: {
-    _docs: {
-      [user.uid]: {
-        _collections: {
-          private: {
-            _docs: {
-              details: {
-                _fields: {
-                  fullName: user.fullName,
-                  email: user.email
-                }
-              }
+    _docs: new Map([[user.uid, {
+      _collections: {
+        private: {
+          _docs: new Map([['details', {
+            _fields: {
+              fullName: user.fullName,
+              email: user.email
             }
-          },
-          followers: {
-            _docs: {
-              ...Object.fromEntries(user.followers.map(followerId => [followerId, {}]))
-            }
-          },
-          following: {
-            _docs: {
-              details: {
-                _fields: {
-                  uids: user.following
-                }
-              }
-            }
-          },
-          likedPosts: {
-            _docs: {
-              details: {
-                _fields: {
-                  postIds: user.likedPosts
-                }
-              }
-            }
-          }
+          }]])
         },
-        _fields: {
-          avatar: user.avatar,
-          createdAt: user.createdAt,
-          deleted: user.deleted,
-          followersCount: user.followers.length,
-          username: user.username,
-          usernameLowerCase: user.username.toLowerCase()
+        followers: {
+          _docs: new Map(user.followers.map(followerId => [followerId, {}]))
+        },
+        following: {
+          _docs: new Map([['details', {
+            _fields: {
+              uids: user.following
+            }
+          }]])
+        },
+        likedPosts: {
+          _docs: new Map([['details', {
+            _fields: {
+              postIds: user.likedPosts
+            }
+          }]])
         }
+      },
+      _fields: {
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        deleted: user.deleted,
+        followersCount: user.followers.length,
+        username: user.username,
+        usernameLowerCase: user.username.toLowerCase()
       }
-    }
+    }]])
   },
   posts: {
-    _docs: {
-      ...Object.keys(posts).reduce((acc, postId) => {
-        const { likes, ...post } = posts[postId]
+    _docs: new Map(Object.keys(posts).map(postId => {
+      const { likes, ...post } = posts[postId]
 
-        return {
-          ...acc,
-          [postId]: {
-            _collections: {
-              likes: {
-                _docs: {
-                  ...Object.fromEntries(likes.map(likerId => [likerId, {}]))
-                }
-              }
-            },
-            _fields: {
-              ...post,
-              likesCount: likes.length
+      return [
+        postId,
+        {
+          _collections: {
+            likes: {
+              _docs: new Map(likes.map(likerId => [likerId, {}]))
             }
+          },
+          _fields: {
+            ...post,
+            likesCount: likes.length
           }
         }
-      }, {})
-    }
+      ]
+    }))
   }
 }
 
@@ -190,7 +176,7 @@ const get = jest.fn(function () {
   let response
   if ('_docs' in this) {
     response = {
-      docs: Object.entries(this._docs).map(([id, doc]) => ({ id, data: () => doc._fields }))
+      docs: [...this._docs.entries()].map(([id, doc]) => ({ id, data: () => doc._fields }))
     }
   } else if ('_fields' in this) {
     response = {
@@ -226,9 +212,9 @@ let collection
 
 const doc = jest.fn(function (id) {
   return {
-    _fields: this._docs[id]?._fields,
+    _fields: this._docs.get(id)?._fields,
     _id: id,
-    _collections: this._docs[id]?._collections || {},
+    _collections: this._docs.get(id)?._collections || {},
     id: id || 'mockId',
     get,
     onSnapshot,
@@ -239,19 +225,52 @@ const doc = jest.fn(function (id) {
   }
 })
 
+const limit = jest.fn(function (num) {
+  const docs = [...this._docs.entries()].slice(0, num)
+
+  return {
+    _docs: new Map(docs),
+    get,
+    onSnapshot
+  }
+})
+
+const orderBy = jest.fn(function (field, direction) {
+  const docs = [...this._docs.entries()].sort((a, b) => {
+    if (a[1][field] < b[1][field]) return -1
+    if (a[1][field] > b[1][field]) return 1
+
+    return 0
+  })
+
+  if (direction === 'desc') {
+    docs.reverse()
+  }
+
+  return {
+    _docs: new Map(docs),
+    limit,
+    get,
+    onSnapshot
+  }
+})
+
 const where = jest.fn(function (field, operator, value) {
-  const docs = Object.entries(this._docs).filter(([, entry]) => {
+  const docs = [...this._docs.entries()].filter(([, entry]) => {
     switch (operator) {
       case '==':
         return entry._fields[field] === value
+      case 'in':
+        return value.includes(entry._fields[field])
       default:
         return false
     }
   })
 
   return {
-    _docs: Object.fromEntries(docs),
+    _docs: new Map(docs),
     where,
+    orderBy,
     get,
     onSnapshot
   }
@@ -274,7 +293,7 @@ collection = jest.fn(function (path) {
   }
 
   return {
-    _docs: this._collections[path]?._docs || {},
+    _docs: this._collections[path]?._docs || new Map(),
     where,
     add,
     doc,
@@ -337,6 +356,8 @@ const mockFunctions = {
   update,
   docDelete,
   add,
+  limit,
+  orderBy,
   where,
   doc,
   collection,

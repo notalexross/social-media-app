@@ -38,7 +38,7 @@ describe(`${getUserById.name}`, () => {
       await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',
-        createdAt: '',
+        createdAt: '0',
         deleted: false,
         username: 'Username',
         usernameLowerCase: 'username',
@@ -63,7 +63,7 @@ describe(`${getUserById.name}`, () => {
       await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',
-        createdAt: '',
+        createdAt: '0',
         deleted: false,
         username: 'Username',
         usernameLowerCase: 'username',
@@ -90,7 +90,7 @@ describe(`${getUserById.name}`, () => {
       await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',
-        createdAt: '',
+        createdAt: '0',
         deleted: false,
         username: 'Username',
         usernameLowerCase: 'username',
@@ -121,7 +121,7 @@ describe(`${getUserByUsername.name}`, () => {
     await expect(result).resolves.toEqual({
       uid: 'user1',
       avatar: '',
-      createdAt: '',
+      createdAt: '0',
       deleted: false,
       username: 'Username',
       usernameLowerCase: 'username',
@@ -139,7 +139,7 @@ describe(`${getUserByUsername.name}`, () => {
     await expect(result).resolves.toEqual({
       uid: 'user1',
       avatar: '',
-      createdAt: '',
+      createdAt: '0',
       deleted: false,
       username: 'Username',
       usernameLowerCase: 'username',
@@ -172,7 +172,7 @@ describe(`${onUserUpdated.name}`, () => {
       expect(callback).toHaveBeenCalledWith({
         uid,
         avatar: '',
-        createdAt: '',
+        createdAt: '0',
         deleted: false,
         followersCount: 2,
         username: 'Username',
@@ -205,7 +205,7 @@ describe(`${onUserUpdated.name}`, () => {
       expect(callback).toHaveBeenCalledWith({
         uid,
         avatar: '',
-        createdAt: '',
+        createdAt: '0',
         deleted: false,
         followersCount: 2,
         username: 'Username',
@@ -244,7 +244,7 @@ describe(`${onUserUpdated.name}`, () => {
       expect(callback).toHaveBeenCalledWith({
         uid: 'user1',
         avatar: '',
-        createdAt: '',
+        createdAt: '0',
         deleted: false,
         username: 'Username',
         usernameLowerCase: 'username',
