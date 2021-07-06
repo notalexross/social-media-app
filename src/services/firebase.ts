@@ -1,5 +1,5 @@
 import firebase from 'firebase/app'
-import { isValidSignUpInputs, isValidSignInInputs } from '../utils'
+import { isValidSignUpInputs, isValidSignInInputs, sortBy, chunkArray } from '../utils'
 
 type UserPublic = {
   avatar: string | null
@@ -15,7 +15,7 @@ type UserPrivate = {
 
 type UserFollowing = { following: string[] }
 type UserLikedPosts = { likedPosts: string[] }
-type UserCreatable = Partial<Omit<Omit<UserPublic & UserPrivate, 'usernameLowerCase'>, 'deleted'>>
+type UserCreatable = Partial<Omit<UserPublic & UserPrivate, 'usernameLowerCase' | 'deleted'>>
 type UserUpdatable = Partial<Omit<UserPublic & UserPrivate, 'usernameLowerCase'>>
 type UserQuery = Promise<UserPublic | UserPrivate | UserFollowing | UserLikedPosts>
 
@@ -25,13 +25,50 @@ export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedP
 
 type Post = {
   attachment: string
+  createdAt: firebase.firestore.Timestamp
   deleted: boolean
+  likesCount: number
   message: string
+  owner: string
+  replies: string[]
   replyTo: string
 }
 
-type PostCreatable = Partial<Omit<Post, 'deleted'>> & ({ message: string } | { attachment: string })
-type PostUpdatable = Partial<Omit<Post, 'replyTo'>>
+type PostCreatable = Partial<Omit<Post, 'deleted' | 'likesCount' | 'owner' | 'replies'>> & (
+  { message: string } | { attachment: string }
+)
+type PostUpdatable = Partial<Omit<Post, 'likesCount' | 'owner' | 'replies' | 'replyTo'>>
+
+export type PostWithId = Post & { id: string }
+
+export type PostsStatus = {
+  posts: PostWithId[] | null
+  isComplete: boolean
+  currentPage: number
+  statistics: Stats
+}
+
+type FetchedPost = {
+  post: PostWithId
+  createdAt: string
+  chunkIndex: number
+}
+
+type UserChunk = {
+  chunkIndex: number
+  users: string[]
+  lastPostFetched: firebase.firestore.QueryDocumentSnapshot<firebase.firestore.DocumentData> | null
+  numPostsFetched: number
+  numPostsReturned: number
+  isDone: boolean
+}
+
+type Stats = {
+  fetchCount: number
+  docReadCount: number
+  chunks: number
+  users: number
+}
 
 const firestore = firebase.firestore()
 const storage = firebase.storage()
@@ -629,4 +666,150 @@ export async function unlikePost(postId: string): Promise<void> {
   }
 
   return updateLikeInDB('unlike', currentUser.uid, postId)
+}
+
+function initUserChunks(usersArray: string[]): UserChunk[] {
+  const chunks = chunkArray(usersArray).map((users, chunkIndex) => ({
+    chunkIndex,
+    users,
+    lastPostFetched: null,
+    numPostsFetched: 0,
+    numPostsReturned: 0,
+    isDone: false
+  }))
+
+  return chunks
+}
+
+async function fetchPostsAndUpdateUsers(
+  chunks: UserChunk[],
+  limitPerChunk: number,
+  statistics?: Stats
+): Promise<FetchedPost[]> {
+  const requests: Promise<void>[] = []
+  const fetchedPosts: FetchedPost[] = []
+
+  chunks.forEach(chunk => {
+    let query = firestore
+      .collection('posts')
+      .where('deleted', '==', false)
+      .where('owner', 'in', chunk.users)
+      .orderBy('createdAt', 'desc')
+      .limit(limitPerChunk)
+
+    if (chunk.lastPostFetched) {
+      query = query.startAfter(chunk.lastPostFetched)
+    }
+
+    requests.push(
+      query.get().then(({ docs }) => {
+        if (statistics) {
+          statistics.fetchCount += 1
+          statistics.docReadCount += docs.length
+        }
+
+        chunk.isDone = docs.length < limitPerChunk
+        docs.forEach(doc => {
+          const post = doc.data() as PostWithId
+          post.id = doc.id
+          fetchedPosts.push({
+            post,
+            createdAt: post.createdAt.valueOf(),
+            chunkIndex: chunk.chunkIndex
+          })
+          chunk.numPostsFetched += 1
+          chunk.lastPostFetched = doc
+        })
+      })
+    )
+  })
+
+  try {
+    await Promise.all(requests)
+  } catch (error) {
+    console.error(error)
+    throw new Error(error)
+  }
+
+  return fetchedPosts
+}
+
+export function getMultiUserPosts(
+  users: string[],
+  statusCallback: (status: PostsStatus) => void,
+  loadingCallback?: (isLoading: boolean) => void,
+  postsPerPage = 10
+): () => Promise<void> {
+  const userChunks = initUserChunks(users)
+  const fetchedPosts: FetchedPost[] = []
+  const statistics: Stats = {
+    fetchCount: 0,
+    docReadCount: 0,
+    chunks: userChunks.length,
+    users: users.length
+  }
+  let chunksToFetch = userChunks
+  let fetchedPostsSorted: FetchedPost[] = []
+  let currentPage = 0
+  let currentPostIndex = -1
+  let isComplete = false
+
+  const loadNextPage: () => Promise<void> = async () => {
+    try {
+      if (!isComplete) {
+        if (loadingCallback) {
+          loadingCallback(true)
+        }
+
+        if (users.length === 0) {
+          isComplete = true
+        }
+
+        currentPage += 1
+
+        while (currentPostIndex + 1 < postsPerPage * currentPage && !isComplete) {
+          if (chunksToFetch.length > 0) {
+            // eslint-disable-next-line no-await-in-loop
+            const newPosts = await fetchPostsAndUpdateUsers(chunksToFetch, postsPerPage, statistics)
+            fetchedPosts.push(...newPosts)
+            fetchedPostsSorted = sortBy(fetchedPosts, 'createdAt', 'desc')
+            chunksToFetch = []
+          }
+
+          currentPostIndex += 1
+
+          const currentPost = fetchedPostsSorted[currentPostIndex]
+          const currentChunk = userChunks[currentPost.chunkIndex]
+          currentChunk.numPostsReturned += 1
+          const hasCurrentChunkReturnedAllFetched =
+            currentChunk.numPostsReturned === currentChunk.numPostsFetched
+
+          if (hasCurrentChunkReturnedAllFetched && !currentChunk.isDone) {
+            chunksToFetch = [currentChunk]
+          }
+
+          isComplete = userChunks.every(chunk => {
+            const hasFetchedAllPosts = chunk.isDone
+            const hasReturnedAllFetched = chunk.numPostsFetched === chunk.numPostsReturned
+
+            return hasFetchedAllPosts && hasReturnedAllFetched
+          })
+        }
+
+        const posts = fetchedPostsSorted.slice(0, currentPostIndex + 1).map(post => post.post)
+        const postsStatus: PostsStatus = { posts, isComplete, currentPage, statistics }
+
+        statusCallback(postsStatus)
+
+        if (loadingCallback) {
+          loadingCallback(false)
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      window.alert(error)
+    }
+  }
+
+  return loadNextPage
 }
