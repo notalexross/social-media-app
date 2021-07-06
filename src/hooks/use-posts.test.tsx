@@ -1,0 +1,33 @@
+import { useState } from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
+import usePosts from './use-posts'
+
+function Component() {
+  const [uids] = useState(['user1', 'user2'])
+  const { posts } = usePosts(uids)
+
+  return posts ? (
+    <>
+      {posts.map(post => (
+        Object.entries(post).map(([key, value]) => (
+          <p key={key}>
+            {key}
+            {': '}
+            {value}
+          </p>
+        ))
+      ))}
+    </>
+  ) : null
+}
+
+test('gets posts', async () => {
+  render(<Component />)
+
+  await waitFor(() => {
+    expect(screen.getByText('createdAt: 2')).toBeInTheDocument()
+    expect(screen.getByText('owner: user2')).toBeInTheDocument()
+    expect(screen.getByText('createdAt: 1')).toBeInTheDocument()
+    expect(screen.getByText('owner: user1')).toBeInTheDocument()
+  })
+})
