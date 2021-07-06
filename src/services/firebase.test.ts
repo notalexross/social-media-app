@@ -13,7 +13,8 @@ import {
   followUser,
   unfollowUser,
   likePost,
-  unlikePost
+  unlikePost,
+  getMultiUserPosts
 } from './firebase'
 
 describe(`${getUserById.name}`, () => {
@@ -635,5 +636,112 @@ describe(`${unlikePost.name}`, () => {
     expect(mockFunctions.arrayRemove).toBeCalledTimes(1)
     expect(mockFunctions.arrayRemove).toBeCalledWith(postId)
     expect(mockFunctions.docDelete).toBeCalledTimes(1)
+  })
+})
+
+describe(`${getMultiUserPosts.name}`, () => {
+  const statusCallback = jest.fn()
+  const loadingCallback = jest.fn()
+
+  test('calls firebase methods', async () => {
+    const users = ['user1', 'user2']
+
+    const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback)
+
+    await loadNextPage()
+
+    expect(mockFunctions.orderBy).toBeCalledTimes(1)
+    expect(mockFunctions.limit).toBeCalledTimes(1)
+    expect(mockFunctions.get).toBeCalledTimes(1)
+  })
+
+  test('calls callbacks', async () => {
+    const users = ['user1', 'user2']
+
+    const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback)
+
+    await loadNextPage()
+
+    expect(loadingCallback).toHaveBeenCalledTimes(2)
+    expect(loadingCallback).toHaveBeenCalledWith(true)
+    expect(loadingCallback).toHaveBeenCalledWith(false)
+    expect(statusCallback).toHaveBeenCalledTimes(1)
+    expect(statusCallback).toHaveBeenCalledWith({
+      posts: [
+        {
+          attachment: '',
+          createdAt: '2',
+          deleted: false,
+          id: 'post2',
+          likesCount: 1,
+          message: 'mock message',
+          owner: 'user2',
+          replies: [],
+          replyTo: 'post1'
+        },
+        {
+          attachment: '',
+          createdAt: '1',
+          deleted: false,
+          id: 'post1',
+          likesCount: 2,
+          message: 'mock message',
+          owner: 'user1',
+          replies: ['post2'],
+          replyTo: ''
+        }
+      ],
+      isComplete: true,
+      currentPage: 1,
+      statistics: { fetchCount: 1, docReadCount: 2, chunks: 1, users: 2 }
+    })
+  })
+
+  test('given multiple pages, calls callbacks', async () => {
+    const users = ['user1', 'user2']
+
+    const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback, 1)
+
+    await loadNextPage()
+
+    expect(loadingCallback).toHaveBeenCalledTimes(2)
+    expect(loadingCallback).toHaveBeenCalledWith(true)
+    expect(loadingCallback).toHaveBeenCalledWith(false)
+    expect(statusCallback).toHaveBeenCalledTimes(1)
+    expect(statusCallback).toHaveBeenCalledWith({
+      posts: [
+        {
+          attachment: '',
+          createdAt: '2',
+          deleted: false,
+          id: 'post2',
+          likesCount: 1,
+          message: 'mock message',
+          owner: 'user2',
+          replies: [],
+          replyTo: 'post1'
+        }
+      ],
+      isComplete: false,
+      currentPage: 1,
+      statistics: { fetchCount: 1, docReadCount: 1, chunks: 1, users: 2 }
+    })
+  })
+
+  test('given no users supplied, callback argument includes empty posts array', async () => {
+    const loadNextPage = getMultiUserPosts([], statusCallback, loadingCallback)
+
+    await loadNextPage()
+
+    expect(loadingCallback).toHaveBeenCalledTimes(2)
+    expect(loadingCallback).toHaveBeenCalledWith(true)
+    expect(loadingCallback).toHaveBeenCalledWith(false)
+    expect(statusCallback).toHaveBeenCalledTimes(1)
+    expect(statusCallback).toHaveBeenCalledWith({
+      posts: [],
+      isComplete: true,
+      currentPage: 1,
+      statistics: { fetchCount: 0, docReadCount: 0, chunks: 0, users: 0 }
+    })
   })
 })
