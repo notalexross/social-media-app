@@ -710,8 +710,7 @@ async function fetchPostsAndUpdateUsers(
 
         chunk.isDone = docs.length < limitPerChunk
         docs.forEach(doc => {
-          const post = doc.data() as PostWithId
-          post.id = doc.id
+          const post = { id: doc.id, ...(doc.data() as Post) }
           fetchedPosts.push({
             post,
             createdAt: post.createdAt.valueOf(),
