@@ -25,6 +25,8 @@ export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedP
 
 type PostReplies = { replies: string[] }
 
+export type PostRepliesWithId = PostReplies & { id: string }
+
 type Post = {
   attachment: string
   createdAt: firebase.firestore.Timestamp
@@ -830,4 +832,33 @@ export function getMultiUserPosts(
   }
 
   return loadNextPage
+}
+
+export function getPosts(
+  postIds: string[]
+): Promise<(PostWithId | PostRepliesWithId)[]> {
+  const promises = postIds.map(async postId => {
+    const { postQuery } = getPostQueries(postId)
+
+    const [settledPost, settledReplies] = await Promise.allSettled([
+      postQuery.get(),
+      getReplies(postId)
+    ])
+
+    if (settledReplies.status !== 'fulfilled') {
+      throw settledReplies.reason
+    }
+
+    let post: Post | PostReplies = settledReplies.value
+
+    if (settledPost.status === 'fulfilled') {
+      const doc = settledPost.value
+      const a = doc.data() as Omit<Post, 'replies'>
+      post = { ...post, ...a }
+    }
+
+    return ({ id: postId, ...post })
+  })
+
+  return Promise.all(promises)
 }
