@@ -80,7 +80,7 @@ const database = {
   },
   posts: {
     _docs: new Map(Object.keys(posts).map(postId => {
-      const { likes, ...post } = posts[postId]
+      const { likes, replies, ...post } = posts[postId]
 
       return [
         postId,
@@ -88,6 +88,13 @@ const database = {
           _collections: {
             likes: {
               _docs: new Map(likes.map(likerId => [likerId, {}]))
+            },
+            replies: {
+              _docs: new Map([['details', {
+                _fields: {
+                  postIds: replies
+                }
+              }]])
             }
           },
           _fields: {

@@ -479,7 +479,7 @@ describe(`${addPost.name}`, () => {
     const result = addPost({ message: 'message' })
 
     await expect(result).resolves.toBe('mockId')
-    expect(mockFunctions.set).toBeCalledTimes(1)
+    expect(mockFunctions.set).toBeCalledTimes(2)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
     expect(mockFunctions.update).not.toHaveBeenCalled()
   })
@@ -488,7 +488,7 @@ describe(`${addPost.name}`, () => {
     const result = addPost({ message: 'message', replyTo: 'post1' })
 
     await expect(result).resolves.toBe('mockId')
-    expect(mockFunctions.set).toBeCalledTimes(1)
+    expect(mockFunctions.set).toBeCalledTimes(2)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
     expect(mockFunctions.update).toBeCalledTimes(1)
     expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
@@ -652,7 +652,7 @@ describe(`${getMultiUserPosts.name}`, () => {
 
     expect(mockFunctions.orderBy).toBeCalledTimes(1)
     expect(mockFunctions.limit).toBeCalledTimes(1)
-    expect(mockFunctions.get).toBeCalledTimes(1)
+    expect(mockFunctions.get).toBeCalledTimes(3)
   })
 
   test('calls callbacks', async () => {

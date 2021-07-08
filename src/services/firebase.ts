@@ -23,6 +23,8 @@ export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedP
   uid: string
 }
 
+type PostReplies = { replies: string[] }
+
 type Post = {
   attachment: string
   createdAt: firebase.firestore.Timestamp
@@ -30,9 +32,8 @@ type Post = {
   likesCount: number
   message: string
   owner: string
-  replies: string[]
   replyTo: string
-}
+} & PostReplies
 
 type PostCreatable = Partial<Omit<Post, 'deleted' | 'likesCount' | 'owner' | 'replies'>> & (
   { message: string } | { attachment: string }
@@ -90,8 +91,9 @@ function getUserQueries(uid: string) {
 function getPostQueries(postId: string) {
   const postQuery = postsQuery.doc(postId)
   const likesQuery = postQuery.collection('likes')
+  const repliesQuery = postQuery.collection('replies').doc('details')
 
-  return { postQuery, likesQuery }
+  return { postQuery, likesQuery, repliesQuery }
 }
 
 function getPublicDetails(uid: string): Promise<UserPublic> {
@@ -128,6 +130,16 @@ function getLikedPosts(uid: string): Promise<UserLikedPosts> {
   return getUserQueries(uid)
     .likedPostsQuery.get()
     .then(doc => ({ likedPosts: doc.data()?.postIds as string[] }))
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+}
+
+function getReplies(postId: string): Promise<PostReplies> {
+  return getPostQueries(postId)
+    .repliesQuery.get()
+    .then(doc => ({ replies: doc.data()?.postIds as string[] }))
     .catch(error => {
       console.error(error)
       throw new Error(error)
@@ -377,14 +389,16 @@ function createPostInDB(
       likesCount: 0,
       message,
       owner: uid,
-      replies: [],
       replyTo
     })
 
+    batch.set(getPostQueries(post.id).repliesQuery, {
+      postIds: []
+    })
+
     if (replyTo) {
-      const replyToPost = postsQuery.doc(replyTo)
-      batch.update(replyToPost, {
-        replies: FieldValue.arrayUnion(post.id)
+      batch.update(getPostQueries(replyTo).repliesQuery, {
+        postIds: FieldValue.arrayUnion(post.id)
       })
     }
 
@@ -686,12 +700,8 @@ async function fetchPostsAndUpdateUsers(
   limitPerChunk: number,
   statistics?: Stats
 ): Promise<FetchedPost[]> {
-  const requests: Promise<void>[] = []
-  const fetchedPosts: FetchedPost[] = []
-
-  chunks.forEach(chunk => {
-    let query = firestore
-      .collection('posts')
+  const requests = chunks.map(async chunk => {
+    let query = postsQuery
       .where('deleted', '==', false)
       .where('owner', 'in', chunk.users)
       .orderBy('createdAt', 'desc')
@@ -701,36 +711,45 @@ async function fetchPostsAndUpdateUsers(
       query = query.startAfter(chunk.lastPostFetched)
     }
 
-    requests.push(
-      query.get().then(({ docs }) => {
-        if (statistics) {
-          statistics.fetchCount += 1
-          statistics.docReadCount += docs.length
-        }
+    const { docs } = await query.get()
 
-        chunk.isDone = docs.length < limitPerChunk
-        docs.forEach(doc => {
-          const post = { id: doc.id, ...(doc.data() as Post) }
-          fetchedPosts.push({
-            post,
-            createdAt: post.createdAt.valueOf(),
-            chunkIndex: chunk.chunkIndex
-          })
-          chunk.numPostsFetched += 1
-          chunk.lastPostFetched = doc
-        })
+    const chunkFetchedPosts = await Promise.all(
+      docs.map(async doc => {
+        const { replies } = await getReplies(doc.id)
+        const post = { id: doc.id, replies, ...(doc.data() as Omit<Post, 'replies'>) }
+
+        return {
+          post,
+          createdAt: post.createdAt.valueOf(),
+          chunkIndex: chunk.chunkIndex
+        }
       })
     )
+
+    chunk.numPostsFetched += docs.length
+    chunk.lastPostFetched = docs[docs.length - 1]
+    chunk.isDone = docs.length < limitPerChunk
+
+    if (statistics) {
+      statistics.fetchCount += 1
+      statistics.docReadCount += docs.length
+    }
+
+    return chunkFetchedPosts
   })
 
   try {
-    await Promise.all(requests)
+    const fetchedPosts = (await Promise.all(requests)).reduce((acc, cur) => {
+      acc.push(...cur)
+
+      return acc
+    }, [])
+
+    return fetchedPosts
   } catch (error) {
     console.error(error)
     throw new Error(error)
   }
-
-  return fetchedPosts
 }
 
 export function getMultiUserPosts(
