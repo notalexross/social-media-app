@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getMultiUserPosts } from '../services/firebase'
 import type { PostsStatus, PostWithId } from '../services/firebase'
 
-export default function usePosts(uids: string[] | undefined): {
+export default function useMultiUserPosts(uids: string[] | undefined): {
   posts: PostWithId[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean

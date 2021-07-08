@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
-import usePosts from './use-posts'
+import useMultiUserPosts from './use-multi-user-posts'
 
 function Component() {
   const [uids] = useState(['user1', 'user2'])
-  const { posts } = usePosts(uids)
+  const { posts } = useMultiUserPosts(uids)
 
   return posts ? (
     <>
