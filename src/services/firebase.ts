@@ -82,10 +82,10 @@ const postsQuery = firestore.collection('posts')
 
 function getUserQueries(uid: string) {
   const publicQuery = usersQuery.doc(uid)
-  const privateQuery = firestore.collection(`users/${uid}/private`).doc('details')
-  const followersQuery = firestore.collection(`users/${uid}/followers`)
-  const followingQuery = firestore.collection(`users/${uid}/following`).doc('details')
-  const likedPostsQuery = firestore.collection(`users/${uid}/likedPosts`).doc('details')
+  const privateQuery = usersQuery.doc(uid).collection('private').doc('details')
+  const followersQuery = usersQuery.doc(uid).collection('followers')
+  const followingQuery = usersQuery.doc(uid).collection('following').doc('details')
+  const likedPostsQuery = usersQuery.doc(uid).collection('likedPosts').doc('details')
 
   return { publicQuery, privateQuery, followersQuery, followingQuery, likedPostsQuery }
 }
