@@ -521,7 +521,13 @@ export function updateLikeInDB(
 
 async function uploadFile(path: string, file: File): Promise<string> {
   try {
-    const storagePathRef = storage.ref().child(path)
+    let fullPath = path
+    if (path.endsWith('/')) {
+      const uniqueId = firestore.collection('non-existant').doc().id
+      fullPath = `${path}${uniqueId}`
+    }
+
+    const storagePathRef = storage.ref().child(fullPath)
 
     await storagePathRef.put(file)
 
