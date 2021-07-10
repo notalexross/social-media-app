@@ -493,6 +493,16 @@ describe(`${addPost.name}`, () => {
     expect(mockFunctions.update).toBeCalledTimes(1)
     expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
   })
+
+  test('given post has an attachment, resolves and calls firebase methods', async () => {
+    const file = new File(['attachment'], 'attachment.png', { type: 'image/png' })
+
+    const result = addPost({ attachment: file })
+
+    await expect(result).resolves.toBe('mockId')
+    expect(mockFunctions.put).toBeCalledTimes(1)
+    expect(mockFunctions.getDownloadURL).toBeCalledTimes(1)
+  })
 })
 
 describe(`${editPost.name}`, () => {
