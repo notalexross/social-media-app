@@ -37,9 +37,6 @@ type Post = {
   replyTo: string
 } & PostReplies
 
-type PostCreatable = Partial<Omit<Post, 'deleted' | 'likesCount' | 'owner' | 'replies'>> & (
-  { message: string } | { attachment: string }
-)
 type PostUpdatable = Partial<Omit<Post, 'likesCount' | 'owner' | 'replies' | 'replyTo'>>
 
 export type PostWithId = Post & { id: string }
@@ -376,9 +373,15 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
   })
 }
 
+type CreatePostInDBOptions = {
+  attachment?: string
+  message?: string
+  replyTo?: string
+} & ({ message: string } | { attachment: string })
+
 function createPostInDB(
   uid: string,
-  { attachment = '', message = '', replyTo = '' }: PostCreatable
+  { attachment = '', message = '', replyTo = '' }: CreatePostInDBOptions
 ): Promise<string> {
   const post = postsQuery.doc()
   const batch = firestore.batch()
