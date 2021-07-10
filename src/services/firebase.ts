@@ -632,18 +632,32 @@ export async function editUser(updates: UserUpdatable): Promise<void> {
   return updateUserInDB(currentUser.uid, updates)
 }
 
+type AddPostOptions = {
+  attachment?: File | null
+  message?: string
+  replyTo?: string
+} & ({ message: string } | { attachment: File })
+
 export async function addPost({
+  attachment = null,
   message = '',
-  attachment = '',
   replyTo = ''
-}: PostCreatable): Promise<string> {
+}: AddPostOptions): Promise<string> {
   const { currentUser } = auth
 
   if (!currentUser) {
     throw new Error('No user.')
   }
 
-  return createPostInDB(currentUser.uid, { attachment, message, replyTo })
+  let url = ''
+  if (attachment) {
+    url = await uploadFile(`attachments/${currentUser.uid}/`, attachment).catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+  }
+
+  return createPostInDB(currentUser.uid, { attachment: url, message, replyTo })
 }
 
 export function editPost(postId: string, updates: PostUpdatable): Promise<void> {
