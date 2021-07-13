@@ -1,4 +1,5 @@
 export { default as useAuthListener } from './use-auth-listener'
+export { default as useCachedUser } from './use-cached-user'
 export { default as useKeyDownListener } from './use-key-down-listener'
 export { default as useLockBody } from './use-lock-body'
 export { default as useMultiUserPosts } from './use-multi-user-posts'

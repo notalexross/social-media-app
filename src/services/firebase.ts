@@ -1,5 +1,6 @@
 import firebase from 'firebase/app'
 import { isValidSignUpInputs, isValidSignInInputs, sortBy, chunkArray } from '../utils'
+import { SelfUpdatingCache } from '../classes'
 
 type UserPublic = {
   avatar: string | null
@@ -236,6 +237,15 @@ export function getUserById(
     uid,
     ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {})
   }))
+}
+
+const usersCache = new SelfUpdatingCache('users', getUserById)
+
+export function getCachedUser(
+  uid: string,
+  maxAge: number
+): Promise<User & { lastUpdated?: number }> {
+  return usersCache.get(uid, maxAge).then(user => user || { uid })
 }
 
 export async function getUserByUsername(
