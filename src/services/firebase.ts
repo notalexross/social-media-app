@@ -895,3 +895,42 @@ export function getPosts(
 
   return Promise.all(promises)
 }
+
+function listenPost(
+  postId: string,
+  callback: (response: Omit<PostWithId, 'replies'>) => void
+): () => void {
+  return getPostQueries(postId).postQuery.onSnapshot(snap => {
+    callback({ id: postId, ...(snap.data() as Omit<Post, 'replies'>) })
+  })
+}
+
+function listenReplies(
+  postId: string,
+  callback: (response: PostRepliesWithId) => void
+): () => void {
+  return getPostQueries(postId).repliesQuery.onSnapshot(snap => {
+    callback({ id: postId, replies: snap.data()?.postIds as string[] })
+  })
+}
+
+export function onPostsUpdated(
+  postIds: string[],
+  callback: (updatedPost: PostWithId) => void
+): () => void {
+  const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
+    let post: PostWithId | Omit<PostWithId, 'replies'> | PostRepliesWithId | Record<string, never> = {}
+    const handleResponse = (response: Omit<PostWithId, 'replies'> | PostRepliesWithId) => {
+      post = { ...post, ...response }
+      if ('replies' in post && 'owner' in post) {
+        callback(post)
+      }
+    }
+
+    acc.push(listenPost(postId, handleResponse), listenReplies(postId, handleResponse))
+
+    return acc
+  }, [])
+
+  return () => listeners.forEach(listener => listener())
+}
