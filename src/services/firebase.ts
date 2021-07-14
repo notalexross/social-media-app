@@ -24,21 +24,26 @@ export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedP
   uid: string
 }
 
-type PostReplies = { replies: string[] }
-
-export type PostRepliesWithId = PostReplies & { id: string }
-
-type Post = {
-  attachment: string
+type PostPublic = {
   createdAt: firebase.firestore.Timestamp
   deleted: boolean
   likesCount: number
-  message: string
   owner: string
   replyTo: string
-} & PostReplies
+  replies: string[]
+  updatedAt?: firebase.firestore.Timestamp
+}
 
-type PostUpdatable = Partial<Omit<Post, 'likesCount' | 'owner' | 'replies' | 'replyTo'>>
+type PostContent = {
+  attachment: string
+  message: string
+}
+
+type Post = PostPublic & PostContent
+
+type PostUpdatable = Partial<
+  Omit<Post, 'createdAt' | 'likesCount' | 'owner' | 'replyTo' | 'replies' | 'updatedAt'>
+>
 
 export type PostWithId = Post & { id: string }
 
@@ -89,11 +94,11 @@ function getUserQueries(uid: string) {
 }
 
 function getPostQueries(postId: string) {
-  const postQuery = postsQuery.doc(postId)
-  const likesQuery = postQuery.collection('likes')
-  const repliesQuery = postQuery.collection('replies').doc('details')
+  const postPublicQuery = postsQuery.doc(postId)
+  const postContentQuery = postPublicQuery.collection('content').doc('details')
+  const likesQuery = postPublicQuery.collection('likes')
 
-  return { postQuery, likesQuery, repliesQuery }
+  return { postPublicQuery, postContentQuery, likesQuery }
 }
 
 function getPublicDetails(uid: string): Promise<UserPublic> {
@@ -130,16 +135,6 @@ function getLikedPosts(uid: string): Promise<UserLikedPosts> {
   return getUserQueries(uid)
     .likedPostsQuery.get()
     .then(doc => ({ likedPosts: doc.data()?.postIds as string[] }))
-    .catch(error => {
-      console.error(error)
-      throw new Error(error)
-    })
-}
-
-function getReplies(postId: string): Promise<PostReplies> {
-  return getPostQueries(postId)
-    .repliesQuery.get()
-    .then(doc => ({ replies: doc.data()?.postIds as string[] }))
     .catch(error => {
       console.error(error)
       throw new Error(error)
@@ -383,6 +378,82 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
   })
 }
 
+function listenPostPublic(postId: string, callback: (response: PostPublic) => void): () => void {
+  return getPostQueries(postId).postPublicQuery.onSnapshot(snap => {
+    callback(snap.data() as PostPublic)
+  })
+}
+
+function listenPostContent(postId: string, callback: (response: PostContent) => void): () => void {
+  return getPostQueries(postId).postContentQuery.onSnapshot(snap => {
+    callback(snap.data() as PostContent)
+  })
+}
+
+function getPostPublic(postId: string): Promise<PostPublic> {
+  return getPostQueries(postId)
+    .postPublicQuery.get()
+    .then(doc => doc.data() as PostPublic)
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+}
+
+function getPostContent(postId: string): Promise<PostContent> {
+  return getPostQueries(postId)
+    .postContentQuery.get()
+    .then(doc => doc.data() as PostContent)
+    .catch(error => {
+      console.error(error)
+      throw new Error(error)
+    })
+}
+
+export function getPosts(postIds: string[]): Promise<PostWithId[]> {
+  const promises = postIds.map(async postId => {
+    const [settledPostPublic, settledPostContent] = await Promise.allSettled([
+      getPostPublic(postId),
+      getPostContent(postId)
+    ])
+
+    if (settledPostPublic.status !== 'fulfilled') {
+      throw settledPostPublic.reason
+    }
+
+    if (settledPostContent.status !== 'fulfilled') {
+      throw settledPostContent.reason
+    }
+
+    const post: Post = { ...settledPostPublic.value, ...settledPostContent.value }
+
+    return { id: postId, ...post }
+  })
+
+  return Promise.all(promises)
+}
+
+export function onPostsUpdated(
+  postIds: string[],
+  callback: (updatedPost: PostWithId) => void
+): () => void {
+  const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
+    let post: Post | PostPublic | PostContent | Record<string, never> = {}
+    const handleResponse = (response: PostPublic | PostContent) => {
+      post = { ...post, ...response }
+      if ('owner' in post && 'message' in post) {
+        callback({ id: postId, ...post })
+      }
+    }
+
+    acc.push(listenPostPublic(postId, handleResponse), listenPostContent(postId, handleResponse))
+
+    return acc
+  }, [])
+
+  return () => listeners.forEach(listener => listener())
+}
+
 type CreatePostInDBOptions = {
   attachment?: string
   message?: string
@@ -398,22 +469,22 @@ function createPostInDB(
 
   if (attachment || message) {
     batch.set(post, {
-      attachment,
       createdAt: FieldValue.serverTimestamp(),
       deleted: false,
       likesCount: 0,
-      message,
       owner: uid,
-      replyTo
+      replyTo,
+      replies: []
     })
 
-    batch.set(getPostQueries(post.id).repliesQuery, {
-      postIds: []
+    batch.set(getPostQueries(post.id).postContentQuery, {
+      attachment,
+      message
     })
 
     if (replyTo) {
-      batch.update(getPostQueries(replyTo).repliesQuery, {
-        postIds: FieldValue.arrayUnion(post.id)
+      batch.update(getPostQueries(replyTo).postContentQuery, {
+        replies: FieldValue.arrayUnion(post.id)
       })
     }
 
@@ -430,19 +501,33 @@ function createPostInDB(
 }
 
 function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
-  const { postQuery } = getPostQueries(postId)
-  const postKeys = ['attachment', 'deleted', 'message'] as const
+  const { postPublicQuery, postContentQuery } = getPostQueries(postId)
+  const postPublicKeys = ['deleted'] as const
+  const postContentKeys = ['attachment', 'message'] as const
 
-  const postUpdates: PostUpdatable = postKeys.reduce(
+  const postPublicUpdates: Partial<PostPublic> = postPublicKeys.reduce(
     (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
     {}
   )
 
-  if (Object.keys(postUpdates).length) {
-    return postQuery.update({
-      ...postUpdates,
-      lastEditedAt: FieldValue.serverTimestamp()
+  const postContentUpdates: Partial<PostContent> = postContentKeys.reduce(
+    (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
+    {}
+  )
+
+  if (Object.keys(postPublicUpdates).length || Object.keys(postContentUpdates).length) {
+    const batch = firebase.firestore().batch()
+
+    batch.update(postPublicQuery, {
+      ...postPublicUpdates,
+      updatedAt: FieldValue.serverTimestamp()
     })
+
+    batch.update(postContentQuery, {
+      ...postContentUpdates
+    })
+
+    return batch.commit()
   }
 
   return Promise.reject(new Error(`No valid updates were supplied for post with id "${postId}".`))
@@ -500,7 +585,7 @@ export function updateLikeInDB(
   }
 
   const batch = firestore.batch()
-  const { postQuery, likesQuery } = getPostQueries(postId)
+  const { postPublicQuery, likesQuery } = getPostQueries(postId)
   const { likedPostsQuery } = getUserQueries(likerUid)
 
   let increment
@@ -521,7 +606,7 @@ export function updateLikeInDB(
   }
 
   if (increment) {
-    batch.update(postQuery, {
+    batch.update(postPublicQuery, {
       likesCount: FieldValue.increment(increment)
     })
   }
@@ -750,8 +835,8 @@ async function fetchPostsAndUpdateUsers(
 
     const chunkFetchedPosts = await Promise.all(
       docs.map(async doc => {
-        const { replies } = await getReplies(doc.id)
-        const post = { id: doc.id, replies, ...(doc.data() as Omit<Post, 'replies'>) }
+        const postContent = await getPostContent(doc.id)
+        const post = { id: doc.id, ...(doc.data() as PostPublic), ...postContent }
 
         return {
           post,
@@ -865,72 +950,4 @@ export function getMultiUserPosts(
   }
 
   return loadNextPage
-}
-
-export function getPosts(
-  postIds: string[]
-): Promise<(PostWithId | PostRepliesWithId)[]> {
-  const promises = postIds.map(async postId => {
-    const { postQuery } = getPostQueries(postId)
-
-    const [settledPost, settledReplies] = await Promise.allSettled([
-      postQuery.get(),
-      getReplies(postId)
-    ])
-
-    if (settledReplies.status !== 'fulfilled') {
-      throw settledReplies.reason
-    }
-
-    let post: Post | PostReplies = settledReplies.value
-
-    if (settledPost.status === 'fulfilled') {
-      const doc = settledPost.value
-      const a = doc.data() as Omit<Post, 'replies'>
-      post = { ...post, ...a }
-    }
-
-    return ({ id: postId, ...post })
-  })
-
-  return Promise.all(promises)
-}
-
-function listenPost(
-  postId: string,
-  callback: (response: Omit<PostWithId, 'replies'>) => void
-): () => void {
-  return getPostQueries(postId).postQuery.onSnapshot(snap => {
-    callback({ id: postId, ...(snap.data() as Omit<Post, 'replies'>) })
-  })
-}
-
-function listenReplies(
-  postId: string,
-  callback: (response: PostRepliesWithId) => void
-): () => void {
-  return getPostQueries(postId).repliesQuery.onSnapshot(snap => {
-    callback({ id: postId, replies: snap.data()?.postIds as string[] })
-  })
-}
-
-export function onPostsUpdated(
-  postIds: string[],
-  callback: (updatedPost: PostWithId) => void
-): () => void {
-  const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
-    let post: PostWithId | Omit<PostWithId, 'replies'> | PostRepliesWithId | Record<string, never> = {}
-    const handleResponse = (response: Omit<PostWithId, 'replies'> | PostRepliesWithId) => {
-      post = { ...post, ...response }
-      if ('replies' in post && 'owner' in post) {
-        callback(post)
-      }
-    }
-
-    acc.push(listenPost(postId, handleResponse), listenReplies(postId, handleResponse))
-
-    return acc
-  }, [])
-
-  return () => listeners.forEach(listener => listener())
 }

@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react'
-import type { PostWithId, PostRepliesWithId } from '../services/firebase'
+import type { PostWithId } from '../services/firebase'
 import { getPosts, onPostsUpdated } from '../services/firebase'
 
-function usePosts<T extends boolean>(
-  postId: string,
-  options?: { subscribe?: T }
-): T extends true ? PostWithId | undefined : PostWithId | PostRepliesWithId | undefined
-function usePosts<T extends boolean>(
-  postIds: string[],
-  options?: { subscribe?: T }
-): T extends true ? PostWithId[] : (PostWithId | PostRepliesWithId)[]
+function usePosts(postId: string, options?: { subscribe?: boolean }): PostWithId | undefined
+function usePosts(postIds: string[], options?: { subscribe?: boolean }): PostWithId[]
 function usePosts(
   postIdOrIds: string | string[],
   { subscribe = false }: { subscribe?: boolean } = {}
-): PostWithId | PostRepliesWithId | undefined | (PostWithId | PostRepliesWithId)[] {
-  const [posts, setPosts] = useState<(PostWithId | PostRepliesWithId)[]>([])
+): PostWithId | PostWithId[] | undefined {
+  const [posts, setPosts] = useState<PostWithId[]>([])
 
   useEffect(() => {
     const postIds = Array.isArray(postIdOrIds) ? postIdOrIds : [postIdOrIds]
