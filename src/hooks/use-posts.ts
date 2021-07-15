@@ -3,12 +3,12 @@ import type { PostWithId } from '../services/firebase'
 import { getPosts, onPostsUpdated } from '../services/firebase'
 
 function usePosts(postId: string, options?: { subscribe?: boolean }): PostWithId | undefined
-function usePosts(postIds: string[], options?: { subscribe?: boolean }): PostWithId[]
+function usePosts(postIds: string[], options?: { subscribe?: boolean }): (PostWithId | undefined)[]
 function usePosts(
   postIdOrIds: string | string[],
   { subscribe = false }: { subscribe?: boolean } = {}
-): PostWithId | PostWithId[] | undefined {
-  const [posts, setPosts] = useState<PostWithId[]>([])
+): PostWithId | undefined | (PostWithId | undefined)[] {
+  const [posts, setPosts] = useState<(PostWithId | undefined)[]>([])
 
   useEffect(() => {
     const postIds = Array.isArray(postIdOrIds) ? postIdOrIds : [postIdOrIds]

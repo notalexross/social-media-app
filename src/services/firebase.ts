@@ -390,16 +390,6 @@ function listenPostContent(postId: string, callback: (response: PostContent) => 
   })
 }
 
-function getPostPublic(postId: string): Promise<PostPublic> {
-  return getPostQueries(postId)
-    .postPublicRef.get()
-    .then(doc => doc.data() as PostPublic)
-    .catch(error => {
-      console.error(error)
-      throw new Error(error)
-    })
-}
-
 function getPostContent(postId: string): Promise<PostContent> {
   return getPostQueries(postId)
     .postContentRef.get()
@@ -410,24 +400,29 @@ function getPostContent(postId: string): Promise<PostContent> {
     })
 }
 
-export function getPosts(postIds: string[]): Promise<PostWithId[]> {
-  const promises = postIds.map(async postId => {
-    const [settledPostPublic, settledPostContent] = await Promise.allSettled([
-      getPostPublic(postId),
-      getPostContent(postId)
-    ])
+export function getPosts(postIds: string[]): Promise<(PostWithId | undefined)[]> {
+  const promises = postIds.map(postId => {
+    const { postPublicRef, postContentRef } = getPostQueries(postId)
 
-    if (settledPostPublic.status !== 'fulfilled') {
-      throw settledPostPublic.reason
-    }
+    return firestore
+      .runTransaction(async transaction => {
+        const postPublicDoc = await transaction.get(postPublicRef)
+        const postPublic = postPublicDoc.data() as PostPublic
 
-    if (settledPostContent.status !== 'fulfilled') {
-      throw settledPostContent.reason
-    }
+        let post: Post = { ...postPublic, attachment: '', message: '' }
+        if (!postPublic.deleted) {
+          const postContentDoc = await transaction.get(postContentRef)
+          const postContent = postContentDoc.data() as PostContent
+          post = { ...post, ...postContent }
+        }
 
-    const post: Post = { ...settledPostPublic.value, ...settledPostContent.value }
+        return { id: postId, ...post }
+      })
+      .catch(error => {
+        console.error(error)
 
-    return { id: postId, ...post }
+        return undefined
+      })
   })
 
   return Promise.all(promises)
