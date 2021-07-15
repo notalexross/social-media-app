@@ -533,7 +533,7 @@ function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
   return Promise.reject(new Error(`No valid updates were supplied for post with id "${postId}".`))
 }
 
-export function updateFollowInDB(
+function updateFollowInDB(
   type: 'unfollow' | 'follow',
   followerUid: string,
   followedUid: string
@@ -575,11 +575,7 @@ export function updateFollowInDB(
   })
 }
 
-export function updateLikeInDB(
-  type: 'unlike' | 'like',
-  likerUid: string,
-  postId: string
-): Promise<void> {
+function updateLikeInDB(type: 'unlike' | 'like', likerUid: string, postId: string): Promise<void> {
   if (!postId.length) {
     return Promise.reject(new Error('Invalid post ID supplied.'))
   }
