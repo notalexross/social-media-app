@@ -80,30 +80,30 @@ const firestore = firebase.firestore()
 const storage = firebase.storage()
 const auth = firebase.auth()
 const { FieldValue } = firebase.firestore
-const usersQuery = firestore.collection('users')
-const postsQuery = firestore.collection('posts')
+const usersRef = firestore.collection('users')
+const postsRef = firestore.collection('posts')
 
 function getUserQueries(uid: string) {
-  const publicQuery = usersQuery.doc(uid)
-  const privateQuery = usersQuery.doc(uid).collection('private').doc('details')
-  const followersQuery = usersQuery.doc(uid).collection('followers')
-  const followingQuery = usersQuery.doc(uid).collection('following').doc('details')
-  const likedPostsQuery = usersQuery.doc(uid).collection('likedPosts').doc('details')
+  const userPublicRef = usersRef.doc(uid)
+  const userPrivateRef = usersRef.doc(uid).collection('private').doc('details')
+  const userFollowersRef = usersRef.doc(uid).collection('followers')
+  const userFollowingRef = usersRef.doc(uid).collection('following').doc('details')
+  const userLikedPostsRef = usersRef.doc(uid).collection('likedPosts').doc('details')
 
-  return { publicQuery, privateQuery, followersQuery, followingQuery, likedPostsQuery }
+  return { userPublicRef, userPrivateRef, userFollowersRef, userFollowingRef, userLikedPostsRef }
 }
 
 function getPostQueries(postId: string) {
-  const postPublicQuery = postsQuery.doc(postId)
-  const postContentQuery = postPublicQuery.collection('content').doc('details')
-  const likesQuery = postPublicQuery.collection('likes')
+  const postPublicRef = postsRef.doc(postId)
+  const postContentRef = postPublicRef.collection('content').doc('details')
+  const postLikesRef = postPublicRef.collection('likes')
 
-  return { postPublicQuery, postContentQuery, likesQuery }
+  return { postPublicRef, postContentRef, postLikesRef }
 }
 
 function getPublicDetails(uid: string): Promise<UserPublic> {
   return getUserQueries(uid)
-    .publicQuery.get()
+    .userPublicRef.get()
     .then(doc => doc.data() as UserPublic)
     .catch(error => {
       console.error(error)
@@ -113,7 +113,7 @@ function getPublicDetails(uid: string): Promise<UserPublic> {
 
 function getPrivateDetails(uid: string): Promise<UserPrivate> {
   return getUserQueries(uid)
-    .privateQuery.get()
+    .userPrivateRef.get()
     .then(doc => doc.data() as UserPrivate)
     .catch(error => {
       console.error(error)
@@ -123,7 +123,7 @@ function getPrivateDetails(uid: string): Promise<UserPrivate> {
 
 function getFollowing(uid: string): Promise<UserFollowing> {
   return getUserQueries(uid)
-    .followingQuery.get()
+    .userFollowingRef.get()
     .then(doc => ({ following: doc.data()?.uids as string[] }))
     .catch(error => {
       console.error(error)
@@ -133,7 +133,7 @@ function getFollowing(uid: string): Promise<UserFollowing> {
 
 function getLikedPosts(uid: string): Promise<UserLikedPosts> {
   return getUserQueries(uid)
-    .likedPostsQuery.get()
+    .userLikedPostsRef.get()
     .then(doc => ({ likedPosts: doc.data()?.postIds as string[] }))
     .catch(error => {
       console.error(error)
@@ -145,7 +145,7 @@ function listenPublicDetails(
   uid: string,
   callback: (details: { uid: string } & UserPublic) => void
 ): () => void {
-  return getUserQueries(uid).publicQuery.onSnapshot(snap => {
+  return getUserQueries(uid).userPublicRef.onSnapshot(snap => {
     callback({ uid, ...(snap.data() as UserPublic) })
   })
 }
@@ -154,7 +154,7 @@ function listenPrivateDetails(
   uid: string,
   callback: (details: { uid: string } & UserPrivate) => void
 ): () => void {
-  return getUserQueries(uid).privateQuery.onSnapshot(
+  return getUserQueries(uid).userPrivateRef.onSnapshot(
     snap => {
       callback({ uid, ...(snap.data() as UserPrivate) })
     },
@@ -169,7 +169,7 @@ function listenFollowing(
   uid: string,
   callback: (details: { uid: string } & UserFollowing) => void
 ): () => void {
-  return getUserQueries(uid).followingQuery.onSnapshot(
+  return getUserQueries(uid).userFollowingRef.onSnapshot(
     snap => {
       callback({ uid, following: snap.data()?.uids as string[] })
     },
@@ -184,7 +184,7 @@ function listenLikedPosts(
   uid: string,
   callback: (details: { uid: string } & UserLikedPosts) => void
 ): () => void {
-  return getUserQueries(uid).likedPostsQuery.onSnapshot(
+  return getUserQueries(uid).userLikedPostsRef.onSnapshot(
     snap => {
       callback({ uid, likedPosts: snap.data()?.postIds as string[] })
     },
@@ -196,7 +196,7 @@ function listenLikedPosts(
 }
 
 function getUserId(username: string): Promise<{ uid: string } & UserPublic> {
-  return usersQuery
+  return usersRef
     .where('deleted', '==', false)
     .where('usernameLowerCase', '==', username.toLowerCase())
     .get()
@@ -299,10 +299,10 @@ function createUserInDB(
   uid: string,
   { avatar = '', email = '', fullName = '', username = '' }: UserCreatable
 ): Promise<void> {
-  const { publicQuery, privateQuery, followingQuery, likedPostsQuery } = getUserQueries(uid)
+  const { userPublicRef, userPrivateRef, userFollowingRef, userLikedPostsRef } = getUserQueries(uid)
   const batch = firestore.batch()
 
-  batch.set(publicQuery, {
+  batch.set(userPublicRef, {
     avatar,
     createdAt: FieldValue.serverTimestamp(),
     deleted: false,
@@ -311,16 +311,16 @@ function createUserInDB(
     usernameLowerCase: username.toLowerCase()
   })
 
-  batch.set(privateQuery, {
+  batch.set(userPrivateRef, {
     email,
     fullName
   })
 
-  batch.set(followingQuery, {
+  batch.set(userFollowingRef, {
     uids: []
   })
 
-  batch.set(likedPostsQuery, {
+  batch.set(userLikedPostsRef, {
     postIds: []
   })
 
@@ -331,7 +331,7 @@ function createUserInDB(
 }
 
 async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void> {
-  const { publicQuery, privateQuery } = getUserQueries(uid)
+  const { userPublicRef, userPrivateRef } = getUserQueries(uid)
   const publicKeys = ['avatar', 'deleted', 'username'] as const
   const privateKeys = ['email', 'fullName'] as const
 
@@ -353,7 +353,7 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
 
   if (Object.keys(publicUpdates).length) {
     promises.push(
-      publicQuery.update({
+      userPublicRef.update({
         ...publicUpdates,
         lastUpdatedAt: FieldValue.serverTimestamp()
       })
@@ -362,7 +362,7 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
 
   if (Object.keys(privateUpdates).length) {
     promises.push(
-      privateQuery.update({
+      userPrivateRef.update({
         ...privateUpdates,
         lastUpdatedAt: FieldValue.serverTimestamp()
       })
@@ -379,20 +379,20 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
 }
 
 function listenPostPublic(postId: string, callback: (response: PostPublic) => void): () => void {
-  return getPostQueries(postId).postPublicQuery.onSnapshot(snap => {
+  return getPostQueries(postId).postPublicRef.onSnapshot(snap => {
     callback(snap.data() as PostPublic)
   })
 }
 
 function listenPostContent(postId: string, callback: (response: PostContent) => void): () => void {
-  return getPostQueries(postId).postContentQuery.onSnapshot(snap => {
+  return getPostQueries(postId).postContentRef.onSnapshot(snap => {
     callback(snap.data() as PostContent)
   })
 }
 
 function getPostPublic(postId: string): Promise<PostPublic> {
   return getPostQueries(postId)
-    .postPublicQuery.get()
+    .postPublicRef.get()
     .then(doc => doc.data() as PostPublic)
     .catch(error => {
       console.error(error)
@@ -402,7 +402,7 @@ function getPostPublic(postId: string): Promise<PostPublic> {
 
 function getPostContent(postId: string): Promise<PostContent> {
   return getPostQueries(postId)
-    .postContentQuery.get()
+    .postContentRef.get()
     .then(doc => doc.data() as PostContent)
     .catch(error => {
       console.error(error)
@@ -464,7 +464,7 @@ function createPostInDB(
   uid: string,
   { attachment = '', message = '', replyTo = '' }: CreatePostInDBOptions
 ): Promise<string> {
-  const post = postsQuery.doc()
+  const post = postsRef.doc()
   const batch = firestore.batch()
 
   if (attachment || message) {
@@ -477,13 +477,13 @@ function createPostInDB(
       replies: []
     })
 
-    batch.set(getPostQueries(post.id).postContentQuery, {
+    batch.set(getPostQueries(post.id).postContentRef, {
       attachment,
       message
     })
 
     if (replyTo) {
-      batch.update(getPostQueries(replyTo).postContentQuery, {
+      batch.update(getPostQueries(replyTo).postContentRef, {
         replies: FieldValue.arrayUnion(post.id)
       })
     }
@@ -501,7 +501,7 @@ function createPostInDB(
 }
 
 function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
-  const { postPublicQuery, postContentQuery } = getPostQueries(postId)
+  const { postPublicRef, postContentRef } = getPostQueries(postId)
   const postPublicKeys = ['deleted'] as const
   const postContentKeys = ['attachment', 'message'] as const
 
@@ -518,12 +518,12 @@ function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
   if (Object.keys(postPublicUpdates).length || Object.keys(postContentUpdates).length) {
     const batch = firebase.firestore().batch()
 
-    batch.update(postPublicQuery, {
+    batch.update(postPublicRef, {
       ...postPublicUpdates,
       updatedAt: FieldValue.serverTimestamp()
     })
 
-    batch.update(postContentQuery, {
+    batch.update(postContentRef, {
       ...postContentUpdates
     })
 
@@ -543,20 +543,20 @@ export function updateFollowInDB(
   }
 
   const batch = firestore.batch()
-  const { followingQuery } = getUserQueries(followerUid)
-  const { publicQuery, followersQuery } = getUserQueries(followedUid)
+  const { userFollowingRef } = getUserQueries(followerUid)
+  const { userPublicRef, userFollowersRef } = getUserQueries(followedUid)
 
   let increment
   if (type === 'unfollow') {
     increment = -1
-    batch.delete(followersQuery.doc(followerUid))
-    batch.update(followingQuery, {
+    batch.delete(userFollowersRef.doc(followerUid))
+    batch.update(userFollowingRef, {
       uids: FieldValue.arrayRemove(followedUid)
     })
   } else if (type === 'follow') {
     increment = 1
-    batch.set(followersQuery.doc(followerUid), {})
-    batch.update(followingQuery, {
+    batch.set(userFollowersRef.doc(followerUid), {})
+    batch.update(userFollowingRef, {
       uids: FieldValue.arrayUnion(followedUid)
     })
   } else {
@@ -564,7 +564,7 @@ export function updateFollowInDB(
   }
 
   if (increment) {
-    batch.update(publicQuery, {
+    batch.update(userPublicRef, {
       followersCount: FieldValue.increment(increment)
     })
   }
@@ -585,20 +585,20 @@ export function updateLikeInDB(
   }
 
   const batch = firestore.batch()
-  const { postPublicQuery, likesQuery } = getPostQueries(postId)
-  const { likedPostsQuery } = getUserQueries(likerUid)
+  const { postPublicRef, postLikesRef } = getPostQueries(postId)
+  const { userLikedPostsRef } = getUserQueries(likerUid)
 
   let increment
   if (type === 'unlike') {
     increment = -1
-    batch.delete(likesQuery.doc(likerUid))
-    batch.update(likedPostsQuery, {
+    batch.delete(postLikesRef.doc(likerUid))
+    batch.update(userLikedPostsRef, {
       postIds: FieldValue.arrayRemove(postId)
     })
   } else if (type === 'like') {
     increment = 1
-    batch.set(likesQuery.doc(likerUid), {})
-    batch.update(likedPostsQuery, {
+    batch.set(postLikesRef.doc(likerUid), {})
+    batch.update(userLikedPostsRef, {
       postIds: FieldValue.arrayUnion(postId)
     })
   } else {
@@ -606,7 +606,7 @@ export function updateLikeInDB(
   }
 
   if (increment) {
-    batch.update(postPublicQuery, {
+    batch.update(postPublicRef, {
       likesCount: FieldValue.increment(increment)
     })
   }
@@ -637,13 +637,13 @@ async function uploadFile(path: string, file: File): Promise<string> {
 }
 
 export async function updateAvatar(uid: string, imageFile: File): Promise<string> {
-  const { publicQuery } = getUserQueries(uid)
+  const { userPublicRef } = getUserQueries(uid)
   const avatar = await uploadFile(`avatars/${uid}`, imageFile).catch(error => {
     console.error(error)
     throw new Error(error)
   })
 
-  await publicQuery.update({ avatar }).catch(error => {
+  await userPublicRef.update({ avatar }).catch(error => {
     console.error(error)
     throw new Error(error)
   })
@@ -821,7 +821,7 @@ async function fetchPostsAndUpdateUsers(
   statistics?: Stats
 ): Promise<FetchedPost[]> {
   const requests = chunks.map(async chunk => {
-    let query = postsQuery
+    let query = postsRef
       .where('deleted', '==', false)
       .where('owner', 'in', chunk.users)
       .orderBy('createdAt', 'desc')
