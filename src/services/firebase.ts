@@ -402,6 +402,10 @@ function getPostContent(postId: string): Promise<PostContent> {
 
 export function getPosts(postIds: string[]): Promise<(PostWithId | undefined)[]> {
   const promises = postIds.map(postId => {
+    if (!postId) {
+      return undefined
+    }
+
     const { postPublicRef, postContentRef } = getPostQueries(postId)
 
     return firestore
@@ -433,6 +437,10 @@ export function onPostsUpdated(
   callback: (updatedPost: PostWithId) => void
 ): () => void {
   const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
+    if (!postId) {
+      return acc
+    }
+
     let post: Post | PostPublic | PostContent | Record<string, never> = {}
     const handleResponse = (response: PostPublic | PostContent) => {
       post = { ...post, ...response }
