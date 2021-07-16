@@ -26,9 +26,15 @@ function usePosts(
       })
     }
 
-    getPosts(postIds).then(setPosts).catch(console.error)
+    let isCurrent = true
 
-    return () => {}
+    getPosts(postIds)
+      .then(data => isCurrent && setPosts(data))
+      .catch(console.error)
+
+    return () => {
+      isCurrent = false
+    }
   }, [postIdOrIds, subscribe])
 
   return Array.isArray(postIdOrIds) ? posts : posts[0]

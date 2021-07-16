@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getMultiUserPosts } from '../services/firebase'
 import type { PostsStatus, PostWithId } from '../services/firebase'
+import { getMultiUserPosts } from '../services/firebase'
 
 export default function useMultiUserPosts(uids: string[] | undefined): {
   posts: PostWithId[] | null
@@ -19,10 +19,21 @@ export default function useMultiUserPosts(uids: string[] | undefined): {
   const { posts, isComplete } = status
 
   useEffect(() => {
+    let isCurrent = true
+
     if (uids) {
-      const loadNextPageFunction = getMultiUserPosts(uids, setStatus, setIsLoadingPosts, 10)
+      const loadNextPageFunction = getMultiUserPosts(
+        uids,
+        data => isCurrent && setStatus(data),
+        data => isCurrent && setIsLoadingPosts(data),
+        10
+      )
       setLoadNextPage(() => loadNextPageFunction)
       loadNextPageFunction().catch(console.error)
+    }
+
+    return () => {
+      isCurrent = false
     }
   }, [uids])
 
