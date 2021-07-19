@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PostsStatus, PostWithId } from '../services/firebase'
 import { getMultiUserPosts } from '../services/firebase'
 
@@ -14,14 +14,14 @@ export default function useMultiUserPosts(uids: string[] | undefined): {
     currentPage: 0,
     statistics: { fetchCount: 0, docReadCount: 0, chunks: 0, users: 0 }
   })
+  const isInitiated = useRef(false)
   const [isLoadingPosts, setIsLoadingPosts] = useState(true)
   const [loadNextPage, setLoadNextPage] = useState<() => Promise<void>>(() => Promise.resolve())
   const { posts, isComplete } = status
 
   useEffect(() => {
     let isCurrent = true
-
-    if (uids) {
+    if (uids && !isInitiated.current) {
       const loadNextPageFunction = getMultiUserPosts(
         uids,
         data => isCurrent && setStatus(data),
@@ -30,6 +30,7 @@ export default function useMultiUserPosts(uids: string[] | undefined): {
       )
       setLoadNextPage(() => loadNextPageFunction)
       loadNextPageFunction().catch(console.error)
+      isInitiated.current = true
     }
 
     return () => {
