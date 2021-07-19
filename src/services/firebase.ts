@@ -24,12 +24,17 @@ export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedP
   uid: string
 }
 
+export type ReplyTo = {
+  id: string
+  owner: string
+} | null
+
 type PostPublic = {
   createdAt: firebase.firestore.Timestamp
   deleted: boolean
   likesCount: number
   owner: string
-  replyTo: string
+  replyTo: ReplyTo
   replies: string[]
   updatedAt?: firebase.firestore.Timestamp
 }
@@ -411,7 +416,7 @@ async function addUserDetailsToPost(post: PostWithId) {
   if (post.replyTo) {
     const [ownerDetails, replyToOwnerDetails] = await Promise.all([
       getCachedUser(post.owner),
-      getCachedUser(post.replyTo)
+      getCachedUser(post.replyTo.owner)
     ])
     postWithUserDetails = { ...post, ownerDetails, replyToOwnerDetails }
   } else {
@@ -492,12 +497,12 @@ export function onPostsUpdated(
 type CreatePostInDBOptions = {
   attachment?: string
   message?: string
-  replyTo?: string
+  replyTo?: ReplyTo
 } & ({ message: string } | { attachment: string })
 
 function createPostInDB(
   uid: string,
-  { attachment = '', message = '', replyTo = '' }: CreatePostInDBOptions
+  { attachment = '', message = '', replyTo = null }: CreatePostInDBOptions
 ): Promise<string> {
   const post = postsRef.doc()
   const batch = firestore.batch()
@@ -518,7 +523,7 @@ function createPostInDB(
     })
 
     if (replyTo) {
-      batch.update(getPostQueries(replyTo).postContentRef, {
+      batch.update(getPostQueries(replyTo.id).postPublicRef, {
         replies: FieldValue.arrayUnion(post.id)
       })
     }
@@ -764,13 +769,13 @@ export async function editUser(updates: UserUpdatable): Promise<void> {
 type AddPostOptions = {
   attachment?: File | null
   message?: string
-  replyTo?: string
+  replyTo?: ReplyTo
 } & ({ message: string } | { attachment: File })
 
 export async function addPost({
   attachment = null,
   message = '',
-  replyTo = ''
+  replyTo = null
 }: AddPostOptions): Promise<string> {
   const { currentUser } = auth
 
