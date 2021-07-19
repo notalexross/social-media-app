@@ -20,7 +20,9 @@ function usePostsLive(
 
   useEffect(() => {
     if (posts) {
-      setLivePosts(posts.map((post, idx) => updatedPosts[idx] || post))
+      setLivePosts(
+        posts.map(post => updatedPosts.find(updatedPost => updatedPost?.id === post.id) || post)
+      )
     }
   }, [posts, updatedPosts])
 
