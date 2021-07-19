@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import type { PostsStatus, PostWithId } from '../services/firebase'
+import type { PostsStatus, PostWithUserDetails } from '../services/firebase'
 import { getMultiUserPosts } from '../services/firebase'
 
 export default function useMultiUserPosts(uids: string[] | undefined): {
-  posts: PostWithId[] | null
+  posts: PostWithUserDetails[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean
   isLoadingPosts: boolean

@@ -45,17 +45,23 @@ type PostUpdatable = Partial<
   Omit<Post, 'createdAt' | 'likesCount' | 'owner' | 'replyTo' | 'replies' | 'updatedAt'>
 >
 
-export type PostWithId = Post & { id: string }
+type PostWithId = Post & { id: string }
+
+export type PostWithUserDetails = PostWithId & {
+  ownerDetails: User
+} & {
+  replyToOwnerDetails?: User
+}
 
 export type PostsStatus = {
-  posts: PostWithId[] | null
+  posts: PostWithUserDetails[] | null
   isComplete: boolean
   currentPage: number
   statistics: Stats
 }
 
 type FetchedPost = {
-  post: PostWithId
+  post: PostWithUserDetails
   createdAt: string
   chunkIndex: number
 }
@@ -238,7 +244,7 @@ const usersCache = new SelfUpdatingCache('users', getUserById)
 
 export function getCachedUser(
   uid: string,
-  maxAge: number
+  maxAge = 10000
 ): Promise<User & { lastUpdated?: number }> {
   return usersCache.get(uid, maxAge).then(user => user || { uid })
 }
@@ -400,16 +406,32 @@ function getPostContent(postId: string): Promise<PostContent> {
     })
 }
 
-export function getPosts(postIds: string[]): Promise<(PostWithId | undefined)[]> {
-  const promises = postIds.map(postId => {
-    if (!postId) {
-      return undefined
-    }
+async function addUserDetailsToPost(post: PostWithId) {
+  let postWithUserDetails: PostWithUserDetails
+  if (post.replyTo) {
+    const [ownerDetails, replyToOwnerDetails] = await Promise.all([
+      getCachedUser(post.owner),
+      getCachedUser(post.replyTo)
+    ])
+    postWithUserDetails = { ...post, ownerDetails, replyToOwnerDetails }
+  } else {
+    const ownerDetails = await getCachedUser(post.owner)
+    postWithUserDetails = { ...post, ownerDetails }
+  }
 
-    const { postPublicRef, postContentRef } = getPostQueries(postId)
+  return postWithUserDetails
+}
 
-    return firestore
-      .runTransaction(async transaction => {
+export function getPosts(postIds: string[]): Promise<(PostWithUserDetails | undefined)[]> {
+  const promises = postIds.map(async postId => {
+    try {
+      if (!postId) {
+        return undefined
+      }
+
+      const { postPublicRef, postContentRef } = getPostQueries(postId)
+
+      const postWithId = await firestore.runTransaction(async transaction => {
         const postPublicDoc = await transaction.get(postPublicRef)
         const postPublic = postPublicDoc.data() as PostPublic
 
@@ -422,11 +444,15 @@ export function getPosts(postIds: string[]): Promise<(PostWithId | undefined)[]>
 
         return { id: postId, ...post }
       })
-      .catch(error => {
-        console.error(error)
 
-        return undefined
-      })
+      const postWithUserDetails = await addUserDetailsToPost(postWithId)
+
+      return postWithUserDetails
+    } catch (error) {
+      console.error(error)
+
+      return undefined
+    }
   })
 
   return Promise.all(promises)
@@ -434,7 +460,7 @@ export function getPosts(postIds: string[]): Promise<(PostWithId | undefined)[]>
 
 export function onPostsUpdated(
   postIds: string[],
-  callback: (updatedPost: PostWithId) => void
+  callback: (updatedPost: PostWithUserDetails) => void
 ): () => void {
   const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
     if (!postId) {
@@ -442,11 +468,17 @@ export function onPostsUpdated(
     }
 
     let post: Post | PostPublic | PostContent | Record<string, never> = {}
-    const handleResponse = (response: PostPublic | PostContent) => {
+
+    const handleResponseAsync = async (response: PostPublic | PostContent) => {
       post = { ...post, ...response }
       if ('owner' in post && 'message' in post) {
-        callback({ id: postId, ...post })
+        const postWithUserDetails = await addUserDetailsToPost({ ...post, id: postId })
+        callback(postWithUserDetails)
       }
+    }
+
+    const handleResponse = (response: PostPublic | PostContent) => {
+      handleResponseAsync(response).catch(console.error)
     }
 
     acc.push(listenPostPublic(postId, handleResponse), listenPostContent(postId, handleResponse))
@@ -835,7 +867,12 @@ async function fetchPostsAndUpdateUsers(
     const chunkFetchedPosts = await Promise.all(
       docs.map(async doc => {
         const postContent = await getPostContent(doc.id)
-        const post = { id: doc.id, ...(doc.data() as PostPublic), ...postContent }
+        const postPublic = doc.data() as PostPublic
+        const post = await addUserDetailsToPost({
+          ...postPublic,
+          ...postContent,
+          id: doc.id
+        })
 
         return {
           post,
