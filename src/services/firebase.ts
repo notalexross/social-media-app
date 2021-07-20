@@ -157,7 +157,7 @@ function listenPublicDetails(
   callback: (details: { uid: string } & UserPublic) => void
 ): () => void {
   return getUserQueries(uid).userPublicRef.onSnapshot(snap => {
-    callback({ uid, ...(snap.data() as UserPublic) })
+    callback({ ...(snap.data() as UserPublic), uid })
   })
 }
 
@@ -167,7 +167,7 @@ function listenPrivateDetails(
 ): () => void {
   return getUserQueries(uid).userPrivateRef.onSnapshot(
     snap => {
-      callback({ uid, ...(snap.data() as UserPrivate) })
+      callback({ ...(snap.data() as UserPrivate), uid })
     },
     error => {
       console.error(error)
@@ -212,8 +212,8 @@ function getUserId(username: string): Promise<{ uid: string } & UserPublic> {
     .where('usernameLowerCase', '==', username.toLowerCase())
     .get()
     .then(snap => ({
-      uid: snap.docs[0]?.id,
-      ...(snap.docs[0]?.data() as UserPublic)
+      ...(snap.docs[0]?.data() as UserPublic),
+      uid: snap.docs[0]?.id
     }))
     .catch(error => {
       console.error(error)
@@ -240,8 +240,8 @@ export function getUserById(
   }
 
   return Promise.all(queries).then(results => ({
-    uid,
-    ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {})
+    ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {}),
+    uid
   }))
 }
 
@@ -279,8 +279,8 @@ export async function getUserByUsername(
   }
 
   return Promise.all(queries).then(results => ({
-    uid,
-    ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {})
+    ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {}),
+    uid
   }))
 }
 
@@ -455,7 +455,7 @@ export function getPosts(
               post = { ...post, ...postContent }
             }
 
-            return { id: postId, ...post }
+            return { ...post, id: postId }
           }
         }
 
@@ -577,9 +577,7 @@ function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
       updatedAt: FieldValue.serverTimestamp()
     })
 
-    batch.update(postContentRef, {
-      ...postContentUpdates
-    })
+    batch.update(postContentRef, postContentUpdates)
 
     return batch.commit()
   }
