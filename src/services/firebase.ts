@@ -427,7 +427,10 @@ async function addUserDetailsToPost(post: PostWithId) {
   return postWithUserDetails
 }
 
-export function getPosts(postIds: string[]): Promise<(PostWithUserDetails | undefined)[]> {
+export function getPosts(
+  postIds: string[],
+  maxRetries = 1
+): Promise<(PostWithUserDetails | undefined)[]> {
   const promises = postIds.map(async postId => {
     try {
       if (!postId) {
@@ -437,22 +440,33 @@ export function getPosts(postIds: string[]): Promise<(PostWithUserDetails | unde
       const { postPublicRef, postContentRef } = getPostQueries(postId)
 
       const postWithId = await firestore.runTransaction(async transaction => {
-        const postPublicDoc = await transaction.get(postPublicRef)
-        const postPublic = postPublicDoc.data() as PostPublic
+        // Retries necessary when grabbing a new post, by current user, with pending writes. Transactions use server data only, no local cache. As such, this transaction is racing against said pending writes.
+        for (let i = 0; i <= maxRetries; i++) {
+          // eslint-disable-next-line no-await-in-loop
+          const postPublicDoc = await transaction.get(postPublicRef)
+          if (postPublicDoc.exists) {
+            const postPublic = postPublicDoc.data() as PostPublic
 
-        let post: Post = { ...postPublic, attachment: '', message: '' }
-        if (!postPublic.deleted) {
-          const postContentDoc = await transaction.get(postContentRef)
-          const postContent = postContentDoc.data() as PostContent
-          post = { ...post, ...postContent }
+            let post: Post = { ...postPublic, attachment: '', message: '' }
+            if (!postPublic.deleted) {
+              // eslint-disable-next-line no-await-in-loop
+              const postContentDoc = await transaction.get(postContentRef)
+              const postContent = postContentDoc.data() as PostContent
+              post = { ...post, ...postContent }
+            }
+
+            return { id: postId, ...post }
+          }
         }
 
-        return { id: postId, ...post }
+        return undefined
       })
 
-      const postWithUserDetails = await addUserDetailsToPost(postWithId)
+      if (!postWithId) {
+        return undefined
+      }
 
-      return postWithUserDetails
+      return await addUserDetailsToPost(postWithId)
     } catch (error) {
       console.error(error)
 
