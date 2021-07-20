@@ -3,12 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 // eslint-disable-next-line jest/no-mocks-import
 import { mockFunctions } from '../__mocks__/react-router-dom'
-import SignIn from './sign-in'
+import SignInPage from './sign-in'
 
 beforeEach(() => {
   render(
     <Router>
-      <SignIn />
+      <SignInPage />
     </Router>
   )
 })

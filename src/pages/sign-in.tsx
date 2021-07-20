@@ -6,7 +6,7 @@ import { useTitle } from '../hooks'
 import * as ROUTES from '../constants/routes'
 import logo from '../images/logo.png'
 
-export default function SignIn(): JSX.Element {
+export default function SignInPage(): JSX.Element {
   useTitle('Login')
   const history = useHistory()
   const [email, setEmail] = useState('')

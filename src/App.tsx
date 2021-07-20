@@ -3,11 +3,11 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 import { UserContextProvider } from './context/user'
 import * as ROUTES from './constants/routes'
 
-const SignUp = lazy(() => import('./pages/sign-up'))
-const SignIn = lazy(() => import('./pages/sign-in'))
-const Profile = lazy(() => import('./pages/profile'))
-const Dashboard = lazy(() => import('./pages/dashboard'))
-const NotFound = lazy(() => import('./pages/not-found'))
+const SignUpPage = lazy(() => import('./pages/sign-up'))
+const SignInPage = lazy(() => import('./pages/sign-in'))
+const ProfilePage = lazy(() => import('./pages/profile'))
+const DashboardPage = lazy(() => import('./pages/dashboard'))
+const NotFoundPage = lazy(() => import('./pages/not-found'))
 
 export default function App(): JSX.Element {
   return (
@@ -16,19 +16,19 @@ export default function App(): JSX.Element {
         <Suspense fallback={<h1>Loading...</h1>}>
           <Switch>
             <Route path={ROUTES.SIGN_UP}>
-              <SignUp />
+              <SignUpPage />
             </Route>
             <Route path={ROUTES.SIGN_IN}>
-              <SignIn />
+              <SignInPage />
             </Route>
             <Route path={`${ROUTES.PROFILES}/:username`}>
-              <Profile />
+              <ProfilePage />
             </Route>
             <Route exact path={ROUTES.DASHBOARD}>
-              <Dashboard />
+              <DashboardPage />
             </Route>
             <Route path="*">
-              <NotFound />
+              <NotFoundPage />
             </Route>
           </Switch>
         </Suspense>
