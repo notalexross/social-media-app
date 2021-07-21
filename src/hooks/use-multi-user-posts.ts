@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { PostsStatus, PostWithUserDetails } from '../services/firebase'
 import { getMultiUserPosts } from '../services/firebase'
 
-export default function useMultiUserPosts(uids: string[] | undefined): {
+export default function useMultiUserPosts(uids: string[] | undefined, postsPerPage = 10): {
   posts: PostWithUserDetails[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean
@@ -26,7 +26,7 @@ export default function useMultiUserPosts(uids: string[] | undefined): {
         uids,
         data => isCurrent && setStatus(data),
         data => isCurrent && setIsLoadingPosts(data),
-        10
+        postsPerPage
       )
       setLoadNextPage(() => loadNextPageFunction)
       loadNextPageFunction().catch(console.error)
@@ -36,7 +36,7 @@ export default function useMultiUserPosts(uids: string[] | undefined): {
     return () => {
       isCurrent = false
     }
-  }, [uids])
+  }, [postsPerPage, uids])
 
   return { posts, loadNextPage, isComplete, isLoadingPosts }
 }
