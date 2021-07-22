@@ -1,2 +1,2 @@
-/* eslint-disable import/prefer-default-export */
 export { default as PostContainer } from './post'
+export { default as TimelineContainer } from './timeline'
