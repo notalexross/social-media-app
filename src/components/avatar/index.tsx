@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { UserCircleIcon as UserIcon } from '@heroicons/react/outline'
+import Skeleton from 'react-loading-skeleton'
 import { updateAvatar } from '../../services/firebase'
 
 type AvatarImageWrapperProps = {
@@ -38,7 +39,6 @@ function AvatarImageWrapper({
       <button
         {...restProps}
         type="button"
-        tabIndex={0}
         onClick={handleClick}
         aria-label="upload new avatar"
       >
@@ -93,7 +93,7 @@ export default function Avatar({
           uid={uid}
           updatable={updatable}
         >
-          {image}
+          {image || <Skeleton circle height="100%" width="100%" style={{ display: 'block' }} />}
         </AvatarImageWrapper>
       </div>
     </div>
