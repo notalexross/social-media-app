@@ -24,7 +24,7 @@ export default function TimelineContainer({
     timelineInner = (
       <>
         {posts.map(post => (
-          <PostContainer className="mb-8" key={post.id} post={post} />
+          <PostContainer className="mb-8" key={post.id} post={post} commentsLimit={1} maxDepth={1} />
         ))}
         {!isComplete ? (
           <button
