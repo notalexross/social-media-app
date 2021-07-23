@@ -17,7 +17,7 @@ export default function TimelineContainer({
 }: TimelineContainerProps): JSX.Element {
   let timelineInner: JSX.Element
   if (!posts) {
-    timelineInner = <p className="text-2xl text-center">Loading posts...</p>
+    timelineInner = <PostContainer className="mb-8" />
   } else if (!posts.length) {
     timelineInner = <p className="text-2xl text-center">There are no posts to show here.</p>
   } else {

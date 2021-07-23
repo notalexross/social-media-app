@@ -1,4 +1,5 @@
 import React, { createContext, useContext } from 'react'
+import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
 import { likePost, unlikePost, followUser, unfollowUser } from '../../services/firebase'
@@ -8,7 +9,7 @@ import StatefulLink from '../stateful-link'
 import * as ROUTES from '../../constants/routes'
 
 type PostContextValue = {
-  post: PostWithUserDetails
+  post: PostWithUserDetails | undefined
   hideAttachment: boolean
   isComment: boolean
   isPostPage: boolean
@@ -18,7 +19,7 @@ const PostContext = createContext<PostContextValue>({} as PostContextValue)
 
 type PostProps = {
   children: React.ReactNode
-  post: PostWithUserDetails
+  post?: PostWithUserDetails
   hideAttachment?: boolean
   isComment?: boolean
   isPostPage?: boolean
@@ -39,35 +40,55 @@ export default function Post({
   )
 }
 
-Post.OwnerAvatar = function PostOwnerAvatar(
-  props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
-) {
+type PostOwnerAvatarProps = {
+  linkClassName?: string
+} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+
+Post.OwnerAvatar = function PostOwnerAvatar({ linkClassName, ...restProps }: PostOwnerAvatarProps) {
   const { post } = useContext(PostContext)
-  const { ownerDetails } = post
-  const { avatar, username } = ownerDetails
+  const { ownerDetails } = post || {}
+  const { avatar, username } = ownerDetails || {}
+
+  if (!post) {
+    return (
+      <div {...restProps}>
+        <Avatar />
+      </div>
+    )
+  }
 
   return (
-    <div {...props}>
+    <div {...restProps}>
       {username ? (
         <StatefulLink to={`${ROUTES.PROFILES}/${username}`}>
-          <Avatar src={avatar} alt={`${username}'s avatar`} />
+          <Avatar className={linkClassName} src={avatar} alt={`${username}'s avatar`} />
         </StatefulLink>
       ) : (
-        <Avatar src={avatar} alt="avatar" />
+        <Avatar src={null} alt="avatar" />
       )}
     </div>
   )
 }
 
-Post.OwnerUsername = function PostOwnerUsername(
-  props: React.AnchorHTMLAttributes<HTMLAnchorElement>
-) {
+type PostOwnerUsernameProps = {
+  linkClassName?: string
+} & React.AnchorHTMLAttributes<HTMLAnchorElement>
+
+Post.OwnerUsername = function PostOwnerUsername({
+  linkClassName,
+  ...restProps
+}: PostOwnerUsernameProps) {
   const { post } = useContext(PostContext)
+
+  if (!post) {
+    return <Skeleton width="20ch" />
+  }
+
   const { ownerDetails } = post
   const { username } = ownerDetails
 
   return username ? (
-    <StatefulLink to={`${ROUTES.PROFILES}/${username}`} {...props}>
+    <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`} {...restProps}>
       {username}
     </StatefulLink>
   ) : null
@@ -78,6 +99,15 @@ Post.OwnerFollowButton = function PostOwnerFollowButton(
 ) {
   const { following, uid } = useContext(UserContext)
   const { post } = useContext(PostContext)
+
+  if (!post) {
+    return (
+      <span {...props}>
+        <Skeleton width="8ch" />
+      </span>
+    )
+  }
+
   const { owner } = post
   const isFollowing = following?.includes(owner)
 
@@ -98,17 +128,17 @@ Post.OwnerFollowButton = function PostOwnerFollowButton(
 
 Post.ReplyingTo = function PostReplyingTo(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   const { post, isComment } = useContext(PostContext)
-  const { replyTo, replyToOwnerDetails } = post
+  const { replyTo, replyToOwnerDetails } = post || {}
 
-  if (!post.replyTo) {
+  if (!post || !replyTo || !replyTo?.id || !replyToOwnerDetails?.username || isComment) {
     return null
   }
 
-  return !isComment && replyTo?.id && replyToOwnerDetails?.username ? (
+  return (
     <StatefulLink to={`${ROUTES.POSTS}/${replyTo?.id}`} post={replyTo.id} modal {...props}>
       {`Replying to ${replyToOwnerDetails?.username}`}
     </StatefulLink>
-  ) : null
+  )
 }
 
 Post.Message = function PostMessage(
@@ -116,7 +146,7 @@ Post.Message = function PostMessage(
 ) {
   const { post } = useContext(PostContext)
 
-  return <div {...props}>{post.message}</div>
+  return <div {...props}>{post ? <p>{post.message}</p> : <Skeleton count={3} />}</div>
 }
 
 type PostAttachmentProps = {
@@ -126,17 +156,23 @@ type PostAttachmentProps = {
 Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAttachmentProps) {
   const { post, hideAttachment } = useContext(PostContext)
 
-  return !hideAttachment && post.attachment ? (
+  if (hideAttachment || (post && !post.attachment)) {
+    return null
+  }
+
+  const imgClassName = 'absolute inset-0 w-full h-full w-full object-contain'
+
+  return (
     <div {...restProps}>
       <div className={`relative pt-${aspectRatio}`}>
-        <img
-          className="absolute inset-0 w-full h-full w-full object-contain"
-          src={post.attachment}
-          alt=""
-        />
+        {post ? (
+          <img className={imgClassName} src={post.attachment} alt="" />
+        ) : (
+          <Skeleton className={imgClassName} />
+        )}
       </div>
     </div>
-  ) : null
+  )
 }
 
 Post.ViewAttachment = function PostAttachment(
@@ -144,11 +180,15 @@ Post.ViewAttachment = function PostAttachment(
 ) {
   const { post, hideAttachment } = useContext(PostContext)
 
-  return hideAttachment && post.attachment ? (
+  if (!post || !hideAttachment || !post.attachment) {
+    return null
+  }
+
+  return (
     <StatefulLink to={`${ROUTES.POSTS}/${post.id}`} post={post} modal {...props}>
       View attachment
     </StatefulLink>
-  ) : null
+  )
 }
 
 type PostLikeButtonProps = {
@@ -158,16 +198,23 @@ type PostLikeButtonProps = {
 Post.LikeButton = function PostLikeButton({ activeColor, ...restProps }: PostLikeButtonProps) {
   const { likedPosts } = useContext(UserContext)
   const { post } = useContext(PostContext)
+
+  if (!post) {
+    return (
+      <span {...restProps}>
+        <Skeleton />
+      </span>
+    )
+  }
+
   const { id } = post
-  const isLiked = id && likedPosts?.includes(id)
+  const isLiked = likedPosts?.includes(id)
 
   const toggleLike: React.MouseEventHandler<HTMLButtonElement> = () => {
-    if (id) {
-      if (!isLiked) {
-        likePost(id).catch(console.error)
-      } else {
-        unlikePost(id).catch(console.error)
-      }
+    if (!isLiked) {
+      likePost(id).catch(console.error)
+    } else {
+      unlikePost(id).catch(console.error)
     }
   }
 
@@ -180,6 +227,14 @@ Post.LikeButton = function PostLikeButton({ activeColor, ...restProps }: PostLik
 
 Post.ReplyButton = function PostReplyButton(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   const { post, isPostPage, isComment } = useContext(PostContext)
+
+  if (!post) {
+    return (
+      <span {...props}>
+        <Skeleton />
+      </span>
+    )
+  }
 
   return (
     <StatefulLink
@@ -197,6 +252,15 @@ Post.LikesCount = function PostLikesCount(
   props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>
 ) {
   const { post } = useContext(PostContext)
+
+  if (!post) {
+    return (
+      <span {...props}>
+        <Skeleton width="8ch" />
+      </span>
+    )
+  }
+
   const { likesCount } = post
 
   return <span {...props}>{`${likesCount} like${likesCount === 1 ? '' : 's'}`}</span>
@@ -211,6 +275,15 @@ Post.RepliesCount = function PostRepliesCount({
   ...restProps
 }: PostRepliesCountProps) {
   const { post, isPostPage } = useContext(PostContext)
+
+  if (!post) {
+    return (
+      <div {...restProps}>
+        <Skeleton width="9ch" />
+      </div>
+    )
+  }
+
   const { replies, id } = post
   const repliesCount = replies.length
 
