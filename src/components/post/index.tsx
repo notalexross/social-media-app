@@ -59,7 +59,7 @@ Post.OwnerAvatar = function PostOwnerAvatar({ linkClassName, ...restProps }: Pos
 
   return (
     <div {...restProps}>
-      {username ? (
+      {username && !post?.deleted ? (
         <StatefulLink to={`${ROUTES.PROFILES}/${username}`}>
           <Avatar className={linkClassName} src={avatar} alt={`${username}'s avatar`} />
         </StatefulLink>
@@ -72,10 +72,12 @@ Post.OwnerAvatar = function PostOwnerAvatar({ linkClassName, ...restProps }: Pos
 
 type PostOwnerUsernameProps = {
   linkClassName?: string
+  deletedTextContent?: string
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>
 
 Post.OwnerUsername = function PostOwnerUsername({
   linkClassName,
+  deletedTextContent = '[Deleted]',
   ...restProps
 }: PostOwnerUsernameProps) {
   const { post } = useContext(PostContext)
@@ -87,11 +89,13 @@ Post.OwnerUsername = function PostOwnerUsername({
   const { ownerDetails } = post
   const { username } = ownerDetails
 
-  return username ? (
+  return username && !post.deleted ? (
     <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`} {...restProps}>
       {username}
     </StatefulLink>
-  ) : null
+  ) : (
+    <span {...restProps}>{deletedTextContent}</span>
+  )
 }
 
 Post.OwnerFollowButton = function PostOwnerFollowButton(
@@ -119,7 +123,7 @@ Post.OwnerFollowButton = function PostOwnerFollowButton(
     }
   }
 
-  return uid && owner !== uid ? (
+  return uid && owner !== uid && !post.deleted ? (
     <button type="button" onClick={toggleFollow} {...props}>
       {isFollowing ? 'Unfollow' : 'follow'}
     </button>
@@ -130,7 +134,14 @@ Post.ReplyingTo = function PostReplyingTo(props: React.AnchorHTMLAttributes<HTML
   const { post, isComment } = useContext(PostContext)
   const { replyTo, replyToOwnerDetails } = post || {}
 
-  if (!post || !replyTo || !replyTo?.id || !replyToOwnerDetails?.username || isComment) {
+  if (
+    !post ||
+    !replyTo ||
+    !replyTo?.id ||
+    !replyToOwnerDetails?.username ||
+    isComment ||
+    post.deleted
+  ) {
     return null
   }
 
@@ -141,12 +152,26 @@ Post.ReplyingTo = function PostReplyingTo(props: React.AnchorHTMLAttributes<HTML
   )
 }
 
-Post.Message = function PostMessage(
-  props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
-) {
+type PostMessageProps = {
+  deletedTextContent?: string
+} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+
+Post.Message = function PostMessage({ deletedTextContent = '[Deleted]', ...restProps }: PostMessageProps) {
   const { post } = useContext(PostContext)
 
-  return <div {...props}>{post ? <p>{post.message}</p> : <Skeleton count={3} />}</div>
+  if (!post) {
+    return (
+      <div {...restProps}>
+        <Skeleton count={3} />
+      </div>
+    )
+  }
+
+  return (
+    <div {...restProps}>
+      <p>{post.deleted ? deletedTextContent : post.message}</p>
+    </div>
+  )
 }
 
 type PostAttachmentProps = {
@@ -156,7 +181,7 @@ type PostAttachmentProps = {
 Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAttachmentProps) {
   const { post, hideAttachment } = useContext(PostContext)
 
-  if (hideAttachment || (post && !post.attachment)) {
+  if (hideAttachment || (post && !post.attachment) || post?.deleted) {
     return null
   }
 
@@ -180,7 +205,7 @@ Post.ViewAttachment = function PostAttachment(
 ) {
   const { post, hideAttachment } = useContext(PostContext)
 
-  if (!post || !hideAttachment || !post.attachment) {
+  if (!post || !hideAttachment || !post.attachment || post.deleted) {
     return null
   }
 

@@ -52,7 +52,7 @@ export default function PostContainer({
         <div className="flex items-center p-4 border-b">
           <Post.OwnerAvatar className="block mr-4 w-12" linkClassName="hover:opacity-70" />
           <div className="flex flex-col">
-            <Post.OwnerUsername className="font-bold" linkClassName="hover:underline" />
+            <Post.OwnerUsername className="font-bold" linkClassName="hover:underline" deletedTextContent="[Deleted]" />
             <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function PostContainer({
         <div className="flex flex-col p-4">
           <Post.ReplyingTo className="mb-1 text-sm text-gray-500 hover:underline" />
           <Post.ViewAttachment className="mb-1 text-sm text-gray-500 hover:underline" />
-          <Post.Message className="mb-1" />
+          <Post.Message className="mb-1" deletedTextContent="[Deleted]" />
           <div className="flex items-center mt-1 text-gray-500">
             <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
             <Post.RepliesCount className="mr-2 text-sm" linkClassName="hover:underline" />
