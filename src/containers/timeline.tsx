@@ -17,14 +17,20 @@ export default function TimelineContainer({
 }: TimelineContainerProps): JSX.Element {
   let timelineInner: JSX.Element
   if (!posts) {
-    timelineInner = <PostContainer className="mb-8" />
+    timelineInner = <PostContainer className="mb-8 border rounded bg-white" />
   } else if (!posts.length) {
     timelineInner = <p className="text-2xl text-center">There are no posts to show here.</p>
   } else {
     timelineInner = (
       <>
         {posts.map(post => (
-          <PostContainer className="mb-8" key={post.id} post={post} commentsLimit={1} maxDepth={1} />
+          <PostContainer
+            className="mb-8 border rounded bg-white"
+            key={post.id}
+            post={post}
+            commentsLimit={1}
+            maxDepth={1}
+          />
         ))}
         {!isComplete ? (
           <button

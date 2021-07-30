@@ -41,45 +41,44 @@ export default function PostContainer({
       {...restProps}
     />
   ) : (
-    <div {...restProps}>
-      <Post
-        className="border rounded bg-white"
-        post={post}
-        hideAttachment={hideAttachment}
-        isComment={isComment}
-        isPostPage={isPostPage}
-      >
-        <div className="flex items-center p-4 border-b">
-          <Post.OwnerAvatar className="block mr-4 w-12" linkClassName="hover:opacity-70" />
-          <div className="flex flex-col">
-            <Post.OwnerUsername className="font-bold" linkClassName="hover:underline" deletedTextContent="[Deleted]" />
-            <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
-          </div>
+    <Post
+      className="border rounded bg-white"
+      post={post}
+      hideAttachment={hideAttachment}
+      isComment={isComment}
+      isPostPage={isPostPage}
+      {...restProps}
+    >
+      <div className="flex items-center p-4 border-b">
+        <Post.OwnerAvatar className="block mr-4 w-12" linkClassName="hover:opacity-70" />
+        <div className="flex flex-col">
+          <Post.OwnerUsername className="font-bold" linkClassName="hover:underline" deletedTextContent="[Deleted]" />
+          <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
         </div>
-        <Post.Attachment className="border-b bg-gray-200" aspectRatio="16/9" />
-        <div className="flex flex-col p-4">
-          <Post.ReplyingTo className="mb-1 text-sm text-gray-500 hover:underline" />
-          <Post.ViewAttachment className="mb-1 text-sm text-gray-500 hover:underline" />
-          <Post.Message className="mb-1" deletedTextContent="[Deleted]" />
-          <div className="flex items-center mt-1 text-gray-500">
-            <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
-            <Post.RepliesCount className="mr-2 text-sm" linkClassName="hover:underline" />
-            <Post.LikeButton className="mr-2 w-6 hover:opacity-70" activeColor="red-600" />
-            <Post.LikesCount className="text-sm" />
-          </div>
-          {compose ? <p className="mt-4 p-4 border rounded">Compose Post Placeholder</p> : null}
-          {post ? (
-            <Comments
-              post={post}
-              limit={commentsLimit}
-              maxDepth={maxDepth}
-              currentDepth={currentDepth + 1}
-              isPostPage={isPostPage}
-            />
-          ) : null}
+      </div>
+      <Post.Attachment className="border-b bg-gray-200" aspectRatio="16/9" />
+      <div className="flex flex-col p-4">
+        <Post.ReplyingTo className="mb-1 text-sm text-gray-500 hover:underline" />
+        <Post.ViewAttachment className="mb-1 text-sm text-gray-500 hover:underline" />
+        <Post.Message className="mb-1" deletedTextContent="[Deleted]" />
+        <div className="flex items-center mt-1 text-gray-500">
+          <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
+          <Post.RepliesCount className="mr-2 text-sm" linkClassName="hover:underline" />
+          <Post.LikeButton className="mr-2 w-6 hover:opacity-70" activeColor="red-600" />
+          <Post.LikesCount className="text-sm" />
         </div>
-      </Post>
-    </div>
+        {compose ? <p className="mt-4 p-4 border rounded">Compose Post Placeholder</p> : null}
+        {post ? (
+          <Comments
+            post={post}
+            limit={commentsLimit}
+            maxDepth={maxDepth}
+            currentDepth={currentDepth + 1}
+            isPostPage={isPostPage}
+          />
+        ) : null}
+      </div>
+    </Post>
   )
 }
 
@@ -211,7 +210,7 @@ Comments = ({
       ) : null}
       {repliesShown.map(reply => (
         <Comment
-          className="mt-4"
+          className="mt-4 border rounded bg-white"
           key={reply}
           id={reply}
           limit={limit}
