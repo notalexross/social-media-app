@@ -485,7 +485,7 @@ describe(`${addPost.name}`, () => {
   })
 
   test('given post has content and is a reply, resolves and calls firebase methods', async () => {
-    const result = addPost({ message: 'message', replyTo: 'post1' })
+    const result = addPost({ message: 'message', replyTo: { id: 'post1', owner: 'user1' } })
 
     await expect(result).resolves.toBe('mockId')
     expect(mockFunctions.set).toBeCalledTimes(2)
@@ -524,7 +524,7 @@ describe(`${editPost.name}`, () => {
     const result = editPost('post1', { message: 'new message' })
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.update).toBeCalledTimes(2)
     expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
   })
 })
@@ -662,10 +662,10 @@ describe(`${getMultiUserPosts.name}`, () => {
 
     expect(mockFunctions.orderBy).toBeCalledTimes(1)
     expect(mockFunctions.limit).toBeCalledTimes(1)
-    expect(mockFunctions.get).toBeCalledTimes(3)
+    expect(mockFunctions.get).toBeCalledTimes(5)
   })
 
-  test('calls callbacks', async () => {
+  test('calls callbacks with correct data', async () => {
     const users = ['user1', 'user2']
 
     const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback)
@@ -687,7 +687,16 @@ describe(`${getMultiUserPosts.name}`, () => {
           message: 'mock message',
           owner: 'user2',
           replies: [],
-          replyTo: 'post1'
+          replyTo: {
+            id: 'post1',
+            owner: 'user1'
+          },
+          ownerDetails: expect.objectContaining({
+            uid: 'user2'
+          }) as unknown,
+          replyToOwnerDetails: expect.objectContaining({
+            uid: 'user1'
+          }) as unknown
         },
         {
           attachment: '',
@@ -698,7 +707,10 @@ describe(`${getMultiUserPosts.name}`, () => {
           message: 'mock message',
           owner: 'user1',
           replies: ['post2'],
-          replyTo: ''
+          replyTo: null,
+          ownerDetails: expect.objectContaining({
+            uid: 'user1'
+          }) as unknown
         }
       ],
       isComplete: true,
@@ -707,7 +719,7 @@ describe(`${getMultiUserPosts.name}`, () => {
     })
   })
 
-  test('given multiple pages, calls callbacks', async () => {
+  test('given multiple pages, calls callbacks with correct data', async () => {
     const users = ['user1', 'user2']
 
     const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback, 1)
@@ -729,7 +741,16 @@ describe(`${getMultiUserPosts.name}`, () => {
           message: 'mock message',
           owner: 'user2',
           replies: [],
-          replyTo: 'post1'
+          replyTo: {
+            id: 'post1',
+            owner: 'user1'
+          },
+          ownerDetails: expect.objectContaining({
+            uid: 'user2'
+          }) as unknown,
+          replyToOwnerDetails: expect.objectContaining({
+            uid: 'user1'
+          }) as unknown
         }
       ],
       isComplete: false,

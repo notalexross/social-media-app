@@ -13,7 +13,7 @@ function Component() {
           <p key={key}>
             {key}
             {': '}
-            {value}
+            {JSON.stringify(value)}
           </p>
         ))
       ))}
@@ -25,9 +25,9 @@ test('gets posts', async () => {
   render(<Component />)
 
   await waitFor(() => {
-    expect(screen.getByText('createdAt: 2')).toBeInTheDocument()
-    expect(screen.getByText('owner: user2')).toBeInTheDocument()
-    expect(screen.getByText('createdAt: 1')).toBeInTheDocument()
-    expect(screen.getByText('owner: user1')).toBeInTheDocument()
+    expect(screen.getByText('createdAt: "2"')).toBeInTheDocument()
+    expect(screen.getByText('owner: "user2"')).toBeInTheDocument()
+    expect(screen.getByText('createdAt: "1"')).toBeInTheDocument()
+    expect(screen.getByText('owner: "user1"')).toBeInTheDocument()
   })
 })

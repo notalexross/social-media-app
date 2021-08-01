@@ -23,7 +23,7 @@ const posts = {
     message: 'mock message',
     owner: 'user1',
     replies: ['post2'],
-    replyTo: '',
+    replyTo: null,
     likes: ['user1', 'user2']
   },
   post2: {
@@ -33,7 +33,10 @@ const posts = {
     message: 'mock message',
     owner: 'user2',
     replies: [],
-    replyTo: 'post1',
+    replyTo: {
+      id: 'post1',
+      owner: 'user1'
+    },
     likes: ['user1']
   }
 }
@@ -80,7 +83,7 @@ const database = {
   },
   posts: {
     _docs: new Map(Object.keys(posts).map(postId => {
-      const { likes, replies, ...post } = posts[postId]
+      const { likes, attachment, message, ...post } = posts[postId]
 
       return [
         postId,
@@ -89,10 +92,11 @@ const database = {
             likes: {
               _docs: new Map(likes.map(likerId => [likerId, {}]))
             },
-            replies: {
+            content: {
               _docs: new Map([['details', {
                 _fields: {
-                  postIds: replies
+                  attachment,
+                  message
                 }
               }]])
             }
