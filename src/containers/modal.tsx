@@ -8,7 +8,9 @@ import PostContainer from './post'
 import { useLockBody } from '../hooks'
 import * as ROUTES from '../constants/routes'
 
-Modal.setAppElement('#root')
+if (process.env.NODE_ENV !== 'test') {
+  Modal.setAppElement('#root')
+}
 
 type ModalContainerProps = {
   post?: PostWithUserDetails | string
