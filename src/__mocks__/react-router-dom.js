@@ -20,8 +20,13 @@ const history = {
 }
 const useHistory = jest.fn(() => history)
 
+const location = {}
+const useLocation = jest.fn(() => location)
+
 const mockFunctions = {
-  history
+  history,
+  useHistory,
+  useLocation
 }
 
-export { BrowserRouter, Switch, Route, Link, useHistory, mockFunctions }
+export { BrowserRouter, Switch, Route, Link, useHistory, useLocation, mockFunctions }
