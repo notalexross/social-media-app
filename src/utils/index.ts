@@ -59,3 +59,51 @@ export function chunkArray<T>(array: T[], numPerChunk = 10): T[][] {
 
   return chunked
 }
+
+export function formatDateTime(date: Date): [string, string] {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ]
+  const year = date.getFullYear()
+  const month = months[date.getMonth()]
+  const day = date.getDate()
+  const hours24 = date.getHours()
+  const hours12 = (hours24 > 12 ? hours24 - 12 : hours24) || 12
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  const amPm = hours24 >= 12 ? 'pm' : 'am'
+  const dateNow = new Date()
+  const yearNow = dateNow.getFullYear()
+  const elapsedMillis = dateNow.getTime() - date.getTime()
+  const millisPerSecond = 1000
+  const millisPerMinute = 60 * millisPerSecond
+  const millisPerHour = 60 * millisPerMinute
+  const millisPer24Hour = 24 * millisPerHour
+
+  let timeElapsed: string
+  if (yearNow !== year) {
+    timeElapsed = `${month} ${day}, ${year}`
+  } else if (elapsedMillis >= millisPer24Hour) {
+    timeElapsed = `${month} ${day}`
+  } else if (elapsedMillis >= millisPerHour) {
+    timeElapsed = `${Math.floor(elapsedMillis / millisPerHour)}h`
+  } else if (elapsedMillis >= millisPerMinute) {
+    timeElapsed = `${Math.floor(elapsedMillis / millisPerMinute)}m`
+  } else {
+    timeElapsed = `${Math.floor(elapsedMillis / millisPerSecond)}s`
+  }
+
+  const dateFull = `${hours12}:${minutes} ${amPm} · ${month} ${day}, ${year}`
+
+  return [timeElapsed, dateFull]
+}
