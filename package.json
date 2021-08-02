@@ -32,8 +32,8 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test",
-    "test:coverage": "craco test --coverage --watchAll",
+    "test": "env TZ=UTC craco test",
+    "test:coverage": "env TZ=UTC craco test --coverage --watchAll",
     "eject": "react-scripts eject"
   },
   "browserslist": {
