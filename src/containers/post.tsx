@@ -52,7 +52,14 @@ export default function PostContainer({
       <div className="flex items-center p-4 border-b">
         <Post.OwnerAvatar className="block mr-4 w-12" linkClassName="hover:opacity-70" />
         <div className="flex flex-col">
-          <Post.OwnerUsername className="font-bold" linkClassName="hover:underline" deletedTextContent="[Deleted]" />
+          <div>
+            <Post.OwnerUsername
+              className="font-bold"
+              linkClassName="hover:underline"
+              deletedTextContent="[Deleted]"
+            />
+            <Post.DateCreated className="text-sm text-gray-500" linkClassName="hover:underline" />
+          </div>
           <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
         </div>
       </div>

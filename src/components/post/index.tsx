@@ -6,6 +6,7 @@ import { likePost, unlikePost, followUser, unfollowUser } from '../../services/f
 import { UserContext } from '../../context/user'
 import Avatar from '../avatar'
 import StatefulLink from '../stateful-link'
+import { formatDateTime } from '../../utils'
 import * as ROUTES from '../../constants/routes'
 
 type PostContextValue = {
@@ -128,6 +129,36 @@ Post.OwnerFollowButton = function PostOwnerFollowButton(
       {isFollowing ? 'Unfollow' : 'follow'}
     </button>
   ) : null
+}
+
+type PostDateCreatedProps = {
+  linkClassName?: string
+} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+
+Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: PostDateCreatedProps) {
+  const { post } = useContext(PostContext)
+
+  if (!post) {
+    return null
+  }
+
+  const { id, createdAt } = post
+  const isEdited = !!post?.updatedAt
+  const createdAtDate = createdAt.toDate()
+  const createdAtISO = createdAtDate.toISOString()
+  const [timeElapsed, dateFull] = formatDateTime(createdAtDate)
+
+  return (
+    <span {...restProps}>
+      {' · '}
+      <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
+        <time dateTime={createdAtISO} title={dateFull}>
+          {timeElapsed}
+        </time>
+      </StatefulLink>
+      {isEdited ? ' · edited' : null}
+    </span>
+  )
 }
 
 Post.ReplyingTo = function PostReplyingTo(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
