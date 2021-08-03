@@ -1,4 +1,11 @@
-import { isValidSignUpInputs, isValidSignInInputs, sortBy, chunkArray, formatDateTime } from '.'
+import {
+  isValidSignUpInputs,
+  isValidSignInInputs,
+  sortBy,
+  chunkArray,
+  formatDateTime,
+  modulo
+} from '.'
 
 describe(`${isValidSignUpInputs.name}`, () => {
   test('given valid inputs, returns true', () => {
@@ -198,5 +205,43 @@ describe(`${formatDateTime.name}`, () => {
         expect(result).toEqual([expTimeElapsed, expFullDate])
       })
     })
+  })
+})
+
+describe(`${modulo.name}`, () => {
+  test('returns the modulus of two numbers', () => {
+    const numerator = 5
+    const denominator = 3
+
+    const result = modulo(numerator, denominator)
+
+    expect(result).toBe(2)
+  })
+
+  test('given negative numerator and denominator, returns a value with the same sign as the denominator', () => {
+    const numerator = -5
+    const denominator = -3
+
+    const result = modulo(numerator, denominator)
+
+    expect(result).toBe(-2)
+  })
+
+  test('given negative denominator, returns a value with the same sign as the denominator', () => {
+    const numerator = 5
+    const denominator = -3
+
+    const result = modulo(numerator, denominator)
+
+    expect(result).toBe(-1)
+  })
+
+  test('given negative numerator, returns a value with the same sign as the denominator', () => {
+    const numerator = -5
+    const denominator = 3
+
+    const result = modulo(numerator, denominator)
+
+    expect(result).toBe(1)
   })
 })

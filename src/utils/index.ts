@@ -107,3 +107,7 @@ export function formatDateTime(date: Date): [string, string] {
 
   return [timeElapsed, dateFull]
 }
+
+export function modulo(numerator: number, denominator: number): number {
+  return ((numerator % denominator) + denominator) % denominator
+}
