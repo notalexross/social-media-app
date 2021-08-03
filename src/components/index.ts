@@ -1,5 +1,6 @@
 export { default as Avatar } from './avatar'
 export { default as FocusTrap } from './focus-trap'
 export { default as Header } from './header'
+export { default as Menu } from './menu'
 export { default as Post } from './post'
 export { default as StatefulLink } from './stateful-link'
