@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { PostWithUserDetails } from '../services/firebase'
+import MenuContainer from './menu'
 import { Post, StatefulLink } from '../components'
 import { usePosts, usePostsLive } from '../hooks'
 import * as ROUTES from '../constants/routes'
@@ -49,19 +50,24 @@ export default function PostContainer({
       isPostPage={isPostPage}
       {...restProps}
     >
-      <div className="flex items-center p-4 border-b">
-        <Post.OwnerAvatar className="block mr-4 w-12" linkClassName="hover:opacity-70" />
-        <div className="flex flex-col">
-          <div>
-            <Post.OwnerUsername
-              className="font-bold"
-              linkClassName="hover:underline"
-              deletedTextContent="[Deleted]"
-            />
-            <Post.DateCreated className="text-sm text-gray-500" linkClassName="hover:underline" />
+      <div className="flex justify-between items-center p-4 border-b">
+        <div className="flex items-center">
+          <Post.OwnerAvatar className="block mr-4 w-12" linkClassName="hover:opacity-70" />
+          <div className="flex flex-col">
+            <div>
+              <Post.OwnerUsername
+                className="font-bold"
+                linkClassName="hover:underline"
+                deletedTextContent="[Deleted]"
+              />
+              <Post.DateCreated className="text-sm text-gray-500" linkClassName="hover:underline" />
+            </div>
+            <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
           </div>
-          <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
         </div>
+        {post ? (
+          <MenuContainer className="pr-4" post={post} />
+        ) : null}
       </div>
       <Post.Attachment className="border-b bg-gray-200" aspectRatio="16/9" />
       <div className="flex flex-col p-4">
