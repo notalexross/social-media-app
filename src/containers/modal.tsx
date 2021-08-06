@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Modal from 'react-modal'
 import { XIcon } from '@heroicons/react/outline'
@@ -29,10 +29,15 @@ export default function ModalContainer({
   const mediaQuery = window.matchMedia('(min-width: 768px)')
   const [headerHeight, setHeaderHeight] = useState(0)
   const [offsetTop, setOffsetTop] = useState(mediaQuery.matches ? offsetTopMd : offsetTopSm)
-  const headerRef = useRef<HTMLDivElement>(null)
   const history = useHistory<LocationState>()
   const back = history.location.state?.back
   const postId = typeof post === 'string' ? post : post?.id
+
+  const measuredHeaderRef = useCallback((node: HTMLDivElement) => {
+    if (node !== null) {
+      setHeaderHeight(node.offsetHeight)
+    }
+  }, [])
 
   const exit = () => {
     if (back) {
@@ -68,7 +73,6 @@ export default function ModalContainer({
       setOffsetTop(event.matches ? offsetTopMd : offsetTopSm)
     }
 
-    setHeaderHeight(headerRef.current?.offsetHeight || 0)
     mediaQuery.addEventListener('change', handleResize)
 
     return () => mediaQuery.removeEventListener('change', handleResize)
@@ -85,7 +89,7 @@ export default function ModalContainer({
       isOpen
     >
       <div className="mx-auto max-w-2xl">
-        <div className="top-0 px-4 py-3 border rounded-t bg-white" ref={headerRef}>
+        <div className="top-0 px-4 py-3 border rounded-t bg-white" ref={measuredHeaderRef}>
           <button
             className="block hover:opacity-70"
             type="button"
@@ -96,7 +100,7 @@ export default function ModalContainer({
           </button>
         </div>
         <div
-          className="overflow-y-auto"
+          className="overflow-y-auto h-screen"
           style={{ maxHeight: `calc(100vh - ${offsetTop} * 100vh - ${headerHeight}px)` }}
         >
           {modalInner}
