@@ -29,6 +29,8 @@ export default function ModalContainer({
   const mediaQuery = window.matchMedia('(min-width: 768px)')
   const [headerHeight, setHeaderHeight] = useState(0)
   const [offsetTop, setOffsetTop] = useState(mediaQuery.matches ? offsetTopMd : offsetTopSm)
+  const [isLargeScreen, setIsLargeScreen] = useState(mediaQuery.matches)
+  const overlayRef = useRef<HTMLDivElement>(null)
   const history = useHistory<LocationState>()
   const back = history.location.state?.back
   const postId = typeof post === 'string' ? post : post?.id
@@ -71,6 +73,7 @@ export default function ModalContainer({
   useEffect(() => {
     const handleResize = (event: MediaQueryListEvent) => {
       setOffsetTop(event.matches ? offsetTopMd : offsetTopSm)
+      setIsLargeScreen(event.matches)
     }
 
     mediaQuery.addEventListener('change', handleResize)
@@ -78,33 +81,44 @@ export default function ModalContainer({
     return () => mediaQuery.removeEventListener('change', handleResize)
   }, [mediaQuery, offsetTopMd, offsetTopSm])
 
+  const handleClick: React.MouseEventHandler = event => {
+    if (event.target === event.currentTarget) {
+      setTimeout(() => {
+        overlayRef.current?.click()
+      }, 0)
+    }
+  }
+
+  const OverlayElement = ({ ref, ...props }: Record<string, unknown>, content: JSX.Element) => (
+    <div ref={overlayRef} {...props}>
+      {content}
+    </div>
+  )
+
   return (
     <Modal
-      className="relative mx-auto h-full bg-white outline-none md:h-auto md:max-w-2xl md:bg-opacity-0"
-      overlayClassName="fixed inset-0 bg-white bg-opacity-75 z-40"
+      className="relative mx-auto max-w-2xl outline-none"
+      overlayClassName="fixed inset-0 bg-white z-40 md:bg-opacity-75"
       style={{ content: { top: `${offsetTop * 100}%` } }}
       key={postId}
       contentLabel="Current Post Modal"
       onRequestClose={exit}
+      shouldCloseOnOverlayClick={isLargeScreen}
+      overlayElement={OverlayElement}
       isOpen
     >
-      <div className="mx-auto max-w-2xl">
-        <div className="top-0 px-4 py-3 border rounded-t bg-white" ref={measuredHeaderRef}>
-          <button
-            className="block hover:opacity-70"
-            type="button"
-            onClick={exit}
-            aria-label="close"
-          >
-            <XIcon className="w-6" />
-          </button>
-        </div>
-        <div
-          className="overflow-y-auto h-screen"
-          style={{ maxHeight: `calc(100vh - ${offsetTop} * 100vh - ${headerHeight}px)` }}
-        >
-          {modalInner}
-        </div>
+      <div className="top-0 px-4 py-3 border rounded-t bg-white" ref={measuredHeaderRef}>
+        <button className="block hover:opacity-70" type="button" onClick={exit} aria-label="close">
+          <XIcon className="w-6" />
+        </button>
+      </div>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <div
+        onClick={handleClick}
+        className="overflow-y-auto h-screen"
+        style={{ maxHeight: `calc(100vh - ${offsetTop} * 100vh - ${headerHeight}px)` }}
+      >
+        {modalInner}
       </div>
     </Modal>
   )
