@@ -144,7 +144,8 @@ Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: Pos
 
   const { id, createdAt } = post
   const isEdited = !!post?.updatedAt
-  const createdAtDate = createdAt.toDate()
+  const createdAtMillis = createdAt.seconds * 1000 + createdAt.nanoseconds / 1000000
+  const createdAtDate = new Date(createdAtMillis)
   const createdAtISO = createdAtDate.toISOString()
   const [timeElapsed, dateFull] = formatDateTime(createdAtDate)
 
