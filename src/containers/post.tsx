@@ -175,52 +175,64 @@ Comments = ({
 
   const updateRepliesPool = () => setRepliesPool(replies.slice().reverse())
 
+  const loadNewRepliesbutton = (
+    <button
+      className="block mt-4 text-sm text-gray-500 hover:underline"
+      type="button"
+      onClick={updateRepliesPool}
+    >
+      {`Load ${numNewReplies} new repl${numNewReplies === 1 ? 'y' : 'ies'}`}
+    </button>
+  )
+
+  const viewSomeRepliesButton = (
+    <button
+      className="mt-4 text-sm text-gray-500 hover:underline"
+      type="button"
+      onClick={() => setMaxReplies(state => state + limit)}
+    >
+      {maxReplies === 0 ? 'View replies' : 'View more replies'}
+    </button>
+  )
+
+  const viewAllRepliesButton = (
+    <StatefulLink
+      className="block mt-4 text-sm text-gray-500 hover:underline"
+      to={`${ROUTES.POSTS}/${post.id}`}
+    >
+      {`View all ${totalReplies} replies`}
+    </StatefulLink>
+  )
+
+  let after: JSX.Element = <></>
+  let before: JSX.Element = <></>
+
+  if (hasMoreReplies) {
+    if (!isPostPage) {
+      if (numNewReplies > 0 && maxReplies > 0) {
+        before = loadNewRepliesbutton
+      }
+
+      if (!(numNewReplies > 0 && maxReplies > 0) || totalRepliesShown > 0) {
+        after = viewAllRepliesButton
+      }
+    } else {
+      if (numNewReplies > 0) {
+        before = loadNewRepliesbutton
+      }
+
+      if (!(numNewReplies > 0) || totalRepliesShown > 0) {
+        after = viewSomeRepliesButton
+      }
+    }
+  }
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => updateRepliesPool(), [post.id])
 
-  if (!totalReplies) {
-    return <></>
-  }
-
-  let viewRepliesButton: JSX.Element
-  if (!isPostPage) {
-    viewRepliesButton = (
-      <StatefulLink
-        className="block mt-4 text-sm text-gray-500 hover:underline"
-        to={`${ROUTES.POSTS}/${post.id}`}
-      >
-        {`View all ${totalReplies} replies`}
-      </StatefulLink>
-    )
-  } else if (
-    totalReplies > 0 &&
-    numNewReplies === 0 &&
-    (totalShowableReplies > maxReplies || totalShowableReplies === 0)
-  ) {
-    viewRepliesButton = (
-      <button
-        className="mt-4 text-sm text-gray-500 hover:underline"
-        type="button"
-        onClick={() => setMaxReplies(state => state + limit)}
-      >
-        {maxReplies === 0 ? 'View replies' : 'View more replies'}
-      </button>
-    )
-  } else {
-    viewRepliesButton = <></>
-  }
-
   return (
     <div {...restProps}>
-      {numNewReplies > 0 ? (
-        <button
-          className="block mt-4 text-sm text-gray-500 hover:underline"
-          type="button"
-          onClick={updateRepliesPool}
-        >
-          {`Load ${numNewReplies} new repl${numNewReplies === 1 ? 'y' : 'ies'}`}
-        </button>
-      ) : null}
+      {before}
       {repliesShown.map(reply => (
         <Comment
           className="mt-4 border rounded bg-white"
@@ -233,7 +245,7 @@ Comments = ({
           hideAttachment
         />
       ))}
-      {hasMoreReplies ? viewRepliesButton : null}
+      {after}
     </div>
   )
 }
