@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
@@ -6,7 +6,7 @@ import { likePost, unlikePost, followUser, unfollowUser } from '../../services/f
 import { UserContext } from '../../context/user'
 import Avatar from '../avatar'
 import StatefulLink from '../stateful-link'
-import { formatDateTime } from '../../utils'
+import { formatDateTime, onIntervalAfter } from '../../utils'
 import * as ROUTES from '../../constants/routes'
 
 type PostContextValue = {
@@ -137,23 +137,48 @@ type PostDateCreatedProps = {
 
 Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: PostDateCreatedProps) {
   const { post } = useContext(PostContext)
+  const [timeElapsed, setTimeElapsed] = useState('')
+  const [dateFull, setDateFull] = useState('')
+  const [dateISO, setDateISO] = useState('')
+  const { id } = post || {}
 
-  if (!post) {
+  useEffect(() => {
+    let cleanup = () => {}
+
+    if (post) {
+      const timeIntervalSeconds = 60
+      const timeIntervalMillis = timeIntervalSeconds * 1000
+      const { createdAt } = post
+      const createdAtMillis = createdAt.seconds * 1000 + createdAt.nanoseconds / 1000000
+
+      const updateTimes = () => {
+        const createdAtDate = new Date(createdAtMillis)
+        const [elapsed, date] = formatDateTime(createdAtDate)
+
+        setTimeElapsed(elapsed)
+        setDateFull(date)
+        setDateISO(createdAtDate.toISOString())
+      }
+
+      cleanup = onIntervalAfter(createdAtMillis, timeIntervalMillis, updateTimes)
+      updateTimes()
+    }
+
+    return cleanup
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  if (!post || !id) {
     return null
   }
 
-  const { id, createdAt } = post
   const isEdited = !!post?.updatedAt
-  const createdAtMillis = createdAt.seconds * 1000 + createdAt.nanoseconds / 1000000
-  const createdAtDate = new Date(createdAtMillis)
-  const createdAtISO = createdAtDate.toISOString()
-  const [timeElapsed, dateFull] = formatDateTime(createdAtDate)
 
   return (
     <span {...restProps}>
       {' · '}
       <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
-        <time dateTime={createdAtISO} title={dateFull}>
+        <time dateTime={dateISO} title={dateFull}>
           {timeElapsed}
         </time>
       </StatefulLink>
