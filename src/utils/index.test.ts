@@ -4,7 +4,8 @@ import {
   sortBy,
   chunkArray,
   formatDateTime,
-  modulo
+  modulo,
+  onIntervalAfter
 } from '.'
 
 describe(`${isValidSignUpInputs.name}`, () => {
@@ -243,5 +244,93 @@ describe(`${modulo.name}`, () => {
     const result = modulo(numerator, denominator)
 
     expect(result).toBe(1)
+  })
+})
+
+describe(`${onIntervalAfter.name}`, () => {
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  test('returns a cleanup function', () => {
+    const startFromNow = 2000
+    const interval = 5000
+
+    const callback = jest.fn()
+    const start = Date.now() + startFromNow
+    const timeUntilFirst = startFromNow
+
+    const cleanup = onIntervalAfter(start, interval, callback)
+
+    jest.advanceTimersByTime(timeUntilFirst + interval * 1000)
+    expect(callback).toBeCalledTimes(1001)
+    cleanup()
+    jest.advanceTimersByTime(interval * 1000)
+    expect(callback).toBeCalledTimes(1001)
+  })
+
+  describe('starting from a future date', () => {
+    test('calls callback at start time', () => {
+      const startFromNow = 1540145
+      const interval = Infinity
+
+      const callback = jest.fn()
+      const start = Date.now() + startFromNow
+      const timeUntilFirst = startFromNow
+
+      onIntervalAfter(start, interval, callback)
+
+      expect(callback).toBeCalledTimes(0)
+      jest.advanceTimersByTime(timeUntilFirst - 1)
+      expect(callback).toBeCalledTimes(0)
+      jest.advanceTimersByTime(1)
+      expect(callback).toBeCalledTimes(1)
+    })
+
+    test('calls callback on interval after start time', () => {
+      const startFromNow = 954679
+      const interval = 6347
+
+      const callback = jest.fn()
+      const start = Date.now() + startFromNow
+      const timeUntilFirst = startFromNow
+
+      onIntervalAfter(start, interval, callback)
+
+      expect(callback).toBeCalledTimes(0)
+      jest.advanceTimersByTime(timeUntilFirst)
+      expect(callback).toBeCalledTimes(1)
+      jest.advanceTimersByTime(interval - 1)
+      expect(callback).toBeCalledTimes(1)
+      jest.advanceTimersByTime(1)
+      expect(callback).toBeCalledTimes(2)
+      jest.advanceTimersByTime(interval * 1000)
+      expect(callback).toBeCalledTimes(1002)
+    })
+  })
+
+  describe('starting from a past date', () => {
+    test('calls callback on interval based on start time', () => {
+      const startFromNow = -7862154
+      const interval = 84278
+
+      const callback = jest.fn()
+      const start = Date.now() + startFromNow
+      const timeUntilFirst = interval - (-startFromNow % interval)
+
+      onIntervalAfter(start, interval, callback)
+
+      expect(callback).toBeCalledTimes(0)
+      jest.advanceTimersByTime(timeUntilFirst - 1)
+      expect(callback).toBeCalledTimes(0)
+      jest.advanceTimersByTime(1)
+      expect(callback).toBeCalledTimes(1)
+      jest.advanceTimersByTime(interval * 1000)
+      expect(callback).toBeCalledTimes(1001)
+    })
   })
 })

@@ -111,3 +111,30 @@ export function formatDateTime(date: Date): [string, string] {
 export function modulo(numerator: number, denominator: number): number {
   return ((numerator % denominator) + denominator) % denominator
 }
+
+export function onIntervalAfter(
+  startTimeMillis: number,
+  intervalMillis: number,
+  callback: (...args: unknown[]) => void
+): () => void {
+  const timeDifference = Date.now() - startTimeMillis
+  const startsInFuture = timeDifference < 0
+
+  let timeUntilFirst: number
+  if (startsInFuture) {
+    timeUntilFirst = -timeDifference
+  } else {
+    timeUntilFirst = intervalMillis - (timeDifference % intervalMillis)
+  }
+
+  let intervalId: NodeJS.Timeout
+  const timeoutId = setTimeout(() => {
+    intervalId = setInterval(callback, intervalMillis)
+    callback()
+  }, timeUntilFirst)
+
+  return () => {
+    clearTimeout(timeoutId)
+    clearInterval(intervalId)
+  }
+}
