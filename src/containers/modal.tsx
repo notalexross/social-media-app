@@ -5,7 +5,7 @@ import { XIcon } from '@heroicons/react/outline'
 import type { LocationState } from '../types'
 import type { PostWithUserDetails } from '../services/firebase'
 import PostContainer from './post'
-import { useLockBody } from '../hooks'
+import { useLockBody, usePosts, usePostsLive } from '../hooks'
 import * as ROUTES from '../constants/routes'
 
 if (process.env.NODE_ENV !== 'test') {
@@ -34,6 +34,8 @@ export default function ModalContainer({
   const history = useHistory<LocationState>()
   const back = history.location.state?.back
   const postId = typeof post === 'string' ? post : post?.id
+  const postObject = usePosts(postId || '')
+  const postLive = usePostsLive(postObject || null) || (typeof post === 'string' ? undefined : post)
 
   const measuredHeaderRef = useCallback((node: HTMLDivElement) => {
     if (node !== null) {
@@ -55,7 +57,7 @@ export default function ModalContainer({
     modalInner = (
       <PostContainer
         className="border-l border-r border-b rounded-b bg-white"
-        post={post}
+        post={postLive}
         commentsLimit={0}
         compose={compose}
       />
