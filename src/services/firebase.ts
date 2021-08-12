@@ -554,20 +554,24 @@ function createPostInDB(
   return Promise.reject(new Error('A post must have at least an attachment or a message.'))
 }
 
-function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
-  const { postPublicRef, postContentRef } = getPostQueries(postId)
+function updatePostInDB(
+  post: PostUpdatable & { id: string; owner: string },
+  updates: PostUpdatable
+): Promise<void> {
+  const { postPublicRef, postContentRef } = getPostQueries(post.id)
   const postPublicKeys = ['deleted'] as const
   const postContentKeys = ['attachment', 'message'] as const
 
-  const postPublicUpdates: Partial<PostPublic> = postPublicKeys.reduce(
-    (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
-    {}
-  )
+  const callback = (acc: typeof updates, cur: keyof typeof updates) => {
+    if (cur in updates && post[cur] !== updates[cur]) {
+      return { ...acc, [cur]: updates[cur] }
+    }
 
-  const postContentUpdates: Partial<PostContent> = postContentKeys.reduce(
-    (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
-    {}
-  )
+    return acc
+  }
+
+  const postPublicUpdates: Partial<PostPublic> = postPublicKeys.reduce(callback, {})
+  const postContentUpdates: Partial<PostContent> = postContentKeys.reduce(callback, {})
 
   if (Object.keys(postPublicUpdates).length || Object.keys(postContentUpdates).length) {
     const batch = firebase.firestore().batch()
@@ -582,7 +586,7 @@ function updatePostInDB(postId: string, updates: PostUpdatable): Promise<void> {
     return batch.commit()
   }
 
-  return Promise.reject(new Error(`No valid updates were supplied for post with id "${postId}".`))
+  return Promise.reject(new Error(`No valid updates were supplied for post with id "${post.id}".`))
 }
 
 function updateFollowInDB(
@@ -816,8 +820,19 @@ export async function addPost({
   return createPostInDB(currentUser.uid, { attachment: url, message, replyTo })
 }
 
-export function editPost(postId: string, updates: PostUpdatable): Promise<void> {
-  return updatePostInDB(postId, updates)
+type EditPostOptions = {
+  deleted?: boolean
+  attachment?: File | string | null
+  message?: string
+}
+
+export async function editPost(
+  post: PostUpdatable & { id: string; owner: string },
+  { attachment, ...restUpdates }: EditPostOptions = {}
+): Promise<void> {
+  const url = await getAttachmentUrl(post.owner, attachment)
+
+  return updatePostInDB(post, { attachment: url, ...restUpdates })
 }
 
 export async function followUser(uid: string): Promise<void> {

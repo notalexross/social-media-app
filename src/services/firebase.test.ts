@@ -507,13 +507,19 @@ describe(`${addPost.name}`, () => {
 
 describe(`${editPost.name}`, () => {
   test('returns a promise', () => {
-    const result = editPost('post1', { message: 'new message' })
+    const result = editPost(
+      { id: 'post1', owner: 'user1', deleted: false, message: '', attachment: '' },
+      { message: 'new message' }
+    )
 
     expect(result).toBeInstanceOf(Promise)
   })
 
   test('given no updates, throws error', async () => {
-    const result = editPost('post1', {})
+    const result = editPost(
+      { id: 'post1', owner: 'user1', deleted: false, message: '', attachment: '' },
+      {}
+    )
 
     await expect(result).rejects.toThrowError(
       'No valid updates were supplied for post with id "post1".'
@@ -521,7 +527,10 @@ describe(`${editPost.name}`, () => {
   })
 
   test('given updates, resolves and calls firebase methods', async () => {
-    const result = editPost('post1', { message: 'new message' })
+    const result = editPost(
+      { id: 'post1', owner: 'user1', deleted: false, message: '', attachment: '' },
+      { message: 'new message' }
+    )
 
     await expect(result).resolves.toBeUndefined()
     expect(mockFunctions.update).toBeCalledTimes(2)
