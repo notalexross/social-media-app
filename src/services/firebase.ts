@@ -778,11 +778,27 @@ export async function editUser(updates: UserUpdatable): Promise<void> {
   return updateUserInDB(currentUser.uid, updates)
 }
 
+async function getAttachmentUrl(directory: string, attachment?: File | string | null) {
+  let url = ''
+  if (attachment) {
+    if (typeof attachment === 'string') {
+      url = attachment
+    } else {
+      url = await uploadFile(`attachments/${directory}/`, attachment).catch(error => {
+        console.error(error)
+        throw new Error(error)
+      })
+    }
+  }
+
+  return url
+}
+
 type AddPostOptions = {
-  attachment?: File | null
+  attachment?: File | string | null
   message?: string
   replyTo?: ReplyTo
-} & ({ message: string } | { attachment: File })
+}
 
 export async function addPost({
   attachment = null,
@@ -795,13 +811,7 @@ export async function addPost({
     throw new Error('No user.')
   }
 
-  let url = ''
-  if (attachment) {
-    url = await uploadFile(`attachments/${currentUser.uid}/`, attachment).catch(error => {
-      console.error(error)
-      throw new Error(error)
-    })
-  }
+  const url = await getAttachmentUrl(currentUser.uid, attachment)
 
   return createPostInDB(currentUser.uid, { attachment: url, message, replyTo })
 }
