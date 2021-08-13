@@ -74,7 +74,7 @@ Post.OwnerAvatar = function PostOwnerAvatar({ linkClassName, ...restProps }: Pos
 type PostOwnerUsernameProps = {
   linkClassName?: string
   deletedTextContent?: string
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>
+} & React.HTMLAttributes<HTMLSpanElement>
 
 Post.OwnerUsername = function PostOwnerUsername({
   linkClassName,
@@ -91,9 +91,11 @@ Post.OwnerUsername = function PostOwnerUsername({
   const { username } = ownerDetails
 
   return username && !post.deleted ? (
-    <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`} {...restProps}>
-      {username}
-    </StatefulLink>
+    <span {...restProps}>
+      <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`}>
+        {username}
+      </StatefulLink>
+    </span>
   ) : (
     <span {...restProps}>{deletedTextContent}</span>
   )
