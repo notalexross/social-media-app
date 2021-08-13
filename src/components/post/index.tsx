@@ -234,7 +234,7 @@ Post.Message = function PostMessage({ deletedTextContent = '[Deleted]', ...restP
 }
 
 type PostAttachmentProps = {
-  aspectRatio: '16/9' | '3/2' | '1/1'
+  aspectRatio: number
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
 
 Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAttachmentProps) {
@@ -248,7 +248,7 @@ Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAtt
 
   return (
     <div {...restProps}>
-      <div className={`relative pt-${aspectRatio}`}>
+      <div className="relative" style={{ paddingTop: `${100 / aspectRatio}%` }}>
         {post ? (
           <img className={imgClassName} src={post.attachment} alt="" />
         ) : (
@@ -276,10 +276,10 @@ Post.ViewAttachment = function PostAttachment(
 }
 
 type PostLikeButtonProps = {
-  activeColor: string
+  likedClassName: string
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
 
-Post.LikeButton = function PostLikeButton({ activeColor, ...restProps }: PostLikeButtonProps) {
+Post.LikeButton = function PostLikeButton({ likedClassName, ...restProps }: PostLikeButtonProps) {
   const { likedPosts } = useContext(UserContext)
   const { post } = useContext(PostContext)
 
@@ -304,7 +304,9 @@ Post.LikeButton = function PostLikeButton({ activeColor, ...restProps }: PostLik
 
   return (
     <button type="button" onClick={toggleLike} {...restProps}>
-      <HeartIcon className={`${isLiked ? `fill-current text-${activeColor}` : ''}`} />
+      <span className={isLiked ? likedClassName : ''}>
+        <HeartIcon className={`${isLiked ? 'fill-current' : ''}`} />
+      </span>
     </button>
   )
 }

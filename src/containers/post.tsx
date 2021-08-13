@@ -69,7 +69,7 @@ export default function PostContainer({
           <MenuContainer className="pr-4" post={post} />
         ) : null}
       </div>
-      <Post.Attachment className="border-b bg-gray-200" aspectRatio="16/9" />
+      <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
       <div className="flex flex-col p-4">
         <Post.ReplyingTo className="self-start mb-1 text-sm text-gray-500 hover:underline" />
         <Post.ViewAttachment className="self-start mb-1 text-sm text-gray-500 hover:underline" />
@@ -77,7 +77,7 @@ export default function PostContainer({
         <div className="flex items-center mt-1 text-gray-500">
           <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
           <Post.RepliesCount className="mr-2 text-sm" linkClassName="hover:underline" />
-          <Post.LikeButton className="mr-2 w-6 hover:opacity-70" activeColor="red-600" />
+          <Post.LikeButton className="mr-2 w-6 hover:opacity-70" likedClassName="text-red-600" />
           <Post.LikesCount className="text-sm" />
         </div>
         {compose ? <p className="mt-4 p-4 border rounded">Compose Post Placeholder</p> : null}
