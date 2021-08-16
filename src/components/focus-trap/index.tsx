@@ -7,6 +7,8 @@ type FocusTrapProps = {
   previousKey?: string
   nextKey?: string
   onRequestClose?: () => void
+  noAutoFocus?: boolean
+  ignoreNav?: boolean
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
 
 export default function FocusTrap({
@@ -15,31 +17,33 @@ export default function FocusTrap({
   previousKey = 'ArrowUp',
   nextKey = 'ArrowDown',
   onRequestClose = () => {},
+  noAutoFocus = false,
+  ignoreNav = false,
   ...restProps
 }: FocusTrapProps): JSX.Element {
   const focusRef = useRef<HTMLDivElement>(null)
+  const initialFocusedElementRef = useRef(document.activeElement)
 
   useEffect(() => {
+    const initialFocusedElement = initialFocusedElementRef.current
+    const interactiveElements =
+      'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
+
     if (focusRef.current) {
       const container = focusRef.current
-      const initialFocusedElement = document.activeElement
-      let focusableElements: NodeListOf<HTMLElement>
-      container.focus()
-
-      const updateFocusableElements = () => {
-        const interactiveElementsString =
-          'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
-        focusableElements = container.querySelectorAll(interactiveElementsString)
+      let shiftTabLastPressedKey = false
+      if (!noAutoFocus) {
+        container.focus()
       }
 
       const moveFocusBy = (direction: number) => {
+        const focusable: NodeListOf<HTMLElement> = container.querySelectorAll(interactiveElements)
+        const { activeElement } = document
         const startIndex = direction > 0 ? -1 : 0
-        const activeElementIndex = Array.from(focusableElements).findIndex(
-          el => el === document.activeElement
-        )
+        const activeElementIndex = Array.from(focusable).findIndex(el => el === activeElement)
         const currentFocusIndex = activeElementIndex >= 0 ? activeElementIndex : startIndex
-        const nextFocusIndex = modulo(currentFocusIndex + direction, focusableElements.length)
-        focusableElements[nextFocusIndex].focus()
+        const nextFocusIndex = modulo(currentFocusIndex + direction, focusable.length)
+        focusable[nextFocusIndex].focus()
       }
 
       const trapKeyboardNavigation = (event: KeyboardEvent) => {
@@ -54,15 +58,43 @@ export default function FocusTrap({
         }
       }
 
-      const observer = new MutationObserver(updateFocusableElements)
+      const handleFocusIn = () => {
+        const { activeElement } = document
+        if (!container.contains(activeElement)) {
+          const focusable = container.querySelectorAll(interactiveElements)
+          const numFocusable = focusable.length
+          const nextFocusable = shiftTabLastPressedKey ? focusable[numFocusable - 1] : focusable[0]
 
-      updateFocusableElements()
-      observer.observe(container, { attributes: true, childList: true, subtree: true })
-      container.addEventListener('keydown', trapKeyboardNavigation)
+          if (nextFocusable instanceof HTMLElement) {
+            nextFocusable.focus()
+          } else {
+            container.focus()
+          }
+        }
+      }
+
+      const handleKeyPress = (event: KeyboardEvent) => {
+        shiftTabLastPressedKey = event.shiftKey && event.key === 'Tab'
+        if (event.key === 'Escape') {
+          onRequestClose()
+        }
+      }
+
+      if (ignoreNav) {
+        document.addEventListener('focusin', handleFocusIn, true)
+        container.addEventListener('keydown', handleKeyPress)
+      } else {
+        container.addEventListener('keydown', trapKeyboardNavigation)
+      }
 
       return () => {
-        observer.disconnect()
-        container.removeEventListener('keydown', trapKeyboardNavigation)
+        if (ignoreNav) {
+          document.removeEventListener('focusin', handleFocusIn, true)
+          container.removeEventListener('keydown', handleKeyPress)
+        } else {
+          container.removeEventListener('keydown', trapKeyboardNavigation)
+        }
+
         if (initialFocusedElement instanceof HTMLElement) {
           initialFocusedElement.focus()
         }
@@ -70,7 +102,7 @@ export default function FocusTrap({
     }
 
     return () => {}
-  }, [nextKey, onRequestClose, previousKey])
+  }, [ignoreNav, nextKey, noAutoFocus, onRequestClose, previousKey])
 
   return (
     <div>
