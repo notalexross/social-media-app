@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { PostWithUserDetails } from '../services/firebase'
+import ComposeContainer from './compose'
 import MenuContainer from './menu'
 import { Post, StatefulLink } from '../components'
 import { usePosts, usePostsLive } from '../hooks'
@@ -80,7 +81,9 @@ export default function PostContainer({
           <Post.LikeButton className="mr-2 w-6 hover:opacity-70" likedClassName="text-red-600" />
           <Post.LikesCount className="text-sm" />
         </div>
-        {compose ? <p className="mt-4 p-4 border rounded">Compose Post Placeholder</p> : null}
+        {compose && post ? (
+          <ComposeContainer className="mt-4" replyTo={{ id: post.id, owner: post.owner }} />
+        ) : null}
         {post ? (
           <Comments
             post={post}

@@ -5,7 +5,8 @@ module.exports = {
     extend: {
       padding: {
         '1/1': '100%'
-      }
+      },
+      minHeight: theme => ({ ...theme('spacing') })
     }
   },
   variants: {

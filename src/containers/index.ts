@@ -1,3 +1,4 @@
+export { default as ComposeContainer } from './compose'
 export { default as PostContainer } from './post'
 export { default as MenuContainer } from './menu'
 export { default as ModalContainer } from './modal'

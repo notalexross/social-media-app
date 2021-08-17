@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import Modal from 'react-modal'
 import { XIcon } from '@heroicons/react/outline'
 import type { LocationState } from '../types'
 import type { PostWithUserDetails } from '../services/firebase'
+import ComposeContainer from './compose'
 import PostContainer from './post'
 import { useLockBody, usePosts, usePostsLive } from '../hooks'
 import * as ROUTES from '../constants/routes'
@@ -17,13 +18,15 @@ type ModalContainerProps = {
   offsetTopSm?: number
   offsetTopMd?: number
   compose?: boolean
+  edit?: boolean
 }
 
 export default function ModalContainer({
   post,
   offsetTopSm = 0,
   offsetTopMd = 0.05,
-  compose = false
+  compose = false,
+  edit = false
 }: ModalContainerProps): JSX.Element {
   useLockBody()
   const mediaQuery = window.matchMedia('(min-width: 768px)')
@@ -32,10 +35,12 @@ export default function ModalContainer({
   const [isLargeScreen, setIsLargeScreen] = useState(mediaQuery.matches)
   const overlayRef = useRef<HTMLDivElement>(null)
   const history = useHistory<LocationState>()
+  const { postId: postIdFromPath } = useParams<{ postId: string | undefined }>()
   const back = history.location.state?.back
-  const postId = typeof post === 'string' ? post : post?.id
+  const postId = typeof post === 'string' ? post : post?.id || postIdFromPath
   const postObject = usePosts(postId || '')
   const postLive = usePostsLive(postObject || null) || (typeof post === 'string' ? undefined : post)
+  const postToEdit = edit && (post && typeof post !== 'string' ? post : postObject || false)
 
   const measuredHeaderRef = useCallback((node: HTMLDivElement) => {
     if (node !== null) {
@@ -52,8 +57,17 @@ export default function ModalContainer({
     }
   }
 
+  let composeContainer: JSX.Element | null = null
+  if (compose) {
+    composeContainer = <ComposeContainer />
+  } else if (edit) {
+    if (postToEdit && postToEdit.message) {
+      composeContainer = <ComposeContainer originalPost={postToEdit} />
+    }
+  }
+
   let modalInner: JSX.Element | null = null
-  if (post) {
+  if (post && !edit) {
     modalInner = (
       <PostContainer
         className="border-l border-r border-b rounded-b bg-white"
@@ -62,12 +76,10 @@ export default function ModalContainer({
         compose={compose}
       />
     )
-  } else if (compose) {
+  } else if (compose || edit) {
     modalInner = (
       <div className="border-l border-r border-b rounded-b bg-white">
-        <div className="flex flex-col p-4">
-          <p className="p-4 border rounded">Compose Post Placeholder</p>
-        </div>
+        <div className="flex flex-col p-4">{composeContainer}</div>
       </div>
     )
   }

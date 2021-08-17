@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Switch, Route, useLocation } from 'react-router-dom'
+import { Switch, Route, useLocation, Redirect } from 'react-router-dom'
 import type { LocationState } from './types'
 import { UserContextProvider } from './context/user'
 import * as ROUTES from './constants/routes'
@@ -22,6 +22,7 @@ export default function App(): JSX.Element {
     <UserContextProvider>
       <Suspense fallback={<h1>Loading...</h1>}>
         <Switch location={isModal ? back : location}>
+          <Redirect from={`${ROUTES.POSTS}/:postId/${ROUTES.EDIT}`} to={`${ROUTES.POSTS}/:postId`} />
           <Route path={ROUTES.SIGN_UP}>
             <SignUpPage />
           </Route>
@@ -53,6 +54,9 @@ export default function App(): JSX.Element {
             </Route>
             <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
               <ModalContainer post={post} compose />
+            </Route>
+            <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.EDIT}`}>
+              <ModalContainer post={post} edit />
             </Route>
             <Route exact path={ROUTES.COMPOSE}>
               <ModalContainer compose />
