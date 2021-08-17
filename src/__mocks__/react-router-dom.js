@@ -14,6 +14,10 @@ function Link({ children, to, ...restProps }) {
   return <a href={to} {...restProps}>{children}</a>
 }
 
+function Redirect() {
+  return null
+}
+
 const push = jest.fn(() => {})
 const history = {
   push
@@ -29,4 +33,4 @@ const mockFunctions = {
   useLocation
 }
 
-export { BrowserRouter, Switch, Route, Link, useHistory, useLocation, mockFunctions }
+export { BrowserRouter, Switch, Route, Link, Redirect, useHistory, useLocation, mockFunctions }
