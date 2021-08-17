@@ -1,4 +1,5 @@
 export { default as Avatar } from './avatar'
+export { default as Compose } from './compose'
 export { default as FocusTrap } from './focus-trap'
 export { default as Header } from './header'
 export { default as Menu } from './menu'
