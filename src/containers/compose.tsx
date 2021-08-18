@@ -85,8 +85,15 @@ export default function ComposeContainer({
             </div>
           </div>
         </div>
-        <div className="p-2 z-10" ref={popperRef}>
-          <Compose.EmojiSelect className="bg-white text-gray-500 border rounded shadow-md" />
+        <div className="z-10" ref={popperRef}>
+          <Compose.EmojiSelect
+            className="w-80 h-96 bg-white text-gray-500 border rounded shadow-md"
+            style={{
+              margin: '0.5rem',
+              maxWidth: 'calc(100vw - 2 * 0.5rem)',
+              maxHeight: 'calc(100vh - 2 * 0.5rem)'
+            }}
+          />
         </div>
       </Compose>
     </div>

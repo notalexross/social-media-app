@@ -1,10 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useHistory } from 'react-router-dom'
-import EmojiPicker from 'emoji-picker-react'
-import type { IEmojiData } from 'emoji-picker-react'
 import type { LocationState } from '../../types'
 import type { PostWithUserDetails, ReplyTo } from '../../services/firebase'
 import { addPost, editPost } from '../../services/firebase'
+import type { IEmojiData } from '../emoji-picker'
+import EmojiPicker from '../emoji-picker'
 import FocusTrap from '../focus-trap'
 
 type ComposeContextValue = {
@@ -384,9 +384,7 @@ Compose.EmojiSelect = function ComposeEmojiSelect(
 
   return showEmojiSelect ? (
     <FocusTrap onRequestClose={onRequestClose} noAutoFocus ignoreNav>
-      <div {...props}>
-        <EmojiPicker native onEmojiClick={handleClick} />
-      </div>
+      <EmojiPicker {...props} native onEmojiClick={handleClick} />
     </FocusTrap>
   ) : null
 }
