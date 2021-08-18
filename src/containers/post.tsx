@@ -200,7 +200,7 @@ Comments = ({
 
   const viewAllRepliesButton = (
     <StatefulLink
-      className="block mt-4 text-sm text-gray-500 hover:underline"
+      className="inline-block mt-4 text-sm text-gray-500 hover:underline"
       to={`${ROUTES.POSTS}/${post.id}`}
     >
       {`View all ${totalReplies} replies`}
