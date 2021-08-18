@@ -34,7 +34,7 @@ export default function TimelineContainer({
         ))}
         {!isComplete ? (
           <button
-            className="block mx-auto mb-8 px-6 py-2 w-full border rounded bg-white hover:opacity-70"
+            className="block mx-auto mb-8 px-6 py-2 w-full border rounded bg-blue-500 font-bold text-white hover:opacity-70"
             type="button"
             disabled={isLoadingPosts}
             onClick={loadNextPage}
