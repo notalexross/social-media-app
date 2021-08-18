@@ -77,7 +77,7 @@ export default function ComposeContainer({
                 showCircleAboveValue={-9}
               />
               <Compose.SubmitButton
-                className="py-1 px-5 bg-blue-500 font-bold text-sm text-white border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="py-1 px-5 bg-blue-500 font-bold text-sm text-white border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-70"
                 aria-label="Send message"
               >
                 {submitButtonContent}
