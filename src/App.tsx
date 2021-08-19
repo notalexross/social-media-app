@@ -22,7 +22,10 @@ export default function App(): JSX.Element {
     <UserContextProvider>
       <Suspense fallback={<h1>Loading...</h1>}>
         <Switch location={isModal ? back : location}>
-          <Redirect from={`${ROUTES.POSTS}/:postId/${ROUTES.EDIT}`} to={`${ROUTES.POSTS}/:postId`} />
+          <Redirect
+            from={`${ROUTES.POSTS}/:postId/${ROUTES.EDIT}`}
+            to={`${ROUTES.POSTS}/:postId`}
+          />
           <Route path={ROUTES.SIGN_UP}>
             <SignUpPage />
           </Route>

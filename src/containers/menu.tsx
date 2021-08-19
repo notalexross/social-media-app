@@ -21,7 +21,7 @@ import * as ROUTES from '../constants/routes'
 
 type MenuContainerProps = {
   post: PostWithUserDetails
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function MenuContainer({ post, ...restProps }: MenuContainerProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false)

@@ -18,7 +18,7 @@ type PostContainerProps = {
   hideAttachment?: boolean
   isComment?: boolean
   isPostPage?: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function PostContainer({
   post,
@@ -53,7 +53,7 @@ export default function PostContainer({
     >
       <div className="flex justify-between items-center p-4 border-b">
         <div className="flex items-center">
-          <Post.OwnerAvatar className="block mr-4 w-12" linkClassName="hover:opacity-70" />
+          <Post.OwnerAvatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
           <div className="flex flex-col">
             <div>
               <Post.OwnerUsername
@@ -66,9 +66,7 @@ export default function PostContainer({
             <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
           </div>
         </div>
-        {post ? (
-          <MenuContainer className="pr-4" post={post} />
-        ) : null}
+        {post ? <MenuContainer className="pr-4" post={post} /> : null}
       </div>
       <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
       <div className="flex flex-col p-4">
@@ -113,7 +111,7 @@ type CommentProps = {
   currentDepth?: number
   hideAttachment?: boolean
   isPostPage?: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 function Comment({
   id,
@@ -156,7 +154,7 @@ type CommentsProps = {
   compose?: boolean
   hideAttachment?: boolean
   isPostPage?: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Comments = ({
   post,

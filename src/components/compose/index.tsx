@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import type { LocationState } from '../../types'
 import type { PostWithUserDetails, ReplyTo } from '../../services/firebase'

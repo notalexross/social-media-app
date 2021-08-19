@@ -1,5 +1,5 @@
 import type firebase from 'firebase'
-import React, { createContext } from 'react'
+import { createContext } from 'react'
 import type { User } from '../services/firebase'
 import { useAuthListener, useUser } from '../hooks'
 

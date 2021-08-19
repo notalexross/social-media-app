@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react'
+import { createContext, useContext } from 'react'
 import type { PostWithUserDetails } from '../../services/firebase'
 import FocusTrap from '../focus-trap'
 import StatefulLink from '../stateful-link'
@@ -17,7 +17,7 @@ type MenuProps = {
   requestCloseOnItemClick?: boolean
   onRequestOpen?: () => void
   onRequestClose?: () => void
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & React.ComponentPropsWithoutRef<'div'>
 
 export default function Menu({
   children,
@@ -46,7 +46,7 @@ export default function Menu({
 Menu.Open = function MenuOpen({
   children,
   ...restProps
-}: React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) {
+}: React.ComponentPropsWithoutRef<'button'>) {
   const { onRequestOpen } = useContext(MenuContext)
 
   const handleMouseUp = () => {
@@ -62,10 +62,7 @@ Menu.Open = function MenuOpen({
   )
 }
 
-Menu.Items = function MenuItems({
-  children,
-  ...restProps
-}: React.DetailedHTMLProps<React.HTMLAttributes<HTMLUListElement>, HTMLUListElement>) {
+Menu.Items = function MenuItems({ children, ...restProps }: React.ComponentPropsWithoutRef<'ul'>) {
   const { isOpen, onRequestClose } = useContext(MenuContext)
 
   return isOpen ? (
@@ -83,7 +80,7 @@ Menu.Items = function MenuItems({
 type MenuItemButtonProps = {
   type: 'button'
   ignoreRequestCloseOnItemClick?: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
+} & React.ComponentPropsWithoutRef<'button'>
 
 type MenuItemLinkProps = {
   type: 'link'
@@ -91,7 +88,7 @@ type MenuItemLinkProps = {
   post?: PostWithUserDetails | string
   modal?: boolean
   ignoreRequestCloseOnItemClick?: boolean
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>
+} & React.ComponentPropsWithoutRef<'a'>
 
 type MenuItemProps = MenuItemButtonProps | MenuItemLinkProps
 

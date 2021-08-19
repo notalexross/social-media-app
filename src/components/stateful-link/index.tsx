@@ -1,14 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import type React from 'react'
 import type { LocationState } from '../../types'
 import type { PostWithUserDetails } from '../../services/firebase'
 
 type StatefulLinkProps = {
-  children: React.ReactNode
   to: string
   post?: PostWithUserDetails | string
   modal?: boolean
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>
+} & React.ComponentPropsWithoutRef<'a'>
 
 export default function StatefulLink({
   children,

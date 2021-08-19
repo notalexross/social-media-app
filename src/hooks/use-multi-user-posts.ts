@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import type { PostsStatus, PostWithUserDetails } from '../services/firebase'
 import { getMultiUserPosts } from '../services/firebase'
 
-export default function useMultiUserPosts(uids: string[] | undefined, postsPerPage = 10): {
+type MultiUserPosts = {
   posts: PostWithUserDetails[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean
   isLoadingPosts: boolean
-} {
+}
+
+export default function useMultiUserPosts(
+  uids: string[] | undefined,
+  postsPerPage = 10
+): MultiUserPosts {
   const [status, setStatus] = useState<PostsStatus>({
     posts: null,
     isComplete: true,

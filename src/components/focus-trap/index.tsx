@@ -2,14 +2,13 @@ import { useEffect, useRef } from 'react'
 import { modulo } from '../../utils'
 
 type FocusTrapProps = {
-  children: React.ReactNode
   overlayClassName?: string
   previousKey?: string
   nextKey?: string
   onRequestClose?: () => void
   noAutoFocus?: boolean
   ignoreNav?: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & React.ComponentPropsWithoutRef<'div'>
 
 export default function FocusTrap({
   children,

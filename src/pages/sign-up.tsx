@@ -91,8 +91,7 @@ export default function SignUpPage(): JSX.Element {
         </div>
         <div className="p-4 border rounded bg-white text-center text-sm">
           <p>
-            Have an account?
-            {' '}
+            {'Have an account? '}
             <Link className="font-bold text-blue-500" to={ROUTES.SIGN_IN} aria-label="sign in">
               Log in
             </Link>

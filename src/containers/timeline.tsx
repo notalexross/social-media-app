@@ -6,7 +6,7 @@ type TimelineContainerProps = {
   loadNextPage: () => Promise<void>
   isComplete: boolean
   isLoadingPosts: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function TimelineContainer({
   posts,

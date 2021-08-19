@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
@@ -19,12 +19,11 @@ type PostContextValue = {
 const PostContext = createContext<PostContextValue>({} as PostContextValue)
 
 type PostProps = {
-  children: React.ReactNode
   post?: PostWithUserDetails
   hideAttachment?: boolean
   isComment?: boolean
   isPostPage?: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & React.ComponentPropsWithoutRef<'div'>
 
 export default function Post({
   children,
@@ -43,7 +42,7 @@ export default function Post({
 
 type PostOwnerAvatarProps = {
   linkClassName?: string
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Post.OwnerAvatar = function PostOwnerAvatar({ linkClassName, ...restProps }: PostOwnerAvatarProps) {
   const { post } = useContext(PostContext)
@@ -74,7 +73,7 @@ Post.OwnerAvatar = function PostOwnerAvatar({ linkClassName, ...restProps }: Pos
 type PostOwnerUsernameProps = {
   linkClassName?: string
   deletedTextContent?: string
-} & React.HTMLAttributes<HTMLSpanElement>
+} & Omit<React.ComponentPropsWithoutRef<'span'>, 'children'>
 
 Post.OwnerUsername = function PostOwnerUsername({
   linkClassName,
@@ -102,7 +101,7 @@ Post.OwnerUsername = function PostOwnerUsername({
 }
 
 Post.OwnerFollowButton = function PostOwnerFollowButton(
-  props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
+  props: Omit<React.ComponentPropsWithoutRef<'button'>, 'children'>
 ) {
   const { following, uid } = useContext(UserContext)
   const { post } = useContext(PostContext)
@@ -135,7 +134,7 @@ Post.OwnerFollowButton = function PostOwnerFollowButton(
 
 type PostDateCreatedProps = {
   linkClassName?: string
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: PostDateCreatedProps) {
   const { post } = useContext(PostContext)
@@ -189,7 +188,9 @@ Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: Pos
   )
 }
 
-Post.ReplyingTo = function PostReplyingTo(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+Post.ReplyingTo = function PostReplyingTo(
+  props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
+) {
   const { post, isComment } = useContext(PostContext)
   const { replyTo, replyToOwnerDetails } = post || {}
 
@@ -213,9 +214,12 @@ Post.ReplyingTo = function PostReplyingTo(props: React.AnchorHTMLAttributes<HTML
 
 type PostMessageProps = {
   deletedTextContent?: string
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
-Post.Message = function PostMessage({ deletedTextContent = '[Deleted]', ...restProps }: PostMessageProps) {
+Post.Message = function PostMessage({
+  deletedTextContent = '[Deleted]',
+  ...restProps
+}: PostMessageProps) {
   const { post } = useContext(PostContext)
 
   if (!post) {
@@ -235,7 +239,7 @@ Post.Message = function PostMessage({ deletedTextContent = '[Deleted]', ...restP
 
 type PostAttachmentProps = {
   aspectRatio: number
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAttachmentProps) {
   const { post, hideAttachment } = useContext(PostContext)
@@ -260,7 +264,7 @@ Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAtt
 }
 
 Post.ViewAttachment = function PostAttachment(
-  props: React.AnchorHTMLAttributes<HTMLAnchorElement>
+  props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
 ) {
   const { post, hideAttachment } = useContext(PostContext)
 
@@ -277,7 +281,7 @@ Post.ViewAttachment = function PostAttachment(
 
 type PostLikeButtonProps = {
   likedClassName: string
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
+} & Omit<React.ComponentPropsWithoutRef<'button'>, 'children'>
 
 Post.LikeButton = function PostLikeButton({ likedClassName, ...restProps }: PostLikeButtonProps) {
   const { likedPosts } = useContext(UserContext)
@@ -294,7 +298,7 @@ Post.LikeButton = function PostLikeButton({ likedClassName, ...restProps }: Post
   const { id } = post
   const isLiked = likedPosts?.includes(id)
 
-  const toggleLike: React.MouseEventHandler<HTMLButtonElement> = () => {
+  const toggleLike = () => {
     if (!isLiked) {
       likePost(id).catch(console.error)
     } else {
@@ -311,7 +315,9 @@ Post.LikeButton = function PostLikeButton({ likedClassName, ...restProps }: Post
   )
 }
 
-Post.ReplyButton = function PostReplyButton(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+Post.ReplyButton = function PostReplyButton(
+  props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
+) {
   const { post, isPostPage, isComment } = useContext(PostContext)
 
   if (!post) {
@@ -335,7 +341,7 @@ Post.ReplyButton = function PostReplyButton(props: React.AnchorHTMLAttributes<HT
 }
 
 Post.LikesCount = function PostLikesCount(
-  props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>
+  props: Omit<React.ComponentPropsWithoutRef<'span'>, 'children'>
 ) {
   const { post } = useContext(PostContext)
 
@@ -354,7 +360,7 @@ Post.LikesCount = function PostLikesCount(
 
 type PostRepliesCountProps = {
   linkClassName: string
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Post.RepliesCount = function PostRepliesCount({
   linkClassName,

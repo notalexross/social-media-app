@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { EmojiHappyIcon, PaperClipIcon } from '@heroicons/react/outline'
 import type { PostWithUserDetails, ReplyTo } from '../services/firebase'
 import { Compose } from '../components'
@@ -8,7 +8,7 @@ import { useResponsivePopper } from '../hooks'
 type ComposeContainerProps = {
   replyTo?: ReplyTo
   originalPost?: PostWithUserDetails
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function ComposeContainer({
   originalPost,

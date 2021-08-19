@@ -4,13 +4,9 @@ import Skeleton from 'react-loading-skeleton'
 import { updateAvatar } from '../../services/firebase'
 
 type AvatarImageWrapperProps = {
-  children: React.ReactNode
   uid?: string
   updatable?: boolean
-} & React.DetailedHTMLProps<
-  React.HTMLAttributes<HTMLButtonElement & HTMLDivElement>,
-  HTMLButtonElement & HTMLDivElement
->
+} & React.ComponentPropsWithoutRef<'button'>
 
 function AvatarImageWrapper({
   children,
@@ -36,12 +32,7 @@ function AvatarImageWrapper({
 
   return updatable && uid ? (
     <>
-      <button
-        {...restProps}
-        type="button"
-        onClick={handleClick}
-        aria-label="upload new avatar"
-      >
+      <button {...restProps} type="button" onClick={handleClick} aria-label="upload new avatar">
         <input
           ref={inputRef}
           className="hidden"
@@ -51,16 +42,16 @@ function AvatarImageWrapper({
           data-testid="upload"
         />
         {isUpdating ? (
-          <div className="opacity-50" data-testid="updating">
+          <span className="block opacity-50" data-testid="updating">
             {children}
-          </div>
+          </span>
         ) : (
           children
         )}
       </button>
     </>
   ) : (
-    <div {...restProps}>{children}</div>
+    <span {...restProps}>{children}</span>
   )
 }
 
@@ -69,7 +60,7 @@ type AvatarProps = {
   uid?: string
   alt?: string
   updatable?: boolean
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+} & React.ComponentPropsWithoutRef<'div'>
 
 export default function Avatar({
   src,

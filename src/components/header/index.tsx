@@ -33,7 +33,11 @@ export default function Header(): JSX.Element {
                 >
                   <LogoutIcon className="h-8 w-8" />
                 </button>
-                <Link className="ml-3" to={`${ROUTES.PROFILES}/${username || ''}`} aria-label="profile">
+                <Link
+                  className="ml-3"
+                  to={`${ROUTES.PROFILES}/${username || ''}`}
+                  aria-label="profile"
+                >
                   <Avatar className="w-8" uid={user.uid} src={avatar} alt="" />
                 </Link>
               </>
