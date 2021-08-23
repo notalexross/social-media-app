@@ -1,12 +1,13 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import type firebase from 'firebase'
+import { createContext, useContext } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
 import { likePost, unlikePost, followUser, unfollowUser } from '../../services/firebase'
 import { UserContext } from '../../context/user'
+import { useTimeAgo } from '../../hooks'
 import Avatar from '../avatar'
 import StatefulLink from '../stateful-link'
-import { formatDateTime, onIntervalAfter } from '../../utils'
 import * as ROUTES from '../../constants/routes'
 
 type PostContextValue = {
@@ -132,58 +133,50 @@ Post.OwnerFollowButton = function PostOwnerFollowButton(
   ) : null
 }
 
+type TimeAgoProps = {
+  timestamp: firebase.firestore.Timestamp | null
+} & Omit<React.ComponentPropsWithoutRef<'time'>, 'children'>
+
+function TimeAgo({ timestamp, ...restProps }: TimeAgoProps) {
+  const [timeElapsed, dateFull, dateISO] = useTimeAgo(timestamp)
+
+  return (
+    <time dateTime={dateISO} title={dateFull} {...restProps}>
+      {timeElapsed}
+    </time>
+  )
+}
+
 type PostDateCreatedProps = {
   linkClassName?: string
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: PostDateCreatedProps) {
   const { post } = useContext(PostContext)
-  const [timeElapsed, setTimeElapsed] = useState('')
-  const [dateFull, setDateFull] = useState('')
-  const [dateISO, setDateISO] = useState('')
-  const { id } = post || {}
 
-  useEffect(() => {
-    let cleanup = () => {}
-
-    if (post) {
-      const timeIntervalSeconds = 60
-      const timeIntervalMillis = timeIntervalSeconds * 1000
-      const { createdAt } = post
-      const createdAtMillis = createdAt.seconds * 1000 + createdAt.nanoseconds / 1000000
-
-      const updateTimes = () => {
-        const createdAtDate = new Date(createdAtMillis)
-        const [elapsed, date] = formatDateTime(createdAtDate)
-
-        setTimeElapsed(elapsed)
-        setDateFull(date)
-        setDateISO(createdAtDate.toISOString())
-      }
-
-      cleanup = onIntervalAfter(createdAtMillis, timeIntervalMillis, updateTimes)
-      updateTimes()
-    }
-
-    return cleanup
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
-
-  if (!post || !id) {
+  if (!post || !post.id) {
     return null
   }
 
-  const isEdited = !!post?.updatedAt
+  const { id, createdAt, updatedAt } = post
 
   return (
     <span {...restProps}>
       {' · '}
-      <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
-        <time dateTime={dateISO} title={dateFull}>
-          {timeElapsed}
-        </time>
-      </StatefulLink>
-      {isEdited ? ' · edited' : null}
+      {createdAt !== undefined ? (
+        <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
+          <TimeAgo timestamp={createdAt} />
+        </StatefulLink>
+      ) : null}
+      {updatedAt !== undefined ? (
+        <>
+          <span> · edited (</span>
+          <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
+            <TimeAgo timestamp={updatedAt} />
+          </StatefulLink>
+          <span>)</span>
+        </>
+      ) : null}
     </span>
   )
 }
