@@ -36,7 +36,7 @@ type PostPublic = {
   owner: string
   replyTo: ReplyTo
   replies: string[]
-  updatedAt?: firebase.firestore.Timestamp
+  updatedAt?: firebase.firestore.Timestamp | null
 }
 
 type PostContent = {
