@@ -72,7 +72,14 @@ export default function PostContainer({
       <div className="flex flex-col p-4">
         <Post.ReplyingTo className="self-start mb-1 text-sm text-gray-500 hover:underline" />
         <Post.ViewAttachment className="self-start mb-1 text-sm text-gray-500 hover:underline" />
-        <Post.Message className="mb-1" deletedTextContent="[Deleted]" />
+        <Post.Message
+          className="mb-1 whitespace-pre-wrap"
+          readMoreClassName="text-gray-500 hover:underline"
+          readMoreTextContent="Read more"
+          deletedTextContent="[Deleted]"
+          lineClamp={isComment ? 4 : Infinity}
+          fadeLines={2}
+        />
         <div className="flex items-center mt-1 text-gray-500">
           <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
           <Post.RepliesCount className="mr-2 text-sm" linkClassName="hover:underline" />

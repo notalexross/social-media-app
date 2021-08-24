@@ -1,11 +1,11 @@
 import type firebase from 'firebase'
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
 import { likePost, unlikePost, followUser, unfollowUser } from '../../services/firebase'
 import { UserContext } from '../../context/user'
-import { useTimeAgo } from '../../hooks'
+import { useLineHeight, useTimeAgo } from '../../hooks'
 import Avatar from '../avatar'
 import StatefulLink from '../stateful-link'
 import * as ROUTES from '../../constants/routes'
@@ -206,14 +206,49 @@ Post.ReplyingTo = function PostReplyingTo(
 }
 
 type PostMessageProps = {
+  lineClamp?: number
+  fadeLines?: number
+  readMoreClassName?: string
+  readMoreTextContent?: string
   deletedTextContent?: string
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Post.Message = function PostMessage({
+  lineClamp = Infinity,
+  fadeLines = 0,
+  readMoreClassName = '',
+  readMoreTextContent = '',
   deletedTextContent = '[Deleted]',
   ...restProps
 }: PostMessageProps) {
   const { post } = useContext(PostContext)
+  const [isOverflowing, setIsOverflowing] = useState(false)
+  const [lineHeight, LineHeightComponent] = useLineHeight()
+  const overflowRef = useRef<HTMLDivElement | null>(null)
+  const maxHeight = lineClamp === Infinity ? 'auto' : lineClamp * (lineHeight || 0)
+  const fadeHeight = fadeLines === Infinity ? 0 : fadeLines * (lineHeight || 0)
+
+  useEffect(() => {
+    const callback = () => {
+      if (overflowRef.current) {
+        setIsOverflowing(overflowRef.current.clientHeight < overflowRef.current.scrollHeight)
+      }
+    }
+
+    const observer = new MutationObserver(callback)
+    observer.observe(document, {
+      attributes: true,
+      childList: true,
+      characterData: true,
+      subtree: true
+    })
+    window.addEventListener('resize', callback)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', callback)
+    }
+  }, [post])
 
   if (!post) {
     return (
@@ -223,9 +258,35 @@ Post.Message = function PostMessage({
     )
   }
 
+  let fade: JSX.Element | null = null
+  if (isOverflowing) {
+    fade = (
+      <div className="absolute bottom-0 left-0 right-0">
+        <div
+          className="bg-gradient-to-t from-white pointer-events-none"
+          style={{ height: fadeHeight }}
+        />
+        <div className="bg-white">
+          <StatefulLink
+            className={readMoreClassName}
+            to={`${ROUTES.POSTS}/${post.id}`}
+            post={post}
+            modal
+          >
+            {readMoreTextContent}
+          </StatefulLink>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div {...restProps}>
-      <p>{post.deleted ? deletedTextContent : post.message}</p>
+      <div className="relative overflow-hidden" style={{ maxHeight }} ref={overflowRef}>
+        <LineHeightComponent />
+        <p>{post.deleted ? deletedTextContent : post.message}</p>
+        {fade}
+      </div>
     </div>
   )
 }
