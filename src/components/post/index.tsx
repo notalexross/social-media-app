@@ -420,7 +420,7 @@ Post.RepliesCount = function PostRepliesCount({
   linkClassName,
   ...restProps
 }: PostRepliesCountProps) {
-  const { post, isPostPage } = useContext(PostContext)
+  const { post, isComment, isPostPage } = useContext(PostContext)
 
   if (!post) {
     return (
@@ -435,7 +435,7 @@ Post.RepliesCount = function PostRepliesCount({
 
   return (
     <div {...restProps}>
-      {isPostPage ? (
+      {isPostPage && !isComment ? (
         <span>{`${repliesCount} repl${repliesCount === 1 ? 'y' : 'ies'}`}</span>
       ) : (
         <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
