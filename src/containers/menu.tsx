@@ -27,7 +27,7 @@ export default function MenuContainer({ post, ...restProps }: MenuContainerProps
   const [isOpen, setIsOpen] = useState(false)
   const { following, likedPosts, uid } = useContext(UserContext)
   const { deleted, id, owner, ownerDetails } = post
-  const { username } = ownerDetails
+  const { username, deleted: ownerDeleted } = ownerDetails
   const isOwner = uid && owner === uid
   const isLiked = likedPosts?.includes(id)
   const isFollowing = following?.includes(owner)
@@ -85,7 +85,7 @@ export default function MenuContainer({ post, ...restProps }: MenuContainerProps
           <DotsHorizontalIcon />
         </Menu.Open>
         <Menu.Items className="mb-4 w-screen max-w-xs border rounded bg-white">
-          {!isOwner && !deleted ? (
+          {!isOwner && !ownerDeleted ? (
             <Menu.Item className={itemClassName} type="button" onClick={toggleFollow}>
               <UserAddIcon className={iconClassName} />
               {isFollowing ? 'Unfollow' : 'Follow'}
