@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import MenuContainer from './menu'
-import { Post, StatefulLink } from '../components'
+import { Post, StatefulLink, UserProfile } from '../components'
 import { usePosts, usePostsLive } from '../hooks'
 import * as ROUTES from '../constants/routes'
 
@@ -52,20 +52,20 @@ export default function PostContainer({
       {...restProps}
     >
       <div className="flex justify-between items-center p-4 border-b">
-        <div className="flex items-center">
-          <Post.OwnerAvatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
+        <UserProfile className="flex items-center" user={post?.ownerDetails || {}}>
+          <UserProfile.Avatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
           <div className="flex flex-col">
             <div>
-              <Post.OwnerUsername
+              <UserProfile.Username
                 className="font-bold"
                 linkClassName="hover:underline"
                 deletedTextContent="[Deleted]"
               />
               <Post.DateCreated className="text-sm text-gray-500" linkClassName="hover:underline" />
             </div>
-            <Post.OwnerFollowButton className="mb-1 w-min text-sm text-gray-500 hover:underline" />
+            <UserProfile.FollowButton className="w-min text-sm text-gray-500 hover:underline" />
           </div>
-        </div>
+        </UserProfile>
         {post ? <MenuContainer className="pr-4" post={post} /> : null}
       </div>
       <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />

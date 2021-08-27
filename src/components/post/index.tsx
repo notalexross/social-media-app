@@ -3,10 +3,9 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
-import { likePost, unlikePost, followUser, unfollowUser } from '../../services/firebase'
+import { likePost, unlikePost } from '../../services/firebase'
 import { UserContext } from '../../context/user'
 import { useLineHeight, useTimeAgo } from '../../hooks'
-import Avatar from '../avatar'
 import StatefulLink from '../stateful-link'
 import * as ROUTES from '../../constants/routes'
 
@@ -39,98 +38,6 @@ export default function Post({
       <div {...restProps}>{children}</div>
     </PostContext.Provider>
   )
-}
-
-type PostOwnerAvatarProps = {
-  linkClassName?: string
-} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
-
-Post.OwnerAvatar = function PostOwnerAvatar({ linkClassName, ...restProps }: PostOwnerAvatarProps) {
-  const { post } = useContext(PostContext)
-  const { ownerDetails } = post || {}
-  const { avatar, username } = ownerDetails || {}
-
-  if (!post) {
-    return (
-      <div {...restProps}>
-        <Avatar />
-      </div>
-    )
-  }
-
-  return (
-    <div {...restProps}>
-      {username && !post?.deleted ? (
-        <StatefulLink to={`${ROUTES.PROFILES}/${username}`}>
-          <Avatar className={linkClassName} src={avatar} alt={`${username}'s avatar`} />
-        </StatefulLink>
-      ) : (
-        <Avatar src={null} alt="avatar" />
-      )}
-    </div>
-  )
-}
-
-type PostOwnerUsernameProps = {
-  linkClassName?: string
-  deletedTextContent?: string
-} & Omit<React.ComponentPropsWithoutRef<'span'>, 'children'>
-
-Post.OwnerUsername = function PostOwnerUsername({
-  linkClassName,
-  deletedTextContent = '[Deleted]',
-  ...restProps
-}: PostOwnerUsernameProps) {
-  const { post } = useContext(PostContext)
-
-  if (!post) {
-    return <Skeleton width="20ch" />
-  }
-
-  const { ownerDetails } = post
-  const { username } = ownerDetails
-
-  return username && !post.deleted ? (
-    <span {...restProps}>
-      <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`}>
-        {username}
-      </StatefulLink>
-    </span>
-  ) : (
-    <span {...restProps}>{deletedTextContent}</span>
-  )
-}
-
-Post.OwnerFollowButton = function PostOwnerFollowButton(
-  props: Omit<React.ComponentPropsWithoutRef<'button'>, 'children'>
-) {
-  const { following, uid } = useContext(UserContext)
-  const { post } = useContext(PostContext)
-
-  if (!post) {
-    return (
-      <span {...props}>
-        <Skeleton width="8ch" />
-      </span>
-    )
-  }
-
-  const { owner } = post
-  const isFollowing = following?.includes(owner)
-
-  const toggleFollow = () => {
-    if (!isFollowing) {
-      followUser(owner).catch(console.error)
-    } else {
-      unfollowUser(owner).catch(console.error)
-    }
-  }
-
-  return uid && owner !== uid && !post.deleted ? (
-    <button type="button" onClick={toggleFollow} {...props}>
-      {isFollowing ? 'Unfollow' : 'follow'}
-    </button>
-  ) : null
 }
 
 type TimeAgoProps = {
