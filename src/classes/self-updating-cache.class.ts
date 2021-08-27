@@ -1,13 +1,13 @@
-type CacheEntry<T> = T & { lastUpdated: number }
+type CacheEntry<T> = { data: T } & { lastUpdated: number }
 
 type CacheStructure<T> = Record<string, Promise<CacheEntry<T> | undefined> | undefined>
 
-export default class SelfUpdatingCache<T extends Record<string, unknown>> {
+export default class SelfUpdatingCache<T, U extends unknown[]> {
   private indexedDB: IDBFactory = window.indexedDB
   private db: IDBDatabase | undefined
   private cache: CacheStructure<T> = {}
 
-  constructor(public name: string, private updater: (key: string) => Promise<T>) {
+  constructor(public name: string, private updater: (...args: U) => Promise<T>) {
     this.initDB().catch(console.error)
   }
 
@@ -70,7 +70,7 @@ export default class SelfUpdatingCache<T extends Record<string, unknown>> {
     })
   }
 
-  private async getEntry(key: string, maxAge: number): Promise<CacheEntry<T> | undefined> {
+  private async getEntry(key: string, maxAge: number, ...args: U): Promise<CacheEntry<T>> {
     const cacheEntry = await this.cache[key]
     let entry: CacheEntry<T> | undefined
 
@@ -81,18 +81,18 @@ export default class SelfUpdatingCache<T extends Record<string, unknown>> {
     }
 
     if (!entry || entry.lastUpdated + maxAge <= Date.now()) {
-      const data = await this.updater(key)
+      const data = await this.updater(...args)
       const lastUpdated = Date.now()
-      entry = { ...data, lastUpdated }
+      entry = { data, lastUpdated }
       await this.updateDBEntry(key, entry)
     }
 
     return entry
   }
 
-  async get(key: string, maxAge: number): Promise<CacheEntry<T> | undefined> {
+  async get(key: string, maxAge: number, ...args: U): Promise<CacheEntry<T> | undefined> {
     this.cache[key] = new Promise<CacheEntry<T> | undefined>(resolve => {
-      this.getEntry(key, maxAge)
+      this.getEntry(key, maxAge, ...args)
         .then(resolve)
         .catch(error => {
           console.error(error)

@@ -260,11 +260,8 @@ export function getUserById(
 
 const usersCache = new SelfUpdatingCache('users', getUserById)
 
-export function getCachedUser(
-  uid: string,
-  maxAge = 10000
-): Promise<User & { lastUpdated?: number }> {
-  return usersCache.get(uid, maxAge).then(user => user || { uid })
+export function getCachedUser(uid: string, maxAge = 10000): Promise<User> {
+  return usersCache.get(uid, maxAge, uid).then(user => user?.data || { uid })
 }
 
 export async function getUserByUsername(
