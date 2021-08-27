@@ -4,9 +4,12 @@ import { SelfUpdatingCache } from '../classes'
 
 type UserPublic = {
   avatar: string | null
+  createdAt: firebase.firestore.Timestamp
   deleted: boolean
+  followersCount: number
   username: string
   usernameLowerCase: string
+  lastPostedAt?: firebase.firestore.Timestamp
 }
 
 type UserPrivate = {
@@ -16,8 +19,18 @@ type UserPrivate = {
 
 type UserFollowing = { following: string[] }
 type UserLikedPosts = { likedPosts: string[] }
-type UserCreatable = Partial<Omit<UserPublic & UserPrivate, 'usernameLowerCase' | 'deleted'>>
-type UserUpdatable = Partial<Omit<UserPublic & UserPrivate, 'usernameLowerCase'>>
+type UserCreatable = Partial<
+  Omit<
+    UserPublic & UserPrivate,
+    'createdAt' | 'deleted' | 'followersCount' | 'usernameLowerCase' | 'lastPostedAt'
+  >
+>
+type UserUpdatable = Partial<
+  Omit<
+    UserPublic & UserPrivate,
+    'createdAt' | 'followersCount' | 'usernameLowerCase' | 'lastPostedAt'
+  >
+>
 type UserQuery = Promise<UserPublic | UserPrivate | UserFollowing | UserLikedPosts>
 
 export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedPosts> & {
@@ -541,6 +554,10 @@ function createPostInDB(
         replies: FieldValue.arrayUnion(post.id)
       })
     }
+
+    batch.update(getUserQueries(uid).userPublicRef, {
+      lastPostedAt: FieldValue.serverTimestamp()
+    })
 
     return batch
       .commit()

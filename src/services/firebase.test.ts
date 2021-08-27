@@ -480,8 +480,8 @@ describe(`${addPost.name}`, () => {
 
     await expect(result).resolves.toBe('mockId')
     expect(mockFunctions.set).toBeCalledTimes(2)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
-    expect(mockFunctions.update).not.toHaveBeenCalled()
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
+    expect(mockFunctions.update).toBeCalledTimes(1)
   })
 
   test('given post has content and is a reply, resolves and calls firebase methods', async () => {
@@ -489,8 +489,8 @@ describe(`${addPost.name}`, () => {
 
     await expect(result).resolves.toBe('mockId')
     expect(mockFunctions.set).toBeCalledTimes(2)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
-    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
+    expect(mockFunctions.update).toBeCalledTimes(2)
     expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
   })
 
