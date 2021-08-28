@@ -723,8 +723,8 @@ describe(`${getMultiUserPosts.name}`, () => {
         }
       ],
       isComplete: true,
-      currentPage: 1,
-      statistics: { fetchCount: 1, docReadCount: 2, chunks: 1, users: 2 }
+      page: 1,
+      stats: { fetchCount: 1, docsFetchedCount: 2, docReadCount: 2, chunks: 1, users: 2 }
     })
   })
 
@@ -763,8 +763,8 @@ describe(`${getMultiUserPosts.name}`, () => {
         }
       ],
       isComplete: false,
-      currentPage: 1,
-      statistics: { fetchCount: 1, docReadCount: 1, chunks: 1, users: 2 }
+      page: 1,
+      stats: { fetchCount: 1, docsFetchedCount: 1, docReadCount: 1, chunks: 1, users: 2 }
     })
   })
 
@@ -780,8 +780,8 @@ describe(`${getMultiUserPosts.name}`, () => {
     expect(statusCallback).toHaveBeenCalledWith({
       posts: [],
       isComplete: true,
-      currentPage: 1,
-      statistics: { fetchCount: 0, docReadCount: 0, chunks: 0, users: 0 }
+      page: 1,
+      stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
     })
   })
 })

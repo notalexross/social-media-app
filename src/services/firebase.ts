@@ -74,8 +74,8 @@ export type PostWithUserDetails = PostWithId & {
 export type PostsStatus = {
   posts: PostWithUserDetails[] | null
   isComplete: boolean
-  currentPage: number
-  statistics: Stats
+  page: number
+  stats: Stats
 }
 
 type FetchedPost = {
@@ -87,14 +87,15 @@ type FetchedPost = {
 type UserChunk = {
   chunkIndex: number
   users: string[]
-  lastPostFetched: firebase.firestore.QueryDocumentSnapshot<firebase.firestore.DocumentData> | null
-  numPostsFetched: number
-  numPostsReturned: number
+  lastFetched: firebase.firestore.QueryDocumentSnapshot<firebase.firestore.DocumentData> | null
+  numFetched: number
+  numReturned: number
   isDone: boolean
 }
 
 type Stats = {
   fetchCount: number
+  docsFetchedCount: number
   docReadCount: number
   chunks: number
   users: number
@@ -889,13 +890,13 @@ export async function unlikePost(postId: string): Promise<void> {
   return updateLikeInDB('unlike', currentUser.uid, postId)
 }
 
-function initUserChunks(usersArray: string[]): UserChunk[] {
-  const chunks = chunkArray(usersArray).map((users, chunkIndex) => ({
+function initUserChunks(usersArray: string[], numPerChunk = 10): UserChunk[] {
+  const chunks = chunkArray(usersArray, numPerChunk).map((users, chunkIndex) => ({
     chunkIndex,
     users,
-    lastPostFetched: null,
-    numPostsFetched: 0,
-    numPostsReturned: 0,
+    lastFetched: null,
+    numFetched: 0,
+    numReturned: 0,
     isDone: false
   }))
 
@@ -905,7 +906,7 @@ function initUserChunks(usersArray: string[]): UserChunk[] {
 async function fetchPostsAndUpdateUsers(
   chunks: UserChunk[],
   limitPerChunk: number,
-  statistics?: Stats
+  stats?: Stats
 ): Promise<FetchedPost[]> {
   const requests = chunks.map(async chunk => {
     let query = postsRef
@@ -914,8 +915,8 @@ async function fetchPostsAndUpdateUsers(
       .orderBy('createdAt', 'desc')
       .limit(limitPerChunk)
 
-    if (chunk.lastPostFetched) {
-      query = query.startAfter(chunk.lastPostFetched)
+    if (chunk.lastFetched) {
+      query = query.startAfter(chunk.lastFetched)
     }
 
     const { docs } = await query.get()
@@ -938,13 +939,14 @@ async function fetchPostsAndUpdateUsers(
       })
     )
 
-    chunk.numPostsFetched += docs.length
-    chunk.lastPostFetched = docs[docs.length - 1]
+    chunk.numFetched += docs.length
+    chunk.lastFetched = docs[docs.length - 1]
     chunk.isDone = docs.length < limitPerChunk
 
-    if (statistics) {
-      statistics.fetchCount += 1
-      statistics.docReadCount += docs.length
+    if (stats) {
+      stats.fetchCount += 1
+      stats.docsFetchedCount += docs.length
+      stats.docReadCount += docs.length || 1
     }
 
     return chunkFetchedPosts
@@ -970,18 +972,19 @@ export function getMultiUserPosts(
   loadingCallback?: (isLoading: boolean) => void,
   postsPerPage = 10
 ): () => Promise<void> {
-  const userChunks = initUserChunks(users)
+  const userChunks = initUserChunks(users, 10)
   const fetchedPosts: FetchedPost[] = []
-  const statistics: Stats = {
+  const stats: Stats = {
     fetchCount: 0,
+    docsFetchedCount: 0,
     docReadCount: 0,
     chunks: userChunks.length,
     users: users.length
   }
   let chunksToFetch = userChunks
   let fetchedPostsSorted: FetchedPost[] = []
-  let currentPage = 0
-  let currentPostIndex = -1
+  let page = 0
+  let postIdx = -1
   let isComplete = false
 
   const loadNextPage: () => Promise<void> = async () => {
@@ -995,39 +998,32 @@ export function getMultiUserPosts(
           isComplete = true
         }
 
-        currentPage += 1
+        page += 1
 
-        while (currentPostIndex + 1 < postsPerPage * currentPage && !isComplete) {
+        while (postIdx + 1 < postsPerPage * page && !isComplete) {
           if (chunksToFetch.length > 0) {
             // eslint-disable-next-line no-await-in-loop
-            const newPosts = await fetchPostsAndUpdateUsers(chunksToFetch, postsPerPage, statistics)
+            const newPosts = await fetchPostsAndUpdateUsers(chunksToFetch, postsPerPage, stats)
             fetchedPosts.push(...newPosts)
             fetchedPostsSorted = sortBy(fetchedPosts, 'createdAt', 'desc')
             chunksToFetch = []
           }
 
-          currentPostIndex += 1
+          postIdx += 1
+          const post = fetchedPostsSorted[postIdx]
+          const chunk = userChunks[post.chunkIndex]
+          chunk.numReturned += 1
 
-          const currentPost = fetchedPostsSorted[currentPostIndex]
-          const currentChunk = userChunks[currentPost.chunkIndex]
-          currentChunk.numPostsReturned += 1
-          const hasCurrentChunkReturnedAllFetched =
-            currentChunk.numPostsReturned === currentChunk.numPostsFetched
-
-          if (hasCurrentChunkReturnedAllFetched && !currentChunk.isDone) {
-            chunksToFetch = [currentChunk]
+          const shouldChunkFetch = !chunk.isDone && chunk.numReturned === chunk.numFetched - 1
+          if (shouldChunkFetch) {
+            chunksToFetch = [chunk]
           }
 
-          isComplete = userChunks.every(chunk => {
-            const hasFetchedAllPosts = chunk.isDone
-            const hasReturnedAllFetched = chunk.numPostsFetched === chunk.numPostsReturned
-
-            return hasFetchedAllPosts && hasReturnedAllFetched
-          })
+          isComplete = userChunks.every(chnk => chnk.isDone && chnk.numFetched === chnk.numReturned)
         }
 
-        const posts = fetchedPostsSorted.slice(0, currentPostIndex + 1).map(post => post.post)
-        const postsStatus: PostsStatus = { posts, isComplete, currentPage, statistics }
+        const posts = fetchedPostsSorted.slice(0, postIdx + 1).map(post => post.post)
+        const postsStatus: PostsStatus = { posts, isComplete, page, stats }
 
         statusCallback(postsStatus)
 

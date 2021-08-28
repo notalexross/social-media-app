@@ -16,8 +16,8 @@ export default function useMultiUserPosts(
   const [status, setStatus] = useState<PostsStatus>({
     posts: null,
     isComplete: true,
-    currentPage: 0,
-    statistics: { fetchCount: 0, docReadCount: 0, chunks: 0, users: 0 }
+    page: 0,
+    stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
   })
   const isInitiated = useRef(false)
   const [isLoadingPosts, setIsLoadingPosts] = useState(true)
