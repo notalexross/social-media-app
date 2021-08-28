@@ -764,7 +764,7 @@ describe(`${getMultiUserPosts.name}`, () => {
       ],
       isComplete: false,
       page: 1,
-      stats: { fetchCount: 1, docsFetchedCount: 1, docReadCount: 1, chunks: 1, users: 2 }
+      stats: { fetchCount: 1, docsFetchedCount: 2, docReadCount: 2, chunks: 1, users: 2 }
     })
   })
 

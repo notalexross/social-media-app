@@ -1003,7 +1003,7 @@ export function getMultiUserPosts(
         while (postIdx + 1 < postsPerPage * page && !isComplete) {
           if (chunksToFetch.length > 0) {
             // eslint-disable-next-line no-await-in-loop
-            const newPosts = await fetchPostsAndUpdateUsers(chunksToFetch, postsPerPage, stats)
+            const newPosts = await fetchPostsAndUpdateUsers(chunksToFetch, postsPerPage + 1, stats)
             fetchedPosts.push(...newPosts)
             fetchedPostsSorted = sortBy(fetchedPosts, 'createdAt', 'desc')
             chunksToFetch = []
@@ -1014,7 +1014,7 @@ export function getMultiUserPosts(
           const chunk = userChunks[post.chunkIndex]
           chunk.numReturned += 1
 
-          const shouldChunkFetch = !chunk.isDone && chunk.numReturned === chunk.numFetched - 1
+          const shouldChunkFetch = !chunk.isDone && chunk.numReturned >= chunk.numFetched - 1
           if (shouldChunkFetch) {
             chunksToFetch = [chunk]
           }
