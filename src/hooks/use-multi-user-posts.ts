@@ -19,18 +19,19 @@ export default function useMultiUserPosts(
     page: 0,
     stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
   })
+  const isMounted = useRef(true)
   const isInitiated = useRef(false)
   const [isLoadingPosts, setIsLoadingPosts] = useState(true)
   const [loadNextPage, setLoadNextPage] = useState<() => Promise<void>>(() => Promise.resolve())
   const { posts, isComplete } = status
 
   useEffect(() => {
-    let isCurrent = true
+    isMounted.current = true
     if (uids && !isInitiated.current) {
       const loadNextPageFunction = getMultiUserPosts(
         uids,
-        data => isCurrent && setStatus(data),
-        data => isCurrent && setIsLoadingPosts(data),
+        data => isMounted.current && setStatus(data),
+        data => isMounted.current && setIsLoadingPosts(data),
         postsPerPage
       )
       setLoadNextPage(() => loadNextPageFunction)
@@ -39,7 +40,7 @@ export default function useMultiUserPosts(
     }
 
     return () => {
-      isCurrent = false
+      isMounted.current = false
     }
   }, [postsPerPage, uids])
 
