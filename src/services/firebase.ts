@@ -1,5 +1,11 @@
 import firebase from 'firebase/app'
-import { isValidSignUpInputs, isValidSignInInputs, sortBy, chunkArray } from '../utils'
+import {
+  isValidSignUpInputs,
+  isValidSignInInputs,
+  sortBy,
+  sortByTimestamp,
+  chunkArray
+} from '../utils'
 import { SelfUpdatingCache } from '../classes'
 
 type UserPublic = {
@@ -1038,4 +1044,141 @@ export function getMultiUserPosts(
   }
 
   return loadNextPage
+}
+
+type LatestPosters = {
+  users: User[]
+  exhausted: boolean
+}
+
+async function getLatestPosters({
+  exclude = [] as string[],
+  minUnexcluded = 5,
+  maxRequests = 10,
+  minDocsPerRequest = 5
+} = {}): Promise<LatestPosters> {
+  const users: User[] = []
+  let last: firebase.firestore.QueryDocumentSnapshot<firebase.firestore.DocumentData> | null = null
+  let requestsMade = 0
+  let numUnexcluded = 0
+
+  while (
+    numUnexcluded < minUnexcluded &&
+    requestsMade < maxRequests &&
+    (last || requestsMade === 0)
+  ) {
+    const remaining = minUnexcluded - numUnexcluded
+    const limit = exclude.length ? Math.max(remaining, minDocsPerRequest) : remaining
+    let query = usersRef.where('deleted', '==', false).orderBy('lastPostedAt', 'desc').limit(limit)
+    query = last ? query.startAfter(last) : query
+
+    // eslint-disable-next-line no-await-in-loop
+    const docs = await query.get().then(snap => snap.docs)
+    numUnexcluded += docs.filter(doc => !exclude.includes(doc.id)).length
+    users.push(...docs.map(doc => ({ uid: doc.id, ...(doc.data() as UserPublic) })))
+    requestsMade += 1
+    last = docs[docs.length - 1]
+  }
+
+  const exhausted = !last
+
+  return { users, exhausted }
+}
+
+const latestPostersCache = new SelfUpdatingCache('latest-posters', getLatestPosters)
+
+async function getCachedLatestPosters(
+  uid: string,
+  {
+    maxAge = 0,
+    exclude = [] as string[],
+    num = 5,
+    buffer = 0,
+    maxRequests = 10,
+    minDocsPerRequest = 5
+  } = {}
+): Promise<User[]> {
+  let exhausted = false
+  let filtered: User[] = []
+  let count = 0
+
+  while (!exhausted && count < 2 && filtered.length < num) {
+    // eslint-disable-next-line no-await-in-loop
+    const latestPosters = await latestPostersCache
+      .get(uid, count > 0 ? 0 : maxAge, {
+        exclude,
+        minUnexcluded: num + buffer,
+        maxRequests,
+        minDocsPerRequest
+      })
+      .then(entry => entry?.data || { users: [], exhausted: false })
+    const { users } = latestPosters
+    exhausted = latestPosters.exhausted
+    filtered = users.filter(user => !exclude.includes(user.uid)).slice(0, num)
+    count += 1
+  }
+
+  return filtered
+}
+
+async function getRecentlySeenPosters({
+  num = 10,
+  timePeriod = 10 * 60 * 1000,
+  exclude = [] as string[]
+}): Promise<User[]> {
+  const cutoff = Math.max(Date.now() - timePeriod, 0)
+  const recentlySeen = (await usersCache.getAll())
+    .filter(entry => entry.lastUpdated >= cutoff)
+    .map(entry => entry.data)
+  const sorted = sortByTimestamp(recentlySeen, 'lastPostedAt', 'desc')
+
+  return sorted.filter(user => !exclude.includes(user.uid)).slice(0, num)
+}
+
+export async function getSuggestedUsers(
+  uid: string,
+  {
+    exclude = [] as string[],
+    max = 10,
+    fractionLatestPosters = 0.5,
+    recentlySeenTimePeriod = 10 * 60 * 1000
+  } = {}
+): Promise<User[]> {
+  const numLatestPosters = Math.max(Math.min(Math.ceil(fractionLatestPosters * max), max), 0)
+  const suggestions: User[] = []
+
+  if (max - numLatestPosters) {
+    suggestions.push(
+      ...(await getRecentlySeenPosters({
+        num: max - numLatestPosters,
+        timePeriod: recentlySeenTimePeriod,
+        exclude
+      }))
+    )
+  }
+
+  if (suggestions.length < max) {
+    suggestions.push(
+      ...(await getCachedLatestPosters(uid, {
+        maxAge: 10 * 60 * 10000,
+        exclude: [...exclude, ...suggestions.map(user => user.uid)],
+        num: max - suggestions.length,
+        buffer: 5,
+        maxRequests: 10,
+        minDocsPerRequest: 5
+      }))
+    )
+  }
+
+  if (suggestions.length < max) {
+    suggestions.push(
+      ...(await getRecentlySeenPosters({
+        num: max - suggestions.length,
+        timePeriod: recentlySeenTimePeriod,
+        exclude: [...exclude, ...suggestions.map(user => user.uid)]
+      }))
+    )
+  }
+
+  return sortByTimestamp(suggestions, 'lastPostedAt', 'desc')
 }
