@@ -104,4 +104,24 @@ export default class SelfUpdatingCache<T, U extends unknown[]> {
 
     return entry
   }
+
+  getAll(): Promise<CacheEntry<T>[]> {
+    return new Promise<CacheEntry<T>[]>((resolve, reject) => {
+      this.getDB()
+        .then(db => {
+          const transaction = db.transaction(this.name)
+          const objectStore = transaction.objectStore(this.name)
+          const request = objectStore.getAll()
+
+          request.onsuccess = () => {
+            resolve(request.result)
+          }
+
+          request.onerror = () => {
+            reject(request.error)
+          }
+        })
+        .catch(reject)
+    })
+  }
 }
