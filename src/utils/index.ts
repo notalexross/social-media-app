@@ -50,6 +50,38 @@ export function sortBy<T extends Record<string, unknown>>(
   return newArray
 }
 
+type Timestamp = {
+  seconds: number
+  nanoseconds: number
+}
+
+function timestampToMillis(timestamp: Timestamp): number {
+  return timestamp.seconds * 1000 + timestamp.nanoseconds
+}
+
+export function sortByTimestamp<T extends Record<string, unknown>, U extends keyof T>(
+  array: T[],
+  property: T[U] extends Timestamp | undefined ? U : never,
+  direction?: 'desc' | 'asc'
+): T[] {
+  const newArray = [...array]
+  newArray.sort((a, b) => {
+    const aValue = timestampToMillis((a[property] || { seconds: 0, nanoseconds: 0 }) as Timestamp)
+    const bValue = timestampToMillis((b[property] || { seconds: 0, nanoseconds: 0 }) as Timestamp)
+
+    if (aValue < bValue) return -1
+    if (aValue > bValue) return 1
+
+    return 0
+  })
+
+  if (direction === 'desc') {
+    newArray.reverse()
+  }
+
+  return newArray
+}
+
 export function chunkArray<T>(array: T[], numPerChunk = 10): T[][] {
   const tempArray = [...array]
   const chunked: T[][] = []

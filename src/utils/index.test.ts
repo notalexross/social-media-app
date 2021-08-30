@@ -2,6 +2,7 @@ import {
   isValidSignUpInputs,
   isValidSignInInputs,
   sortBy,
+  sortByTimestamp,
   chunkArray,
   formatDateTime,
   modulo,
@@ -87,6 +88,32 @@ describe(`${sortBy.name}`, () => {
     const result = sortBy(objectArray, 'a', 'desc')
 
     expect(result).toStrictEqual([{ a: '3' }, { a: '2' }, { a: '1' }])
+  })
+})
+
+describe(`${sortByTimestamp.name}`, () => {
+  test('given "asc", sorts array of objects by timestamp property in ascending order', () => {
+    const objectArray = [
+      { a: { seconds: 1620000000, nanoseconds: 0 } },
+      { a: { seconds: 1630000000, nanoseconds: 0 } },
+      { a: { seconds: 1610000000, nanoseconds: 0 } }
+    ]
+
+    const result = sortByTimestamp(objectArray, 'a', 'asc')
+
+    expect(result).toEqual([objectArray[2], objectArray[0], objectArray[1]])
+  })
+
+  test('given "desc", sorts array of objects by timestamp property in descending order', () => {
+    const objectArray = [
+      { a: { seconds: 1620000000, nanoseconds: 0 } },
+      { a: { seconds: 1630000000, nanoseconds: 0 } },
+      { a: { seconds: 1610000000, nanoseconds: 0 } }
+    ]
+
+    const result = sortByTimestamp(objectArray, 'a', 'desc')
+
+    expect(result).toEqual([objectArray[1], objectArray[0], objectArray[2]])
   })
 })
 
