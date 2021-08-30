@@ -15,13 +15,13 @@ export default function ComposeContainer({
   replyTo,
   ...restProps
 }: ComposeContainerProps): JSX.Element {
-  const { avatar, username } = useContext(UserContext)
+  const { username } = useContext(UserContext)
   const [popperRef, popperRelativeRef] = useResponsivePopper<HTMLDivElement, HTMLDivElement>({
     offsetY: -0.5
   })
   const replyToPost = replyTo || originalPost?.replyTo
 
-  if (!avatar || !username) {
+  if (!username) {
     return <></>
   }
 
