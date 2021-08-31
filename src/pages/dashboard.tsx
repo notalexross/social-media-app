@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { UserContext } from '../context/user'
-import { TimelineContainer } from '../containers'
+import { TimelineContainer, SidebarContainer } from '../containers'
 import { Header } from '../components'
 import { useMultiUserPosts, usePostsLive, useTitle } from '../hooks'
 
@@ -22,6 +22,7 @@ export default function DashboardPage(): JSX.Element {
             isComplete={isComplete}
             isLoadingPosts={isLoadingPosts}
           />
+          <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
         </div>
       </main>
     </>

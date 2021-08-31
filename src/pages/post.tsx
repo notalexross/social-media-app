@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { PostContainer } from '../containers'
+import { PostContainer, SidebarContainer } from '../containers'
 import { Header } from '../components'
 import { usePosts, usePostsLive } from '../hooks'
 
@@ -26,6 +26,7 @@ export default function PostPage({ compose = false }: PostPageProps): JSX.Elemen
               isPostPage
             />
           </div>
+          <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
         </div>
       </main>
     </>
