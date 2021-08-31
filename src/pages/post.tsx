@@ -15,9 +15,9 @@ export default function PostPage({ compose = false }: PostPageProps): JSX.Elemen
   return (
     <>
       <Header />
-      <main className="mx-4">
-        <div className="grid grid-cols-3 gap-4 mx-auto max-w-screen-lg">
-          <div className="col-span-2">
+      <main className="mx-2 lg:mx-4">
+        <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
+          <div className="col-span-3 lg:col-span-2">
             <PostContainer
               post={post || undefined}
               commentsLimit={3}

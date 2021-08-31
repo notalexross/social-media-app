@@ -51,7 +51,7 @@ export default function PostContainer({
       isPostPage={isPostPage}
       {...restProps}
     >
-      <div className="flex justify-between items-center p-4 border-b">
+      <div className="flex justify-between items-center p-3 border-b lg:p-4">
         <UserProfile className="flex items-center" user={post?.ownerDetails || {}}>
           <UserProfile.Avatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
           <div className="flex flex-col">
@@ -69,7 +69,7 @@ export default function PostContainer({
         {post ? <MenuContainer className="pr-4" post={post} /> : null}
       </div>
       <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
-      <div className="flex flex-col p-4">
+      <div className="flex flex-col p-3 lg:p-4">
         <Post.ReplyingTo className="self-start mb-1 text-sm text-gray-500 hover:underline" />
         <Post.ViewAttachment className="self-start mb-1 text-sm text-gray-500 hover:underline" />
         <Post.Message

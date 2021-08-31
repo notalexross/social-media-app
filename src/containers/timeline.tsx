@@ -17,7 +17,7 @@ export default function TimelineContainer({
 }: TimelineContainerProps): JSX.Element {
   let timelineInner: JSX.Element
   if (!posts) {
-    timelineInner = <PostContainer className="mb-8 border rounded bg-white" />
+    timelineInner = <PostContainer className="mb-2 border rounded bg-white lg:mb-8" />
   } else if (!posts.length) {
     timelineInner = <p className="text-2xl text-center">There are no posts to show here.</p>
   } else {
@@ -25,7 +25,7 @@ export default function TimelineContainer({
       <>
         {posts.map(post => (
           <PostContainer
-            className="mb-8 border rounded bg-white"
+            className="mb-2 border rounded bg-white lg:mb-8"
             key={post.id}
             post={post}
             commentsLimit={1}
@@ -34,7 +34,7 @@ export default function TimelineContainer({
         ))}
         {!isComplete ? (
           <button
-            className="block mx-auto mb-8 px-6 py-2 w-full border rounded bg-blue-500 font-bold text-white hover:opacity-70"
+            className="block mx-auto mb-2 px-6 py-2 w-full border rounded bg-blue-500 font-bold text-white lg:mb-8 hover:opacity-70"
             type="button"
             disabled={isLoadingPosts}
             onClick={loadNextPage}

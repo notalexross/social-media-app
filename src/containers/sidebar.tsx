@@ -37,11 +37,11 @@ export default function SidebarContainer(
             </div>
           </UserProfile>
           {suggestions.length ? (
-            <div className="py-4 border-t flex-grow-1 overflow-auto">
-              <h3 className="px-4">Recommendations</h3>
+            <div className="py-3 border-t flex-grow-1 overflow-auto lg:py-4">
+              <h3 className="px-3 lg:px-4">Recommendations</h3>
               {suggestions.map(suggestion => (
                 <UserProfile
-                  className="flex justify-between items-center mt-4 px-4 text-sm min-w-min"
+                  className="flex justify-between items-center mt-3 px-3 text-sm min-w-min lg:mt-4 lg:px-4"
                   key={suggestion.uid}
                   user={suggestion}
                 >

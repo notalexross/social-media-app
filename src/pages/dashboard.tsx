@@ -13,10 +13,10 @@ export default function DashboardPage(): JSX.Element {
   return (
     <>
       <Header />
-      <main className="mx-4">
-        <div className="grid grid-cols-3 gap-4 mx-auto max-w-screen-lg">
+      <main className="mx-2 lg:mx-4">
+        <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
           <TimelineContainer
-            className="col-span-2"
+            className="col-span-3 lg:col-span-2"
             posts={postsLive}
             loadNextPage={loadNextPage}
             isComplete={isComplete}
