@@ -6,7 +6,7 @@ import type { LocationState } from '../types'
 import type { PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import PostContainer from './post'
-import { useLockBody, usePosts, usePostsLive } from '../hooks'
+import { useLockBody, usePosts, usePostsLive, useWindowDimensions } from '../hooks'
 import * as ROUTES from '../constants/routes'
 
 if (process.env.NODE_ENV !== 'test') {
@@ -41,6 +41,8 @@ export default function ModalContainer({
   const postObject = usePosts(postId || '')
   const postLive = usePostsLive(postObject || null) || (typeof post === 'string' ? undefined : post)
   const postToEdit = edit && (post && typeof post !== 'string' ? post : postObject || false)
+  const [, windowHeight] = useWindowDimensions()
+  const maxHeight = `${windowHeight * (1 - offsetTop) - headerHeight}px`
 
   const measuredHeaderRef = useCallback((node: HTMLDivElement) => {
     if (node !== null) {
@@ -127,11 +129,7 @@ export default function ModalContainer({
         </button>
       </div>
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div
-        onClick={handleClick}
-        className="overflow-y-auto h-screen"
-        style={{ maxHeight: `calc(100vh - ${offsetTop} * 100vh - ${headerHeight}px)` }}
-      >
+      <div onClick={handleClick} className="overflow-y-auto h-screen" style={{ maxHeight }}>
         {modalInner}
       </div>
     </Modal>
