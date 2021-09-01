@@ -3,12 +3,14 @@ import type { User } from '../services/firebase'
 import { getSuggestedUsers } from '../services/firebase'
 import { UserContext } from '../context/user'
 import { UserProfile } from '../components'
+import { useWindowDimensions } from '../hooks'
 
 export default function SidebarContainer(
   props: Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 ): JSX.Element {
   const user = useContext(UserContext)
   const { uid, following } = user
+  const [, windowHeight] = useWindowDimensions()
   const [suggestions, setSuggestions] = useState<User[]>([])
   const loadedFollowing = following !== undefined
 
@@ -28,7 +30,7 @@ export default function SidebarContainer(
   return (
     <div {...props}>
       <div className="border rounded bg-white">
-        <div className="flex flex-col" style={{ maxHeight: 'calc(100vh - 2 * 1rem)' }}>
+        <div className="flex flex-col" style={{ maxHeight: `calc(${windowHeight}px - 2 * 1rem)` }}>
           <UserProfile className="flex items-center p-4" user={user}>
             <UserProfile.Avatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
             <div className="flex flex-col">

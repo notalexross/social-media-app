@@ -3,7 +3,7 @@ import { EmojiHappyIcon, PaperClipIcon } from '@heroicons/react/outline'
 import type { PostWithUserDetails, ReplyTo } from '../services/firebase'
 import { Compose } from '../components'
 import { UserContext } from '../context/user'
-import { useResponsivePopper } from '../hooks'
+import { useResponsivePopper, useWindowDimensions } from '../hooks'
 
 type ComposeContainerProps = {
   replyTo?: ReplyTo
@@ -16,6 +16,7 @@ export default function ComposeContainer({
   ...restProps
 }: ComposeContainerProps): JSX.Element {
   const { username } = useContext(UserContext)
+  const [windowWidth, windowHeight] = useWindowDimensions()
   const [popperRef, popperRelativeRef] = useResponsivePopper<HTMLDivElement, HTMLDivElement>({
     offsetY: -0.5
   })
@@ -90,8 +91,8 @@ export default function ComposeContainer({
             className="w-80 h-96 bg-white text-gray-500 border rounded shadow-md"
             style={{
               margin: '0.5rem',
-              maxWidth: 'calc(100vw - 2 * 0.5rem)',
-              maxHeight: 'calc(100vh - 2 * 0.5rem)'
+              maxWidth: `calc(${windowWidth}px - 2 * 0.5rem)`,
+              maxHeight: `calc(${windowHeight}px - 2 * 0.5rem)`
             }}
           />
         </div>
