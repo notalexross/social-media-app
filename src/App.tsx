@@ -4,6 +4,7 @@ import type { LocationState } from './types'
 import { UserContextProvider } from './context/user'
 import * as ROUTES from './constants/routes'
 
+const Header = lazy(() => import('./components/header'))
 const SignUpPage = lazy(() => import('./pages/sign-up'))
 const SignInPage = lazy(() => import('./pages/sign-in'))
 const ProfilePage = lazy(() => import('./pages/profile'))
@@ -32,20 +33,27 @@ export default function App(): JSX.Element {
           <Route path={ROUTES.SIGN_IN}>
             <SignInPage />
           </Route>
-          <Route path={`${ROUTES.PROFILES}/:username`}>
-            <ProfilePage />
-          </Route>
-          <Route exact path={`${ROUTES.POSTS}/:postId`}>
-            <PostPage />
-          </Route>
-          <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
-            <PostPage compose />
-          </Route>
-          <Route exact path={[ROUTES.DASHBOARD, ROUTES.COMPOSE]}>
-            <DashboardPage />
-          </Route>
           <Route path="*">
-            <NotFoundPage />
+            <Header />
+            <Suspense fallback={null}>
+              <Switch location={isModal ? back : location}>
+                <Route path={`${ROUTES.PROFILES}/:username`}>
+                  <ProfilePage />
+                </Route>
+                <Route exact path={`${ROUTES.POSTS}/:postId`}>
+                  <PostPage />
+                </Route>
+                <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
+                  <PostPage compose />
+                </Route>
+                <Route exact path={[ROUTES.DASHBOARD, ROUTES.COMPOSE]}>
+                  <DashboardPage />
+                </Route>
+                <Route path="*">
+                  <NotFoundPage />
+                </Route>
+              </Switch>
+            </Suspense>
           </Route>
         </Switch>
       </Suspense>

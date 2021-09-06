@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom'
 import { PostContainer, SidebarContainer } from '../containers'
-import { Header } from '../components'
 import { usePosts, usePostsLive } from '../hooks'
 
 type PostPageProps = {
@@ -13,22 +12,19 @@ export default function PostPage({ compose = false }: PostPageProps): JSX.Elemen
   const [post] = usePostsLive(postSnaphot || null) || [null]
 
   return (
-    <>
-      <Header />
-      <main className="mx-2 lg:mx-4">
-        <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
-          <div className="col-span-3 lg:col-span-2">
-            <PostContainer
-              post={post || undefined}
-              commentsLimit={3}
-              maxDepth={1}
-              compose={compose}
-              isPostPage
-            />
-          </div>
-          <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
+    <main className="mx-2 lg:mx-4">
+      <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
+        <div className="col-span-3 lg:col-span-2">
+          <PostContainer
+            post={post || undefined}
+            commentsLimit={3}
+            maxDepth={1}
+            compose={compose}
+            isPostPage
+          />
         </div>
-      </main>
-    </>
+        <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
+      </div>
+    </main>
   )
 }
