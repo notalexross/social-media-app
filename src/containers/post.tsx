@@ -130,7 +130,7 @@ function Comment({
   ...restProps
 }: CommentProps) {
   const postSnaphot = usePosts(id)
-  const comment = usePostsLive(postSnaphot || null)
+  const [comment] = usePostsLive(postSnaphot || null) || [null]
 
   return comment ? (
     <PostContainer

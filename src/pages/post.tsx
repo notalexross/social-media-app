@@ -10,7 +10,7 @@ type PostPageProps = {
 export default function PostPage({ compose = false }: PostPageProps): JSX.Element {
   const { postId } = useParams<{ postId: string }>()
   const postSnaphot = usePosts(postId)
-  const post = usePostsLive(postSnaphot || null)
+  const [post] = usePostsLive(postSnaphot || null) || [null]
 
   return (
     <>

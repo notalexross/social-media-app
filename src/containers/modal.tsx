@@ -39,7 +39,7 @@ export default function ModalContainer({
   const back = history.location.state?.back
   const postId = typeof post === 'string' ? post : post?.id || postIdFromPath
   const postObject = usePosts(postId || '')
-  const postLive = usePostsLive(postObject || null) || (typeof post === 'string' ? undefined : post)
+  const [postLive] = usePostsLive(postObject || null) || [typeof post === 'string' ? null : post]
   const postToEdit = edit && (post && typeof post !== 'string' ? post : postObject || false)
   const [, windowHeight] = useWindowDimensions()
   const maxHeight = `${windowHeight * (1 - offsetTop) - headerHeight}px`
@@ -73,7 +73,7 @@ export default function ModalContainer({
     modalInner = (
       <PostContainer
         className="border-l border-r border-b rounded-b bg-white"
-        post={postLive}
+        post={postLive || undefined}
         commentsLimit={0}
         compose={compose}
       />

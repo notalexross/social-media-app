@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import type { PostWithUserDetails } from '../services/firebase'
 import usePosts from './use-posts'
 
-function usePostsLive(post: PostWithUserDetails | null): PostWithUserDetails | null
+function usePostsLive(post: PostWithUserDetails | null): PostWithUserDetails[] | null
 function usePostsLive(posts: PostWithUserDetails[] | null): PostWithUserDetails[] | null
 function usePostsLive(
   postOrPosts: PostWithUserDetails | PostWithUserDetails[] | null
-): PostWithUserDetails | PostWithUserDetails[] | null {
+): PostWithUserDetails[] | null {
   const posts = useMemo(() => {
     if (postOrPosts) {
       return Array.isArray(postOrPosts) ? postOrPosts : [postOrPosts]
@@ -23,10 +23,12 @@ function usePostsLive(
       setLivePosts(
         posts.map(post => updatedPosts.find(updatedPost => updatedPost?.id === post.id) || post)
       )
+    } else {
+      setLivePosts(null)
     }
   }, [posts, updatedPosts])
 
-  return Array.isArray(postOrPosts) ? livePosts : livePosts && livePosts[0]
+  return livePosts
 }
 
 export default usePostsLive
