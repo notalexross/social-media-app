@@ -3,8 +3,9 @@ import { render, screen, waitFor } from '@testing-library/react'
 import useMultiUserPosts from './use-multi-user-posts'
 
 function Component() {
+  const uid = 'user3'
   const [uids] = useState(['user1', 'user2'])
-  const { posts } = useMultiUserPosts(uids)
+  const { posts } = useMultiUserPosts(uid, uids)
 
   return posts ? (
     <>

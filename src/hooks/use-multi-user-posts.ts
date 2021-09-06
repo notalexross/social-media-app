@@ -9,21 +9,35 @@ type MultiUserPosts = {
   isLoadingPosts: boolean
 }
 
+const initialIsLoadingPosts = true
+const initialLoadNextPage = () => Promise.resolve()
+const initialStatus = {
+  posts: null,
+  isComplete: true,
+  page: 0,
+  stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
+}
+
 export default function useMultiUserPosts(
+  id: string | undefined,
   uids: string[] | undefined,
   postsPerPage = 10
 ): MultiUserPosts {
-  const [status, setStatus] = useState<PostsStatus>({
-    posts: null,
-    isComplete: true,
-    page: 0,
-    stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
-  })
+  const [isLoadingPosts, setIsLoadingPosts] = useState(initialIsLoadingPosts)
+  const [loadNextPage, setLoadNextPage] = useState<() => Promise<void>>(initialLoadNextPage)
+  const [status, setStatus] = useState<PostsStatus>(initialStatus)
   const isMounted = useRef(true)
   const isInitiated = useRef(false)
-  const [isLoadingPosts, setIsLoadingPosts] = useState(true)
-  const [loadNextPage, setLoadNextPage] = useState<() => Promise<void>>(() => Promise.resolve())
   const { posts, isComplete } = status
+
+  useEffect(() => {
+    if (id) {
+      isInitiated.current = false
+      setIsLoadingPosts(initialIsLoadingPosts)
+      setLoadNextPage(initialLoadNextPage)
+      setStatus(initialStatus)
+    }
+  }, [id])
 
   useEffect(() => {
     isMounted.current = true

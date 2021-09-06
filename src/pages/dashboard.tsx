@@ -6,8 +6,8 @@ import { useMultiUserPosts, usePostsLive, useTitle } from '../hooks'
 
 export default function DashboardPage(): JSX.Element {
   useTitle('Dashboard')
-  const { following } = useContext(UserContext)
-  const { posts, loadNextPage, isComplete, isLoadingPosts } = useMultiUserPosts(following, 2)
+  const { uid, following } = useContext(UserContext)
+  const { posts, loadNextPage, isComplete, isLoadingPosts } = useMultiUserPosts(uid, following, 2)
   const postsLive = usePostsLive(posts)
 
   return (
