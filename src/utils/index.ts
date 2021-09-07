@@ -92,7 +92,7 @@ export function chunkArray<T>(array: T[], numPerChunk = 10): T[][] {
   return chunked
 }
 
-export function formatDateTime(date: Date): [string, string] {
+export function formatDateTime(date: Date): [string, string, string] {
   const months = [
     'Jan',
     'Feb',
@@ -135,9 +135,10 @@ export function formatDateTime(date: Date): [string, string] {
     timeElapsed = `${Math.floor(elapsedMillis / millisPerSecond)}s`
   }
 
-  const dateFull = `${hours12}:${minutes} ${amPm} · ${month} ${day}, ${year}`
+  const datePartial = `${month} ${day}, ${year}`
+  const dateFull = `${hours12}:${minutes} ${amPm} · ${datePartial}`
 
-  return [timeElapsed, dateFull]
+  return [timeElapsed, dateFull, datePartial]
 }
 
 export function modulo(numerator: number, denominator: number): number {
