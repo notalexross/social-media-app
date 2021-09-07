@@ -10,7 +10,7 @@ type MultiUserPosts = {
 }
 
 const initialIsLoadingPosts = true
-const initialLoadNextPage = () => Promise.resolve()
+const initialLoadNextPage = () => () => Promise.resolve()
 const initialStatus = {
   posts: null,
   isComplete: true,
