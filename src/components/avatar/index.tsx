@@ -31,7 +31,7 @@ function AvatarImageWrapper({
   }
 
   return updatable && uid ? (
-    <>
+    <span className="hover:opacity-70">
       <button {...restProps} type="button" onClick={handleClick} aria-label="upload new avatar">
         <input
           ref={inputRef}
@@ -49,7 +49,7 @@ function AvatarImageWrapper({
           children
         )}
       </button>
-    </>
+    </span>
   ) : (
     <span {...restProps}>{children}</span>
   )
