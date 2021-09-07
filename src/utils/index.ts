@@ -56,7 +56,7 @@ type Timestamp = {
 }
 
 function timestampToMillis(timestamp: Timestamp): number {
-  return timestamp.seconds * 1000 + timestamp.nanoseconds
+  return timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1000000)
 }
 
 export function sortByTimestamp<T extends Record<string, unknown>, U extends keyof T>(
