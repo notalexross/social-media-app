@@ -55,7 +55,7 @@ type Timestamp = {
   nanoseconds: number
 }
 
-function timestampToMillis(timestamp: Timestamp): number {
+export function timestampToMillis(timestamp: Timestamp): number {
   return timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1000000)
 }
 

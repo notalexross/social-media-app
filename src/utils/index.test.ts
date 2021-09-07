@@ -1,6 +1,8 @@
+import firebase from 'firebase'
 import {
   isValidSignUpInputs,
   isValidSignInInputs,
+  timestampToMillis,
   sortBy,
   sortByTimestamp,
   chunkArray,
@@ -70,6 +72,17 @@ describe(`${isValidSignInInputs.name}`, () => {
     const result = isValidSignInInputs(options)
 
     expect(result).toBe(false)
+  })
+})
+
+describe(`${timestampToMillis.name}`, () => {
+  test('given firebase timestamp, returns time in milliseconds', () => {
+    const date = new Date()
+    const timestamp = firebase.firestore.Timestamp.fromDate(date)
+
+    const result = timestampToMillis(timestamp)
+
+    expect(result).toBe(date.getTime())
   })
 })
 
