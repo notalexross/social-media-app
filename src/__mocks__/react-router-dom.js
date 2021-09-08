@@ -26,11 +26,23 @@ const useHistory = jest.fn(() => history)
 
 const location = {}
 const useLocation = jest.fn(() => location)
+const useParams = jest.fn(() => ({ postId: '', username: '' }))
 
 const mockFunctions = {
   history,
   useHistory,
-  useLocation
+  useLocation,
+  useParams
 }
 
-export { BrowserRouter, Switch, Route, Link, Redirect, useHistory, useLocation, mockFunctions }
+export {
+  BrowserRouter,
+  Switch,
+  Route,
+  Link,
+  Redirect,
+  useHistory,
+  useLocation,
+  useParams,
+  mockFunctions
+}
