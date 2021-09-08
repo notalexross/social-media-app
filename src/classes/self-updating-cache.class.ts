@@ -139,4 +139,27 @@ export default class SelfUpdatingCache<T, U extends unknown[]> {
 
     return this.cache[key]
   }
+
+  async clear(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.getDB()
+        .then(db => {
+          const transaction = db.transaction(this.name, 'readwrite')
+          const objectStore = transaction.objectStore(this.name)
+          const request = objectStore.clear()
+
+          request.onsuccess = () => {
+            resolve(request.result)
+          }
+
+          request.onerror = () => {
+            reject(request.error)
+          }
+        })
+        .then(() => {
+          this.cache = {}
+        })
+        .catch(reject)
+    })
+  }
 }
