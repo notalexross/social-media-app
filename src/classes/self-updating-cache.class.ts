@@ -91,12 +91,11 @@ export default class SelfUpdatingCache<T, U extends unknown[]> {
   }
 
   async get(key: string, maxAge: number, ...args: U): Promise<CacheEntry<T> | undefined> {
-    this.cache[key] = new Promise<CacheEntry<T> | undefined>(resolve => {
+    this.cache[key] = new Promise<CacheEntry<T>>((resolve, reject) => {
       this.getEntry(key, maxAge, ...args)
         .then(resolve)
         .catch(error => {
-          console.error(error)
-          resolve(undefined)
+          reject(error)
         })
     })
 
