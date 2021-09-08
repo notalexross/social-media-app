@@ -124,4 +124,19 @@ export default class SelfUpdatingCache<T, U extends unknown[]> {
         .catch(reject)
     })
   }
+
+  async set(key: string, data: T): Promise<CacheEntry<T> | undefined> {
+    const lastUpdated = Date.now()
+    const entry = { data, lastUpdated }
+
+    this.cache[key] = new Promise<CacheEntry<T>>((resolve, reject) => {
+      this.updateDBEntry(key, entry)
+        .then(() => resolve(entry))
+        .catch(error => {
+          reject(error)
+        })
+    })
+
+    return this.cache[key]
+  }
 }
