@@ -1,8 +1,8 @@
 // eslint-disable-next-line jest/no-mocks-import
 import { mockFunctions } from '../__mocks__/firebase/app'
 import {
-  getUserByUsername,
   getCachedUserById,
+  getCachedUserByUsername,
   onUserUpdated,
   isUsernameAvailable,
   signUp,
@@ -101,21 +101,21 @@ describe(`${getCachedUserById.name}`, () => {
   })
 })
 
-describe(`${getUserByUsername.name}`, () => {
+describe(`${getCachedUserByUsername.name}`, () => {
   test('returns a promise', () => {
-    const result = getUserByUsername('username')
+    const result = getCachedUserByUsername('username')
 
     expect(result).toBeInstanceOf(Promise)
   })
 
   test('given username does not exist, throws error', async () => {
-    const result = getUserByUsername('untakenUsername')
+    const result = getCachedUserByUsername('untakenUsername')
 
     await expect(result).rejects.toThrowError('User with username "untakenUsername" not found.')
   })
 
   test('given username exists, returns user data', async () => {
-    const result = getUserByUsername('username')
+    const result = getCachedUserByUsername('username')
 
     await expect(result).resolves.toEqual({
       uid: 'user1',
@@ -129,7 +129,7 @@ describe(`${getUserByUsername.name}`, () => {
   })
 
   test('given all inclusions, returns all data', async () => {
-    const result = getUserByUsername('username', {
+    const result = getCachedUserByUsername('username', 0, {
       includePrivate: true,
       includeFollowing: true,
       includeLikedPosts: true

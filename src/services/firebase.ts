@@ -265,7 +265,7 @@ function getUserById(
   }))
 }
 
-export async function getUserByUsername(
+async function getUserByUsername(
   username: string,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
 ): Promise<User> {
@@ -296,6 +296,7 @@ export async function getUserByUsername(
 }
 
 export const usersByIdCache = new SelfUpdatingCache('users', getUserById)
+export const usersByUsernameCache = new SelfUpdatingCache('usernames', getUserByUsername)
 
 export async function getCachedUserById(
   uid: string,
@@ -305,6 +306,16 @@ export async function getCachedUserById(
   return usersByIdCache
     .get(uid, maxAge, uid, { includePrivate, includeFollowing, includeLikedPosts })
     .then(user => user?.data || { uid })
+}
+
+export async function getCachedUserByUsername(
+  username: string,
+  maxAge = 10000,
+  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+): Promise<Partial<User>> {
+  return usersByUsernameCache
+    .get(username, maxAge, username, { includePrivate, includeFollowing, includeLikedPosts })
+    .then(user => user?.data || {})
 }
 
 export function onUserUpdated(
