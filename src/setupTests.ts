@@ -4,3 +4,6 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 import 'fake-indexeddb/auto'
+import { usersByIdCache } from './services/firebase'
+
+beforeEach(() => usersByIdCache.clear())

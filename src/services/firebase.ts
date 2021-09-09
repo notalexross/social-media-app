@@ -241,7 +241,7 @@ function getUserId(username: string): Promise<{ uid: string } & UserPublic> {
     })
 }
 
-export function getUserById(
+function getUserById(
   uid: string,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
 ): Promise<User> {
@@ -263,12 +263,6 @@ export function getUserById(
     ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {}),
     uid
   }))
-}
-
-const usersCache = new SelfUpdatingCache('users', getUserById)
-
-export function getCachedUser(uid: string, maxAge = 10000): Promise<User> {
-  return usersCache.get(uid, maxAge, uid).then(user => user?.data || { uid })
 }
 
 export async function getUserByUsername(
@@ -299,6 +293,18 @@ export async function getUserByUsername(
     ...results.reduce((acc, cur) => ({ ...acc, ...cur }), {}),
     uid
   }))
+}
+
+export const usersByIdCache = new SelfUpdatingCache('users', getUserById)
+
+export async function getCachedUserById(
+  uid: string,
+  maxAge = 10000,
+  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+): Promise<User> {
+  return usersByIdCache
+    .get(uid, maxAge, uid, { includePrivate, includeFollowing, includeLikedPosts })
+    .then(user => user?.data || { uid })
 }
 
 export function onUserUpdated(
@@ -432,12 +438,12 @@ async function addUserDetailsToPost(post: PostWithId) {
   let postWithUserDetails: PostWithUserDetails
   if (post.replyTo) {
     const [ownerDetails, replyToOwnerDetails] = await Promise.all([
-      getCachedUser(post.owner),
-      getCachedUser(post.replyTo.owner)
+      getCachedUserById(post.owner),
+      getCachedUserById(post.replyTo.owner)
     ])
     postWithUserDetails = { ...post, ownerDetails, replyToOwnerDetails }
   } else {
-    const ownerDetails = await getCachedUser(post.owner)
+    const ownerDetails = await getCachedUserById(post.owner)
     postWithUserDetails = { ...post, ownerDetails }
   }
 
@@ -1127,7 +1133,7 @@ async function getRecentlySeenPosters({
   exclude = [] as string[]
 }): Promise<User[]> {
   const cutoff = Math.max(Date.now() - timePeriod, 0)
-  const recentlySeen = (await usersCache.getAll())
+  const recentlySeen = (await usersByIdCache.getAll())
     .filter(entry => entry.lastUpdated >= cutoff)
     .map(entry => entry.data)
   const sorted = sortByTimestamp(recentlySeen, 'lastPostedAt', 'desc')

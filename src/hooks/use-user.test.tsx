@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import useUser from './use-user'
 
 function Component({
@@ -24,18 +24,20 @@ test('given undefined uid, after having already passed a uid, returns empty data
   function Wrapper() {
     const [uid, setUid] = useState<string | undefined>('user1')
 
-    useEffect(() => {
-      setTimeout(() => {
-        setUid(undefined)
-      }, 0)
-    }, [])
-
-    return <Component uid={uid} />
+    return (
+      <>
+        <button type="button" onClick={() => setUid(undefined)}>
+          unset
+        </button>
+        <Component uid={uid} />
+      </>
+    )
   }
 
   render(<Wrapper />)
-
   expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
+
+  screen.getByRole('button', { name: 'unset' }).click()
 
   await waitFor(() => {
     expect(screen.queryByText('username: "Username"')).not.toBeInTheDocument()

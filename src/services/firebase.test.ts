@@ -1,8 +1,8 @@
 // eslint-disable-next-line jest/no-mocks-import
 import { mockFunctions } from '../__mocks__/firebase/app'
 import {
-  getUserById,
   getUserByUsername,
+  getCachedUserById,
   onUserUpdated,
   isUsernameAvailable,
   signUp,
@@ -17,25 +17,25 @@ import {
   getMultiUserPosts
 } from './firebase'
 
-describe(`${getUserById.name}`, () => {
+describe(`${getCachedUserById.name}`, () => {
   const uid = 'user1'
 
+  test('returns a promise', () => {
+    const result = getCachedUserById(uid)
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
   describe('without options', () => {
-    let result: ReturnType<typeof getUserById>
+    test('calls firestore methods', async () => {
+      await getCachedUserById(uid)
 
-    beforeEach(() => {
-      result = getUserById(uid)
-    })
-
-    test('calls firestore methods', () => {
       expect(mockFunctions.get).toHaveBeenCalledTimes(1)
     })
 
-    test('returns a promise', () => {
-      expect(result).toBeInstanceOf(Promise)
-    })
-
     test('returns correct data', async () => {
+      const result = getCachedUserById(uid)
+
       await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',
@@ -49,18 +49,17 @@ describe(`${getUserById.name}`, () => {
   })
 
   describe('with private data', () => {
-    let result: ReturnType<typeof getUserById>
+    const options = { includePrivate: true }
 
-    beforeEach(() => {
-      const options = { includePrivate: true }
-      result = getUserById(uid, options)
-    })
+    test('calls firestore methods', async () => {
+      await getCachedUserById(uid, 0, options)
 
-    test('calls firestore methods', () => {
       expect(mockFunctions.get).toHaveBeenCalledTimes(2)
     })
 
     test('returns correct data', async () => {
+      const result = getCachedUserById(uid, 0, options)
+
       await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',
@@ -76,18 +75,17 @@ describe(`${getUserById.name}`, () => {
   })
 
   describe('with following and likedPosts data', () => {
-    let result: ReturnType<typeof getUserById>
+    const options = { includeFollowing: true, includeLikedPosts: true }
 
-    beforeEach(() => {
-      const options = { includeFollowing: true, includeLikedPosts: true }
-      result = getUserById(uid, options)
-    })
+    test('calls firestore methods', async () => {
+      await getCachedUserById(uid, 0, options)
 
-    test('calls firestore methods', () => {
       expect(mockFunctions.get).toHaveBeenCalledTimes(3)
     })
 
     test('returns correct data', async () => {
+      const result = getCachedUserById(uid, 0, options)
+
       await expect(result).resolves.toEqual({
         uid: 'user1',
         avatar: '',

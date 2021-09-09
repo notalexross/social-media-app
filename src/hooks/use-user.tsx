@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { User } from '../services/firebase'
-import { getUserById, onUserUpdated } from '../services/firebase'
+import { getCachedUserById, onUserUpdated } from '../services/firebase'
 
 export default function useUser(
   uid: string | undefined,
@@ -25,7 +25,7 @@ export default function useUser(
         })
       }
 
-      getUserById(uid, { includePrivate, includeFollowing, includeLikedPosts })
+      getCachedUserById(uid, 0, { includePrivate, includeFollowing, includeLikedPosts })
         .then(data => isCurrent && setUserDetails(data))
         .catch(console.error)
     } else {
