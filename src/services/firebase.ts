@@ -318,24 +318,32 @@ export async function getCachedUserByUsername(
     .then(user => user?.data || {})
 }
 
-export function onUserUpdated(
+export function onUserByIdUpdated(
   uid: string,
   callback: (details: User) => void,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
 ): () => void {
-  const listeners = [listenPublicDetails(uid, callback)]
+  let fullDetails: User = { uid }
+  let callCount = 0
+  let minCallsForCaching = 1
+  if (includePrivate) minCallsForCaching += 1
+  if (includeFollowing) minCallsForCaching += 1
+  if (includeLikedPosts) minCallsForCaching += 1
 
-  if (includePrivate) {
-    listeners.push(listenPrivateDetails(uid, callback))
+  const cachingCallback = (details: User): void => {
+    callCount += 1
+    fullDetails = { ...fullDetails, ...details }
+    if (callCount >= minCallsForCaching) {
+      usersByIdCache.set(uid, fullDetails).catch(console.error)
+    }
+
+    return callback(details)
   }
 
-  if (includeFollowing) {
-    listeners.push(listenFollowing(uid, callback))
-  }
-
-  if (includeLikedPosts) {
-    listeners.push(listenLikedPosts(uid, callback))
-  }
+  const listeners = [listenPublicDetails(uid, cachingCallback)]
+  if (includePrivate) listeners.push(listenPrivateDetails(uid, cachingCallback))
+  if (includeFollowing) listeners.push(listenFollowing(uid, cachingCallback))
+  if (includeLikedPosts) listeners.push(listenLikedPosts(uid, cachingCallback))
 
   return () => listeners.forEach(listener => listener())
 }

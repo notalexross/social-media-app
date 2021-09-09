@@ -1,9 +1,10 @@
+import { waitFor } from '@testing-library/react'
 // eslint-disable-next-line jest/no-mocks-import
 import { mockFunctions } from '../__mocks__/firebase/app'
 import {
   getCachedUserById,
   getCachedUserByUsername,
-  onUserUpdated,
+  onUserByIdUpdated,
   isUsernameAvailable,
   signUp,
   signIn,
@@ -151,121 +152,111 @@ describe(`${getCachedUserByUsername.name}`, () => {
   })
 })
 
-describe(`${onUserUpdated.name}`, () => {
-  const callback = jest.fn()
+describe(`${onUserByIdUpdated.name}`, () => {
   const uid = 'user1'
+  const username = 'Username'
+  const fullName = 'Forename Surname'
+  const email = 'email@email.com'
+  const avatar = ''
+  const createdAt = '0'
+  const deleted = false
+  const followersCount = 2
+  const following = ['user3', 'user4']
+  const likedPosts = ['post1', 'post2']
 
-  describe('without options', () => {
-    let result: ReturnType<typeof onUserUpdated>
+  test('calls firestore methods', async () => {
+    const callback = jest.fn()
+    onUserByIdUpdated(uid, callback)
+    await waitFor(() => expect(callback).toHaveBeenCalled())
 
-    beforeEach(() => {
-      result = onUserUpdated(uid, callback)
-    })
+    expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+  })
 
-    test('calls firestore methods', () => {
-      expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
-    })
+  test('calls callback with correct data', async () => {
+    const callback = jest.fn()
+    onUserByIdUpdated(uid, callback)
+    await waitFor(() => expect(callback).toHaveBeenCalled())
 
-    test('calls callback with correct data', () => {
-      expect(callback).toBeCalledTimes(1)
-      expect(callback).toHaveBeenCalledWith({
-        uid,
-        avatar: '',
-        createdAt: '0',
-        deleted: false,
-        followersCount: 2,
-        username: 'Username',
-        usernameLowerCase: 'username'
-      })
-    })
-
-    test('returns a cleanup function', () => {
-      result()
-
-      expect(typeof result).toBe('function')
-      expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+    expect(callback).toBeCalledTimes(1)
+    expect(callback).toHaveBeenCalledWith({
+      uid,
+      avatar,
+      createdAt,
+      deleted,
+      followersCount,
+      username,
+      usernameLowerCase: username.toLowerCase()
     })
   })
 
+  test('returns a cleanup function', async () => {
+    const callback = jest.fn()
+    const result = onUserByIdUpdated(uid, callback)
+    await waitFor(() => expect(callback).toHaveBeenCalled())
+    result()
+
+    expect(typeof result).toBe('function')
+    expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+  })
+
   describe('with private data', () => {
-    let result: ReturnType<typeof onUserUpdated>
+    const options = { includePrivate: true }
 
-    beforeEach(() => {
-      const options = { includePrivate: true }
-      result = onUserUpdated(uid, callback, options)
-    })
+    test('calls firestore methods', async () => {
+      const callback = jest.fn()
+      onUserByIdUpdated(uid, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
 
-    test('calls firestore methods', () => {
       expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
     })
 
-    test('calls callback with correct data', () => {
+    test('calls callback with correct data', async () => {
+      const callback = jest.fn()
+      onUserByIdUpdated(uid, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
       expect(callback).toBeCalledTimes(2)
       expect(callback).toHaveBeenCalledWith({
         uid,
-        avatar: '',
-        createdAt: '0',
-        deleted: false,
-        followersCount: 2,
-        username: 'Username',
-        usernameLowerCase: 'username'
+        avatar,
+        createdAt,
+        deleted,
+        followersCount,
+        username,
+        usernameLowerCase: username.toLowerCase()
       })
-
-      expect(callback).toHaveBeenCalledWith({
-        uid,
-        fullName: 'Forename Surname',
-        email: 'email@email.com'
-      })
-    })
-
-    test('returns a cleanup function', () => {
-      result()
-
-      expect(typeof result).toBe('function')
-      expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+      expect(callback).toHaveBeenCalledWith({ uid, fullName, email })
     })
   })
 
   describe('with following and likedPosts data', () => {
-    let result: ReturnType<typeof onUserUpdated>
+    const options = { includeFollowing: true, includeLikedPosts: true }
 
-    beforeEach(() => {
-      const options = { includeFollowing: true, includeLikedPosts: true }
-      result = onUserUpdated(uid, callback, options)
-    })
+    test('calls firestore methods', async () => {
+      const callback = jest.fn()
+      onUserByIdUpdated(uid, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
 
-    test('calls firestore methods', () => {
       expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(3)
     })
 
-    test('calls callback with correct data', () => {
+    test('calls callback with correct data', async () => {
+      const callback = jest.fn()
+      onUserByIdUpdated(uid, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
       expect(callback).toBeCalledTimes(3)
       expect(callback).toHaveBeenCalledWith({
-        uid: 'user1',
-        avatar: '',
-        createdAt: '0',
-        deleted: false,
-        username: 'Username',
-        usernameLowerCase: 'username',
-        followersCount: 2
-      })
-
-      expect(callback).toHaveBeenCalledWith({
         uid,
-        following: ['user3', 'user4']
+        avatar,
+        createdAt,
+        deleted,
+        username,
+        usernameLowerCase: username.toLowerCase(),
+        followersCount
       })
-
-      expect(callback).toHaveBeenCalledWith({
-        uid,
-        likedPosts: ['post1', 'post2']
-      })
-    })
-
-    test('returns a cleanup function', () => {
-      result()
-
-      expect(typeof result).toBe('function')
-      expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(3)
+      expect(callback).toHaveBeenCalledWith({ uid, following })
+      expect(callback).toHaveBeenCalledWith({ uid, likedPosts })
     })
   })
 })

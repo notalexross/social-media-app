@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { User } from '../services/firebase'
-import { getCachedUserById, onUserUpdated } from '../services/firebase'
+import { getCachedUserById, onUserByIdUpdated } from '../services/firebase'
 
 export default function useUser(
   uid: string | undefined,
@@ -18,11 +18,15 @@ export default function useUser(
 
     if (uid) {
       if (subscribe) {
-        return onUserUpdated(uid, changes => setUserDetails(state => ({ ...state, ...changes })), {
-          includePrivate,
-          includeFollowing,
-          includeLikedPosts
-        })
+        return onUserByIdUpdated(
+          uid,
+          changes => setUserDetails(state => ({ ...state, ...changes })),
+          {
+            includePrivate,
+            includeFollowing,
+            includeLikedPosts
+          }
+        )
       }
 
       getCachedUserById(uid, 0, { includePrivate, includeFollowing, includeLikedPosts })
