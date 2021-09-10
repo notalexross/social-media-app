@@ -9,21 +9,24 @@ import * as ROUTES from '../../constants/routes'
 
 type UserProfileContextValue = {
   user: Partial<User>
+  noLinks: boolean
 }
 
 const UserProfileContext = createContext({} as UserProfileContextValue)
 
 type UserProfileProps = {
   user: Partial<User>
+  noLinks?: boolean
 } & React.ComponentPropsWithoutRef<'div'>
 
 export default function UserProfile({
   children,
   user,
+  noLinks = false,
   ...restProps
 }: UserProfileProps): JSX.Element {
   return (
-    <UserProfileContext.Provider value={{ user }}>
+    <UserProfileContext.Provider value={{ user, noLinks }}>
       <div {...restProps}>{children}</div>
     </UserProfileContext.Provider>
   )
@@ -31,14 +34,16 @@ export default function UserProfile({
 
 type UserProfileAvatarProps = {
   linkClassName?: string
+  updatable?: boolean
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 UserProfile.Avatar = function UserProfileAvatar({
   linkClassName,
+  updatable = false,
   ...restProps
 }: UserProfileAvatarProps) {
   const { uid } = useContext(UserContext)
-  const { user } = useContext(UserProfileContext)
+  const { user, noLinks } = useContext(UserProfileContext)
   const { avatar, username } = user
   const isSelf = uid === user.uid
 
@@ -58,15 +63,23 @@ UserProfile.Avatar = function UserProfileAvatar({
     )
   }
 
+  const inner = (
+    <Avatar
+      className={linkClassName}
+      src={avatar}
+      alt={isSelf ? 'Your avatar' : `${username}'s avatar`}
+      uid={user.uid}
+      updatable={updatable}
+    />
+  )
+
   return (
     <div {...restProps}>
-      <StatefulLink to={`${ROUTES.PROFILES}/${username}`}>
-        <Avatar
-          className={linkClassName}
-          src={avatar}
-          alt={isSelf ? 'Your avatar' : `${username}'s avatar`}
-        />
-      </StatefulLink>
+      {updatable || noLinks ? (
+        inner
+      ) : (
+        <StatefulLink to={`${ROUTES.PROFILES}/${username}`}>{inner}</StatefulLink>
+      )}
     </div>
   )
 }
@@ -82,7 +95,7 @@ UserProfile.Username = function UserProfileUsername({
   ...restProps
 }: UserProfileUsernameProps) {
   const { uid } = useContext(UserContext)
-  const { user } = useContext(UserProfileContext)
+  const { user, noLinks } = useContext(UserProfileContext)
   const { username } = user
   const isSelf = user.uid === uid
 
@@ -96,9 +109,13 @@ UserProfile.Username = function UserProfileUsername({
 
   return (
     <span {...restProps}>
-      <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`}>
-        {username}
-      </StatefulLink>
+      {noLinks ? (
+        username
+      ) : (
+        <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`}>
+          {username}
+        </StatefulLink>
+      )}
     </span>
   )
 }
