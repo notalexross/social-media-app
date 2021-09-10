@@ -5,6 +5,7 @@ import {
   getCachedUserById,
   getCachedUserByUsername,
   onUserByIdUpdated,
+  onUserByUsernameUpdated,
   isUsernameAvailable,
   signUp,
   signIn,
@@ -243,6 +244,116 @@ describe(`${onUserByIdUpdated.name}`, () => {
     test('calls callback with correct data', async () => {
       const callback = jest.fn()
       onUserByIdUpdated(uid, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
+      expect(callback).toBeCalledTimes(3)
+      expect(callback).toHaveBeenCalledWith({
+        uid,
+        avatar,
+        createdAt,
+        deleted,
+        username,
+        usernameLowerCase: username.toLowerCase(),
+        followersCount
+      })
+      expect(callback).toHaveBeenCalledWith({ uid, following })
+      expect(callback).toHaveBeenCalledWith({ uid, likedPosts })
+    })
+  })
+})
+
+describe(`${onUserByUsernameUpdated.name}`, () => {
+  const uid = 'user1'
+  const username = 'Username'
+  const fullName = 'Forename Surname'
+  const email = 'email@email.com'
+  const avatar = ''
+  const createdAt = '0'
+  const deleted = false
+  const followersCount = 2
+  const following = ['user3', 'user4']
+  const likedPosts = ['post1', 'post2']
+
+  test('calls firestore methods', async () => {
+    const callback = jest.fn()
+    onUserByUsernameUpdated(username, callback)
+    await waitFor(() => expect(callback).toHaveBeenCalled())
+
+    expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+  })
+
+  test('calls callback with correct data', async () => {
+    const callback = jest.fn()
+    onUserByUsernameUpdated(username, callback)
+    await waitFor(() => expect(callback).toHaveBeenCalled())
+
+    expect(callback).toBeCalledTimes(1)
+    expect(callback).toHaveBeenCalledWith({
+      uid,
+      avatar,
+      createdAt,
+      deleted,
+      followersCount,
+      username,
+      usernameLowerCase: username.toLowerCase()
+    })
+  })
+
+  test('returns a cleanup function', async () => {
+    const callback = jest.fn()
+    const result = onUserByUsernameUpdated(username, callback)
+    await waitFor(() => expect(callback).toHaveBeenCalled())
+
+    result()
+
+    expect(typeof result).toBe('function')
+    expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+  })
+
+  describe('with private data', () => {
+    const options = { includePrivate: true }
+
+    test('calls firestore methods', async () => {
+      const callback = jest.fn()
+      onUserByUsernameUpdated(username, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
+      expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+    })
+
+    test('calls callback with correct data', async () => {
+      const callback = jest.fn()
+      onUserByUsernameUpdated(username, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
+      expect(callback).toBeCalledTimes(2)
+      expect(callback).toHaveBeenCalledWith({
+        uid,
+        avatar,
+        createdAt,
+        deleted,
+        followersCount,
+        username,
+        usernameLowerCase: username.toLowerCase()
+      })
+      expect(callback).toHaveBeenCalledWith({ uid, fullName, email })
+    })
+  })
+
+  describe('with following and likedPosts data', () => {
+    const options = { includeFollowing: true, includeLikedPosts: true }
+
+    test('calls firestore methods', async () => {
+      const callback = jest.fn()
+      onUserByUsernameUpdated(username, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
+      expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(3)
+    })
+
+    test('calls callback with correct data', async () => {
+      const callback = jest.fn()
+      onUserByUsernameUpdated(username, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
       expect(callback).toBeCalledTimes(3)

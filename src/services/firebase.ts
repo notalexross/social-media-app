@@ -348,6 +348,55 @@ export function onUserByIdUpdated(
   return () => listeners.forEach(listener => listener())
 }
 
+export function onUserByUsernameUpdated(
+  username: string,
+  callback: (details: User | { error: Error }) => void,
+  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+): () => void {
+  let isCurrent = true
+  let cleanup = () => {
+    isCurrent = false
+  }
+
+  getUserId(username)
+    .then(({ uid }) => {
+      if (uid === undefined) {
+        throw new Error(`User with username "${username}" not found.`)
+      }
+
+      let fullDetails: User = { uid }
+      let callCount = 0
+      let minCallsForCaching = 1
+      if (includePrivate) minCallsForCaching += 1
+      if (includeFollowing) minCallsForCaching += 1
+      if (includeLikedPosts) minCallsForCaching += 1
+
+      const cachingCallback = (details: User): void => {
+        callCount += 1
+        fullDetails = { ...fullDetails, ...details }
+        if (callCount >= minCallsForCaching) {
+          usersByUsernameCache.set(username, fullDetails).catch(console.error)
+        }
+
+        return callback(details)
+      }
+
+      if (isCurrent) {
+        cleanup = onUserByIdUpdated(uid, cachingCallback, {
+          includePrivate,
+          includeFollowing,
+          includeLikedPosts
+        })
+      }
+    })
+    .catch((error: Error) => {
+      console.error(error)
+      callback({ error })
+    })
+
+  return () => cleanup()
+}
+
 function createUserInDB(
   uid: string,
   { avatar = '', email = '', fullName = '', username = '' }: UserCreatable
