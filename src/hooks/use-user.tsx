@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
 import type { User } from '../services/firebase'
-import { getCachedUserById, onUserByIdUpdated } from '../services/firebase'
+import {
+  getCachedUserById,
+  getCachedUserByUsername,
+  onUserByIdUpdated,
+  onUserByUsernameUpdated
+} from '../services/firebase'
 
 export default function useUser(
-  uid: string | undefined,
+  uidOrUsername: string | undefined,
   {
+    by = 'uid',
+    maxAge = 0,
     subscribe = false,
     includePrivate = false,
     includeFollowing = false,
@@ -16,22 +23,52 @@ export default function useUser(
   useEffect(() => {
     let isCurrent = true
 
-    if (uid) {
-      if (subscribe) {
-        return onUserByIdUpdated(
-          uid,
-          changes => setUserDetails(state => ({ ...state, ...changes })),
-          {
-            includePrivate,
-            includeFollowing,
-            includeLikedPosts
-          }
-        )
-      }
+    if (uidOrUsername) {
+      if (by === 'uid') {
+        const uid = uidOrUsername
 
-      getCachedUserById(uid, 0, { includePrivate, includeFollowing, includeLikedPosts })
-        .then(data => isCurrent && setUserDetails(data))
-        .catch(console.error)
+        if (subscribe) {
+          return onUserByIdUpdated(
+            uid,
+            changes => setUserDetails(state => ({ ...state, ...changes })),
+            {
+              includePrivate,
+              includeFollowing,
+              includeLikedPosts
+            }
+          )
+        }
+
+        getCachedUserById(uid, maxAge, {
+          includePrivate,
+          includeFollowing,
+          includeLikedPosts
+        })
+          .then(data => isCurrent && setUserDetails(data))
+          .catch(console.error)
+      } else {
+        const username = uidOrUsername
+
+        if (subscribe) {
+          return onUserByUsernameUpdated(
+            username,
+            changes => setUserDetails(state => ({ ...state, ...changes })),
+            {
+              includePrivate,
+              includeFollowing,
+              includeLikedPosts
+            }
+          )
+        }
+
+        getCachedUserByUsername(username, maxAge, {
+          includePrivate,
+          includeFollowing,
+          includeLikedPosts
+        })
+          .then(data => isCurrent && setUserDetails(data))
+          .catch(console.error)
+      }
     } else {
       setUserDetails({})
     }
@@ -39,7 +76,7 @@ export default function useUser(
     return () => {
       isCurrent = false
     }
-  }, [includeFollowing, includeLikedPosts, includePrivate, subscribe, uid])
+  }, [by, includeFollowing, includeLikedPosts, includePrivate, maxAge, subscribe, uidOrUsername])
 
   return userDetails
 }
