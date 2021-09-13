@@ -46,26 +46,26 @@ export default function ProfilePage(): JSX.Element {
     <main className="mx-4 lg:mx-4">
       <div className="mx-auto max-w-screen-lg">
         <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
-          <div className="col-span-3">
+          <div className="col-span-3 flex justify-center mb-2 border rounded bg-white sm:justify-start lg:mb-8">
             <UserProfile
-              className="flex mb-2 p-4 border rounded bg-white lg:mb-8 lg:p-8"
+              className="flex flex-col items-center p-4 text-center sm:flex-row lg:p-8 sm:text-left"
               user={isCurrentUser ? currentUser : user}
               noLinks
             >
-              <UserProfile.Avatar className="flex-shrink-0 w-20 mr-8 lg:w-40" updatable={isCurrentUser} />
-              <div className="flex-grow">
-                <div className="flex flex-col mb-3">
-                  <UserProfile.Username className="font-bold text-xl lg:text-2xl" />
-                  <div className="w-max text-gray-500 hover:underline">
+              <UserProfile.Avatar className="mb-3 w-40 sm:mb-0 sm:mr-8" updatable={isCurrentUser} />
+              <div>
+                <div className="flex flex-col mb-2">
+                  <UserProfile.Username className="font-bold text-lg sm:text-xl lg:text-2xl" />
+                  <div className="w-max mx-auto text-gray-500 sm:mx-0">
                     {isCurrentUser ? (
-                      <UserProfile.FullName title="Not visible to other users" />
+                      <UserProfile.FullName className="hover:underline" title="Not visible to other users" />
                     ) : (
-                      <UserProfile.FollowButton />
+                      <UserProfile.FollowButton className="hover:underline" />
                     )}
                   </div>
                 </div>
                 <div>
-                  <div className="flex mb-3">
+                  <div className="flex justify-center mb-2 sm:justify-start sm:mb-0">
                     <p>
                       <span className="font-bold">{followersCount}</span>
                       <span>{` follower${followersCount === 1 ? '' : 's'}`}</span>
@@ -77,14 +77,16 @@ export default function ProfilePage(): JSX.Element {
                       </p>
                     ) : null}
                   </div>
-                  <p>
-                    <span className="font-bold">Created: </span>
-                    <span>{created}</span>
-                  </p>
-                  <p>
-                    <span className="font-bold">Last Posted: </span>
-                    <span>{lastPosted}</span>
-                  </p>
+                  <div>
+                    <p>
+                      <span className="font-bold">Created: </span>
+                      <span>{created}</span>
+                    </p>
+                    <p>
+                      <span className="font-bold">Last Posted: </span>
+                      <span>{lastPosted}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </UserProfile>
