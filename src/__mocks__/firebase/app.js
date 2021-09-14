@@ -1,19 +1,64 @@
 /* eslint-disable func-names */
 /* eslint-disable no-underscore-dangle */
 
-const user = {
-  uid: 'user1',
-  avatar: '',
-  createdAt: '0',
-  deleted: false,
-  fullName: 'Forename Surname',
-  email: 'email@email.com',
-  password: 'password',
-  username: 'Username',
-  following: ['user3', 'user4'],
-  followers: ['user2', 'user3'],
-  likedPosts: ['post1', 'post2']
-}
+const users = [
+  {
+    uid: 'user1',
+    avatar: '',
+    createdAt: '0',
+    lastPostedAt: '1',
+    deleted: false,
+    fullName: 'Forename Surname',
+    email: 'email@email.com',
+    password: 'password',
+    username: 'Username',
+    following: ['user3', 'user4'],
+    followers: ['user2', 'user3'],
+    likedPosts: ['post1', 'post2']
+  },
+  {
+    uid: 'user2',
+    avatar: '',
+    createdAt: '1',
+    lastPostedAt: '3',
+    deleted: false,
+    fullName: 'User Two',
+    email: 'user2@email.com',
+    password: 'password2',
+    username: 'Username2',
+    following: ['user1'],
+    followers: [],
+    likedPosts: ['post1']
+  },
+  {
+    uid: 'user3',
+    avatar: '',
+    createdAt: '2',
+    lastPostedAt: '3',
+    deleted: false,
+    fullName: 'User Three',
+    email: 'user3@email.com',
+    password: 'password3',
+    username: 'Username3',
+    following: ['user1'],
+    followers: ['user1'],
+    likedPosts: []
+  },
+  {
+    uid: 'user4',
+    avatar: '',
+    createdAt: '3',
+    lastPostedAt: '4',
+    deleted: false,
+    fullName: 'User Four',
+    email: 'user4@email.com',
+    password: 'password4',
+    username: 'Username4',
+    following: [],
+    followers: ['user1'],
+    likedPosts: []
+  }
+]
 
 const posts = {
   post1: {
@@ -43,77 +88,106 @@ const posts = {
 
 const database = {
   users: {
-    _docs: new Map([[user.uid, {
-      _collections: {
-        private: {
-          _docs: new Map([['details', {
-            _fields: {
-              fullName: user.fullName,
-              email: user.email
-            }
-          }]])
-        },
-        followers: {
-          _docs: new Map(user.followers.map(followerId => [followerId, {}]))
-        },
-        following: {
-          _docs: new Map([['details', {
-            _fields: {
-              uids: user.following
-            }
-          }]])
-        },
-        likedPosts: {
-          _docs: new Map([['details', {
-            _fields: {
-              postIds: user.likedPosts
-            }
-          }]])
-        }
-      },
-      _fields: {
-        avatar: user.avatar,
-        createdAt: user.createdAt,
-        deleted: user.deleted,
-        followersCount: user.followers.length,
-        username: user.username,
-        usernameLowerCase: user.username.toLowerCase()
-      }
-    }]])
-  },
-  posts: {
-    _docs: new Map(Object.keys(posts).map(postId => {
-      const { likes, attachment, message, ...post } = posts[postId]
-
-      return [
-        postId,
+    _docs: new Map(
+      users.map(user => [
+        user.uid,
         {
           _collections: {
-            likes: {
-              _docs: new Map(likes.map(likerId => [likerId, {}]))
+            private: {
+              _docs: new Map([
+                [
+                  'details',
+                  {
+                    _fields: {
+                      fullName: user.fullName,
+                      email: user.email
+                    }
+                  }
+                ]
+              ])
             },
-            content: {
-              _docs: new Map([['details', {
-                _fields: {
-                  attachment,
-                  message
-                }
-              }]])
+            followers: {
+              _docs: new Map(user.followers.map(followerId => [followerId, {}]))
+            },
+            following: {
+              _docs: new Map([
+                [
+                  'details',
+                  {
+                    _fields: {
+                      uids: user.following
+                    }
+                  }
+                ]
+              ])
+            },
+            likedPosts: {
+              _docs: new Map([
+                [
+                  'details',
+                  {
+                    _fields: {
+                      postIds: user.likedPosts
+                    }
+                  }
+                ]
+              ])
             }
           },
           _fields: {
-            ...post,
-            likesCount: likes.length
+            avatar: user.avatar,
+            createdAt: user.createdAt,
+            lastPostedAt: user.lastPostedAt,
+            deleted: user.deleted,
+            followersCount: user.followers.length,
+            username: user.username,
+            usernameLowerCase: user.username.toLowerCase()
           }
         }
-      ]
-    }))
+      ])
+    )
+  },
+  posts: {
+    _docs: new Map(
+      Object.keys(posts).map(postId => {
+        const { likes, attachment, message, ...post } = posts[postId]
+
+        return [
+          postId,
+          {
+            _collections: {
+              likes: {
+                _docs: new Map(likes.map(likerId => [likerId, {}]))
+              },
+              content: {
+                _docs: new Map([
+                  [
+                    'details',
+                    {
+                      _fields: {
+                        attachment,
+                        message
+                      }
+                    }
+                  ]
+                ])
+              }
+            },
+            _fields: {
+              ...post,
+              likesCount: likes.length
+            }
+          }
+        ]
+      })
+    )
   }
 }
 
 const userCredentials = {
-  uid: user.uid,
-  email: user.email
+  uid: users[0].uid,
+  email: users[0].email,
+  password: users[0].password
 }
 
 class FirebaseEventTarget extends EventTarget {
@@ -140,7 +214,7 @@ const createUserWithEmailAndPassword = jest.fn(email => Promise.resolve({
 
 const signInWithEmailAndPassword = jest.fn(
   (email, password) => new Promise((resolve, reject) => {
-    if (email !== user.email) {
+    if (email !== userCredentials.email) {
       reject(
         new Error(
           'There is no user record corresponding to this identifier. The user may have been deleted.'
@@ -148,7 +222,7 @@ const signInWithEmailAndPassword = jest.fn(
       )
     }
 
-    if (password !== user.password) {
+    if (password !== userCredentials.password) {
       reject(new Error('The password is invalid or the user does not have a password.'))
     }
 
@@ -176,18 +250,47 @@ const onAuthStateChanged = jest.fn(callback => {
 })
 
 const auth = jest.fn(() => ({
-  currentUser: { uid: user.uid },
+  currentUser: { uid: userCredentials.uid },
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 }))
 
+function sortByField(docs, field, direction) {
+  const sortedDocs = docs.sort((a, b) => {
+    if (a[1][field] < b[1][field]) return -1
+    if (a[1][field] > b[1][field]) return 1
+
+    return 0
+  })
+
+  if (direction === 'desc') {
+    sortedDocs.reverse()
+  }
+
+  return sortedDocs
+}
+
 const get = jest.fn(function () {
   let response
   if ('_docs' in this) {
+    let docs = [...this._docs.entries()]
+
+    if ('_orderBy' in this) {
+      docs = sortByField(docs, this._orderBy.field, this._orderBy.direction)
+    }
+
+    if ('_startAfter' in this) {
+      const indexOfEntry = docs.findIndex(([key]) => key === this._startAfter?.id)
+      docs = docs.slice(indexOfEntry + 1)
+    }
+
     response = {
-      docs: [...this._docs.entries()].map(([id, doc]) => ({ id, data: () => doc._fields }))
+      docs: docs.slice(0, this._limit).map(([id, doc]) => ({
+        id,
+        data: () => doc._fields
+      }))
     }
   } else if ('_fields' in this) {
     response = {
@@ -219,6 +322,38 @@ const set = jest.fn(() => Promise.resolve())
 const update = jest.fn(() => Promise.resolve())
 const docDelete = jest.fn(() => Promise.resolve())
 
+const startAfter = jest.fn(function (document) {
+  return { ...this, _startAfter: document }
+})
+
+const limit = jest.fn(function (num) {
+  return { ...this, _limit: num }
+})
+
+const orderBy = jest.fn(function (field, direction) {
+  return { ...this, _orderBy: { field, direction } }
+})
+
+const where = jest.fn(function (field, operator, value) {
+  const docs = [...this._docs.entries()].filter(([, entry]) => {
+    switch (operator) {
+      case '==':
+        return entry._fields[field] === value
+      case 'in':
+        return value.includes(entry._fields[field])
+      default:
+        return false
+    }
+  })
+
+  return {
+    ...this,
+    _docs: new Map(docs)
+  }
+})
+
+const add = jest.fn(() => Promise.resolve())
+
 let collection
 
 const doc = jest.fn(function (id) {
@@ -236,59 +371,6 @@ const doc = jest.fn(function (id) {
   }
 })
 
-const limit = jest.fn(function (num) {
-  const docs = [...this._docs.entries()].slice(0, num)
-
-  return {
-    _docs: new Map(docs),
-    get,
-    onSnapshot
-  }
-})
-
-const orderBy = jest.fn(function (field, direction) {
-  const docs = [...this._docs.entries()].sort((a, b) => {
-    if (a[1][field] < b[1][field]) return -1
-    if (a[1][field] > b[1][field]) return 1
-
-    return 0
-  })
-
-  if (direction === 'desc') {
-    docs.reverse()
-  }
-
-  return {
-    _docs: new Map(docs),
-    limit,
-    get,
-    onSnapshot
-  }
-})
-
-const where = jest.fn(function (field, operator, value) {
-  const docs = [...this._docs.entries()].filter(([, entry]) => {
-    switch (operator) {
-      case '==':
-        return entry._fields[field] === value
-      case 'in':
-        return value.includes(entry._fields[field])
-      default:
-        return false
-    }
-  })
-
-  return {
-    _docs: new Map(docs),
-    where,
-    orderBy,
-    get,
-    onSnapshot
-  }
-})
-
-const add = jest.fn(() => Promise.resolve())
-
 collection = jest.fn(function (path) {
   const parts = path.split('/')
   const [part1, part2, ...restParts] = parts
@@ -305,7 +387,10 @@ collection = jest.fn(function (path) {
 
   return {
     _docs: this._collections[path]?._docs || new Map(),
+    startAfter,
     where,
+    orderBy,
+    limit,
     add,
     doc,
     get,
@@ -367,6 +452,7 @@ const mockFunctions = {
   update,
   docDelete,
   add,
+  startAfter,
   limit,
   orderBy,
   where,
