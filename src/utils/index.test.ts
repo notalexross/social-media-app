@@ -161,12 +161,12 @@ describe(`${formatDateTime.name}`, () => {
   const dateNow = '2021-07-31T16:00:00.000Z'
 
   describe(`where date now is ${dateNow}`, () => {
-    beforeAll(() => {
+    beforeEach(() => {
       jest.useFakeTimers('modern')
       jest.setSystemTime(Date.parse(dateNow))
     })
 
-    afterAll(() => {
+    afterEach(() => {
       jest.useRealTimers()
     })
 
