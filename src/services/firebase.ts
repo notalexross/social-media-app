@@ -1125,7 +1125,7 @@ type LatestPosters = {
   exhausted: boolean
 }
 
-async function getLatestPosters({
+export async function getLatestPosters({
   exclude = [] as string[],
   minUnexcluded = 5,
   maxRequests = 10,

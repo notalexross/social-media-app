@@ -16,7 +16,8 @@ import {
   unfollowUser,
   likePost,
   unlikePost,
-  getMultiUserPosts
+  getMultiUserPosts,
+  getLatestPosters
 } from './firebase'
 
 const user = {
@@ -833,5 +834,54 @@ describe(`${getMultiUserPosts.name}`, () => {
       page: 1,
       stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
     })
+  })
+})
+
+describe(`${getLatestPosters.name}`, () => {
+  test('returns a promise', () => {
+    const result = getLatestPosters()
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given more users available for getting, returns exhaused = false', async () => {
+    const result = getLatestPosters({ minUnexcluded: 2 })
+
+    await expect(result).resolves.toMatchObject({ exhausted: false })
+  })
+
+  test('given exhausted all users, returns exhaused = true', async () => {
+    const result = getLatestPosters({ minUnexcluded: 10 })
+
+    await expect(result).resolves.toMatchObject({ exhausted: true })
+  })
+
+  test('returns at least minUnexcluded users ordered by lastPostedAt', async () => {
+    const result = getLatestPosters({ minUnexcluded: 2 })
+
+    await expect(result).resolves.toMatchObject({
+      users: expect.arrayContaining([
+        expect.objectContaining({ uid: 'user4' }),
+        expect.objectContaining({ uid: 'user3' })
+      ]) as unknown
+    })
+  })
+
+  test('returns users including those passed to exclude', async () => {
+    const result = getLatestPosters({ minUnexcluded: 2, exclude: ['user4'] })
+
+    await expect(result).resolves.toMatchObject({
+      users: expect.arrayContaining([
+        expect.objectContaining({ uid: 'user4' }),
+        expect.objectContaining({ uid: 'user3' }),
+        expect.objectContaining({ uid: 'user2' })
+      ]) as unknown
+    })
+  })
+
+  test('calls firebase methods', async () => {
+    await getLatestPosters({ maxRequests: 1 })
+
+    expect(mockFunctions.get).toBeCalledTimes(1)
   })
 })
