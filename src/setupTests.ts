@@ -4,9 +4,10 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 import 'fake-indexeddb/auto'
-import { usersByIdCache, usersByUsernameCache } from './services/firebase'
+import { usersByIdCache, usersByUsernameCache, latestPostersCache } from './services/firebase'
 
 beforeEach(() => Promise.all([
   usersByUsernameCache.clear(),
-  usersByIdCache.clear()
+  usersByIdCache.clear(),
+  latestPostersCache.clear()
 ]))

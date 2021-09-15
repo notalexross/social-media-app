@@ -1167,9 +1167,9 @@ export async function getRecentlySeenPosters({
   return sorted.filter(user => !exclude.includes(user.uid)).slice(0, num)
 }
 
-const latestPostersCache = new SelfUpdatingCache('latest-posters', getLatestPosters)
+export const latestPostersCache = new SelfUpdatingCache('latest-posters', getLatestPosters)
 
-async function getCachedLatestPosters(
+export async function getCachedLatestPosters(
   uid: string,
   {
     maxAge = 0,

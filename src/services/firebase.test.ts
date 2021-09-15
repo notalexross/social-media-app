@@ -20,7 +20,9 @@ import {
   getMultiUserPosts,
   usersByIdCache,
   getRecentlySeenPosters,
-  getLatestPosters
+  getLatestPosters,
+  latestPostersCache,
+  getCachedLatestPosters
 } from './firebase'
 
 const user = {
@@ -947,5 +949,85 @@ describe(`${getLatestPosters.name}`, () => {
     await getLatestPosters({ maxRequests: 1 })
 
     expect(mockFunctions.get).toBeCalledTimes(1)
+  })
+})
+
+describe(`${getCachedLatestPosters.name}`, () => {
+  test('returns a promise', () => {
+    const result = getCachedLatestPosters(user.uid)
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('returns up to num users ordered by lastPostedAt', async () => {
+    const result = getCachedLatestPosters('user1', { num: 2 })
+
+    await expect(result).resolves.toEqual([
+      expect.objectContaining({ uid: 'user4' }),
+      expect.objectContaining({ uid: 'user3' })
+    ])
+  })
+
+  test('returns users excluding those specified', async () => {
+    const result = getCachedLatestPosters('user1', { exclude: ['user1', 'user3'] })
+
+    await expect(result).resolves.toEqual([
+      expect.objectContaining({ uid: 'user4' }),
+      expect.objectContaining({ uid: 'user2' })
+    ])
+  })
+
+  test('given no cached users, calls firebase methods', async () => {
+    await getCachedLatestPosters('user1', { maxAge: 1, num: 1 })
+
+    expect(mockFunctions.get).toBeCalledTimes(1)
+  })
+
+  describe('with cached users', () => {
+    let DateNowOriginal: typeof Date.now
+
+    beforeAll(() => {
+      DateNowOriginal = Date.now
+      Date.now = () => Date.parse('2021-07-31T16:00:00.000Z')
+    })
+
+    beforeEach(async () => {
+      const exhausted = false
+      const users = ['user5', 'user6', 'user7'].map(uid => ({ uid }))
+
+      return latestPostersCache.set('user1', { exhausted, users })
+    })
+
+    afterAll(() => {
+      Date.now = DateNowOriginal
+    })
+
+    test('given enough cached users, does not call firebase methods', async () => {
+      await getCachedLatestPosters('user1', { maxAge: 1, num: 1 })
+
+      expect(mockFunctions.get).toBeCalledTimes(0)
+    })
+
+    test('given enough cached users, returns recently cached users', async () => {
+      const result = getCachedLatestPosters('user1', { maxAge: 1, num: 3 })
+
+      await expect(result).resolves.toEqual([
+        expect.objectContaining({ uid: 'user5' }),
+        expect.objectContaining({ uid: 'user6' }),
+        expect.objectContaining({ uid: 'user7' })
+      ])
+      expect(mockFunctions.get).toBeCalledTimes(0)
+    })
+
+    test('given not enough cached users and users not exhausted, gets latest posters from firebase', async () => {
+      const result = getCachedLatestPosters('user1', { maxAge: 1, num: 4 })
+
+      await expect(result).resolves.toEqual([
+        expect.objectContaining({ uid: 'user4' }),
+        expect.objectContaining({ uid: 'user3' }),
+        expect.objectContaining({ uid: 'user2' }),
+        expect.objectContaining({ uid: 'user1' })
+      ])
+    })
   })
 })
