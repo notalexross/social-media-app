@@ -22,7 +22,8 @@ import {
   getRecentlySeenPosters,
   getLatestPosters,
   latestPostersCache,
-  getCachedLatestPosters
+  getCachedLatestPosters,
+  getSuggestedUsers
 } from './firebase'
 
 const user = {
@@ -1029,5 +1030,25 @@ describe(`${getCachedLatestPosters.name}`, () => {
         expect.objectContaining({ uid: 'user1' })
       ])
     })
+  })
+})
+
+describe(`${getSuggestedUsers.name}`, () => {
+  test('returns max users ordered by lastPostedAt', async () => {
+    const result = getSuggestedUsers('user1', { max: 2 })
+
+    await expect(result).resolves.toEqual([
+      expect.objectContaining({ uid: 'user4' }),
+      expect.objectContaining({ uid: 'user3' })
+    ])
+  })
+
+  test('returns users excluding those specified', async () => {
+    const result = getSuggestedUsers('user1', { max: 2, exclude: ['user3'] })
+
+    await expect(result).resolves.toEqual([
+      expect.objectContaining({ uid: 'user4' }),
+      expect.objectContaining({ uid: 'user2' })
+    ])
   })
 })
