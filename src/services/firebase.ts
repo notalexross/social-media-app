@@ -1,11 +1,5 @@
 import firebase from 'firebase/app'
-import {
-  isValidSignUpInputs,
-  isValidSignInInputs,
-  sortBy,
-  sortByTimestamp,
-  chunkArray
-} from '../utils'
+import { isValidSignUpInputs, isValidSignInInputs, sortByTimestamp, chunkArray } from '../utils'
 import { SelfUpdatingCache } from '../classes'
 
 type UserPublic = {
@@ -86,7 +80,7 @@ export type PostsStatus = {
 
 type FetchedPost = {
   post: PostWithUserDetails
-  createdAt: string
+  createdAt: firebase.firestore.Timestamp
   chunkIndex: number
 }
 
@@ -1013,7 +1007,7 @@ async function fetchPostsAndUpdateUsers(
 
         return {
           post,
-          createdAt: post.createdAt.valueOf(),
+          createdAt: post.createdAt,
           chunkIndex: chunk.chunkIndex
         }
       })
@@ -1085,7 +1079,7 @@ export function getMultiUserPosts(
             // eslint-disable-next-line no-await-in-loop
             const newPosts = await fetchPostsAndUpdateUsers(chunksToFetch, postsPerPage + 1, stats)
             fetchedPosts.push(...newPosts)
-            fetchedPostsSorted = sortBy(fetchedPosts, 'createdAt', 'desc')
+            fetchedPostsSorted = sortByTimestamp(fetchedPosts, 'createdAt', 'desc')
             chunksToFetch = []
           }
 
