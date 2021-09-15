@@ -5,8 +5,8 @@ const users = [
   {
     uid: 'user1',
     avatar: '',
-    createdAt: '0',
-    lastPostedAt: '1',
+    createdAt: { seconds: 0, nanoseconds: 0 },
+    lastPostedAt: { seconds: 1, nanoseconds: 0 },
     deleted: false,
     fullName: 'Forename Surname',
     email: 'email@email.com',
@@ -19,8 +19,8 @@ const users = [
   {
     uid: 'user2',
     avatar: '',
-    createdAt: '1',
-    lastPostedAt: '3',
+    createdAt: { seconds: 1, nanoseconds: 0 },
+    lastPostedAt: { seconds: 3, nanoseconds: 0 },
     deleted: false,
     fullName: 'User Two',
     email: 'user2@email.com',
@@ -33,8 +33,8 @@ const users = [
   {
     uid: 'user3',
     avatar: '',
-    createdAt: '2',
-    lastPostedAt: '3',
+    createdAt: { seconds: 2, nanoseconds: 0 },
+    lastPostedAt: { seconds: 3, nanoseconds: 0 },
     deleted: false,
     fullName: 'User Three',
     email: 'user3@email.com',
@@ -47,8 +47,8 @@ const users = [
   {
     uid: 'user4',
     avatar: '',
-    createdAt: '3',
-    lastPostedAt: '4',
+    createdAt: { seconds: 3, nanoseconds: 0 },
+    lastPostedAt: { seconds: 4, nanoseconds: 0 },
     deleted: false,
     fullName: 'User Four',
     email: 'user4@email.com',
@@ -63,7 +63,7 @@ const users = [
 const posts = {
   post1: {
     attachment: '',
-    createdAt: '1',
+    createdAt: { seconds: 1, nanoseconds: 0 },
     deleted: false,
     message: 'mock message',
     owner: 'user1',
@@ -73,7 +73,7 @@ const posts = {
   },
   post2: {
     attachment: '',
-    createdAt: '2',
+    createdAt: { seconds: 2, nanoseconds: 0 },
     deleted: false,
     message: 'mock message',
     owner: 'user2',
@@ -257,13 +257,28 @@ const auth = jest.fn(() => ({
   onAuthStateChanged
 }))
 
-function sortByField(docs, field, direction) {
-  const sortedDocs = docs.sort((a, b) => {
-    if (a[1][field] < b[1][field]) return -1
-    if (a[1][field] > b[1][field]) return 1
+function timestampToMillis(timestamp) {
+  return timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1000000)
+}
 
-    return 0
-  })
+function sortByField(docs, field, direction) {
+  let sortedDocs
+
+  if (field.endsWith('At')) {
+    sortedDocs = docs.sort((a, b) => {
+      if (timestampToMillis(a[1]._fields[field]) < timestampToMillis(b[1]._fields[field])) return -1
+      if (timestampToMillis(a[1]._fields[field]) > timestampToMillis(b[1]._fields[field])) return 1
+
+      return 0
+    })
+  } else {
+    sortedDocs = docs.sort((a, b) => {
+      if (a[1]._fields[field] < b[1]._fields[field]) return -1
+      if (a[1]._fields[field] > b[1]._fields[field]) return 1
+
+      return 0
+    })
+  }
 
   if (direction === 'desc') {
     sortedDocs.reverse()

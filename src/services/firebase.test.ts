@@ -24,10 +24,10 @@ const user = {
   uid: 'user1',
   public: {
     avatar: '',
-    createdAt: '0',
+    createdAt: { seconds: 0, nanoseconds: 0 },
     deleted: false,
     followersCount: 2,
-    lastPostedAt: '1',
+    lastPostedAt: { seconds: 1, nanoseconds: 0 },
     username: 'Username',
     usernameLowerCase: 'username'
   },
@@ -740,7 +740,7 @@ describe(`${getMultiUserPosts.name}`, () => {
       posts: [
         {
           attachment: '',
-          createdAt: '2',
+          createdAt: { seconds: 2, nanoseconds: 0 },
           deleted: false,
           id: 'post2',
           likesCount: 1,
@@ -760,7 +760,7 @@ describe(`${getMultiUserPosts.name}`, () => {
         },
         {
           attachment: '',
-          createdAt: '1',
+          createdAt: { seconds: 1, nanoseconds: 0 },
           deleted: false,
           id: 'post1',
           likesCount: 2,
@@ -794,7 +794,7 @@ describe(`${getMultiUserPosts.name}`, () => {
       posts: [
         {
           attachment: '',
-          createdAt: '2',
+          createdAt: { seconds: 2, nanoseconds: 0 },
           deleted: false,
           id: 'post2',
           likesCount: 1,

@@ -26,9 +26,9 @@ test('gets posts', async () => {
   render(<Component />)
 
   await waitFor(() => {
-    expect(screen.getByText('createdAt: "2"')).toBeInTheDocument()
+    expect(screen.getByText('createdAt: {"seconds":2,"nanoseconds":0}')).toBeInTheDocument()
     expect(screen.getByText('owner: "user2"')).toBeInTheDocument()
-    expect(screen.getByText('createdAt: "1"')).toBeInTheDocument()
+    expect(screen.getByText('createdAt: {"seconds":1,"nanoseconds":0}')).toBeInTheDocument()
     expect(screen.getByText('owner: "user1"')).toBeInTheDocument()
   })
 })
