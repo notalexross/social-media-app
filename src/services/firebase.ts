@@ -1153,6 +1153,20 @@ export async function getLatestPosters({
   return { users, exhausted }
 }
 
+export async function getRecentlySeenPosters({
+  num = 10,
+  timePeriod = 10 * 60 * 1000,
+  exclude = [] as string[]
+} = {}): Promise<User[]> {
+  const cutoff = Math.max(Date.now() - timePeriod, 0)
+  const recentlySeen = (await usersByIdCache.getAll())
+    .filter(entry => entry.lastUpdated >= cutoff)
+    .map(entry => entry.data)
+  const sorted = sortByTimestamp(recentlySeen, 'lastPostedAt', 'desc')
+
+  return sorted.filter(user => !exclude.includes(user.uid)).slice(0, num)
+}
+
 const latestPostersCache = new SelfUpdatingCache('latest-posters', getLatestPosters)
 
 async function getCachedLatestPosters(
@@ -1187,20 +1201,6 @@ async function getCachedLatestPosters(
   }
 
   return filtered
-}
-
-async function getRecentlySeenPosters({
-  num = 10,
-  timePeriod = 10 * 60 * 1000,
-  exclude = [] as string[]
-}): Promise<User[]> {
-  const cutoff = Math.max(Date.now() - timePeriod, 0)
-  const recentlySeen = (await usersByIdCache.getAll())
-    .filter(entry => entry.lastUpdated >= cutoff)
-    .map(entry => entry.data)
-  const sorted = sortByTimestamp(recentlySeen, 'lastPostedAt', 'desc')
-
-  return sorted.filter(user => !exclude.includes(user.uid)).slice(0, num)
 }
 
 export async function getSuggestedUsers(

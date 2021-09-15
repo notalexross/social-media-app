@@ -1,3 +1,4 @@
+import firebase from 'firebase'
 import { waitFor } from '@testing-library/react'
 // eslint-disable-next-line jest/no-mocks-import
 import { mockFunctions } from '../__mocks__/firebase/app'
@@ -17,6 +18,8 @@ import {
   likePost,
   unlikePost,
   getMultiUserPosts,
+  usersByIdCache,
+  getRecentlySeenPosters,
   getLatestPosters
 } from './firebase'
 
@@ -833,6 +836,67 @@ describe(`${getMultiUserPosts.name}`, () => {
       isComplete: true,
       page: 1,
       stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
+    })
+  })
+})
+
+describe(`${getRecentlySeenPosters.name}`, () => {
+  test('returns a promise', () => {
+    const result = getRecentlySeenPosters()
+
+    expect(result).toBeInstanceOf(Promise)
+  })
+
+  test('given no cached users, returns an empty array', async () => {
+    const result = getRecentlySeenPosters()
+
+    await expect(result).resolves.toEqual([])
+  })
+
+  describe('with cached users', () => {
+    let DateNowOriginal: typeof Date.now
+
+    beforeAll(() => {
+      DateNowOriginal = Date.now
+      Date.now = () => Date.parse('2021-07-31T16:00:00.000Z')
+    })
+
+    beforeEach(async () => {
+      await Promise.all(
+        ['user3', 'user2', 'user1'].map((uid, idx) => {
+          const lastPostedAt = firebase.firestore.Timestamp.fromMillis(Date.now() - idx * 100)
+
+          return usersByIdCache.set(uid, { uid, lastPostedAt })
+        })
+      )
+    })
+
+    afterAll(() => {
+      Date.now = DateNowOriginal
+    })
+
+    test('returns up to num cached users ordered by lastPostedAt', async () => {
+      const result = getRecentlySeenPosters({ num: 2 })
+
+      await expect(result).resolves.toEqual([
+        expect.objectContaining({ uid: 'user3' }),
+        expect.objectContaining({ uid: 'user2' })
+      ])
+    })
+
+    test('returns users excluding those specified', async () => {
+      const result = getRecentlySeenPosters({ exclude: ['user2'] })
+
+      await expect(result).resolves.toEqual([
+        expect.objectContaining({ uid: 'user3' }),
+        expect.objectContaining({ uid: 'user1' })
+      ])
+    })
+
+    test('returns users last seen in the past timePeriod milliseconds', async () => {
+      const result = getRecentlySeenPosters({ num: 1, timePeriod: 0 })
+
+      await expect(result).resolves.toEqual([expect.objectContaining({ uid: 'user3' })])
     })
   })
 })
