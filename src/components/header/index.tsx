@@ -11,7 +11,7 @@ export default function Header(): JSX.Element {
   const { user, avatar, username } = useContext(UserContext)
 
   return (
-    <div className="mb-2 py-4 border-b bg-white lg:mb-8">
+    <header className="mb-2 py-4 border-b bg-white lg:mb-8">
       <div className="mx-4">
         <div className="flex justify-between items-center mx-auto max-w-screen-lg">
           <h1 className="mt-1">
@@ -58,6 +58,6 @@ export default function Header(): JSX.Element {
           </div>
         </div>
       </div>
-    </div>
+    </header>
   )
 }
