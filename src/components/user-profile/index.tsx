@@ -78,7 +78,12 @@ UserProfile.Avatar = function UserProfileAvatar({
       {updatable || noLinks ? (
         inner
       ) : (
-        <StatefulLink to={`${ROUTES.PROFILES}/${username}`}>{inner}</StatefulLink>
+        <StatefulLink
+          to={`${ROUTES.PROFILES}/${username}`}
+          aria-label={isSelf ? 'Your profile' : `${username}'s profile`}
+        >
+          {inner}
+        </StatefulLink>
       )}
     </div>
   )
