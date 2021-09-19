@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { HomeIcon, LogoutIcon } from '@heroicons/react/outline'
 import { signOut } from '../../services/firebase'
 import { UserContext } from '../../context/user'
@@ -8,17 +8,29 @@ import * as ROUTES from '../../constants/routes'
 import logo from '../../images/logo.png'
 
 export default function Header(): JSX.Element {
-  const { user, avatar, username } = useContext(UserContext)
+  const { pathname } = useLocation()
+  const currentUser = useContext(UserContext)
+  const { user, avatar, username } = currentUser
 
   return (
     <header className="mb-2 py-4 border-b bg-white lg:mb-8">
       <div className="mx-4">
         <div className="flex justify-between items-center mx-auto max-w-screen-lg">
-          <h1 className="mt-1">
-            <Link to={ROUTES.DASHBOARD} aria-label="home">
-              <img className="h-7" src={logo} alt="Logo" />
-            </Link>
-          </h1>
+          <div className="flex items-center">
+            <h1 className="flex-shrink-0 mt-1">
+              <Link to={ROUTES.DASHBOARD} aria-label="home">
+                <img className="h-7" src={logo} alt="Logo" />
+              </Link>
+            </h1>
+            <nav className="ml-8 font-bold text-gray-800">
+              <Link className="hover:underline hover:opacity-70" to={ROUTES.DASHBOARD}>
+                <span className={pathname === ROUTES.DASHBOARD ? 'underline' : ''}>Following</span>
+              </Link>
+              <Link className="ml-4 hover:underline hover:opacity-70" to={ROUTES.EXPLORE}>
+                <span className={pathname === ROUTES.EXPLORE ? 'underline' : ''}>Explore</span>
+              </Link>
+            </nav>
+          </div>
           <div className="flex items-center text-sm">
             {user.uid !== undefined ? (
               <>

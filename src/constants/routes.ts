@@ -1,4 +1,5 @@
-export const DASHBOARD = '/'
+export const DASHBOARD = '/home'
+export const EXPLORE = '/explore'
 export const SIGN_IN = '/signin'
 export const SIGN_UP = '/signup'
 export const PROFILES = '/p'

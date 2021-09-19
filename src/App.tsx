@@ -47,7 +47,13 @@ export default function App(): JSX.Element {
                   <PostPage compose />
                 </Route>
                 <Route exact path={[ROUTES.DASHBOARD, ROUTES.COMPOSE]}>
-                  <DashboardPage />
+                  <DashboardPage timeline="following" />
+                </Route>
+                <Route exact path={ROUTES.EXPLORE}>
+                  <DashboardPage timeline="master" />
+                </Route>
+                <Route exact path="/">
+                  <Redirect to={ROUTES.DASHBOARD} />
                 </Route>
                 <Route path="*">
                   <NotFoundPage />
