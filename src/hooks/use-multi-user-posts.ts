@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PostsStatus, PostWithUserDetails } from '../services/firebase'
-import { getMultiUserPosts } from '../services/firebase'
+import { getAllUserPosts, getMultiUserPosts } from '../services/firebase'
 
 type MultiUserPosts = {
   posts: PostWithUserDetails[] | null
@@ -20,7 +20,7 @@ const initialStatus = {
 
 export default function useMultiUserPosts(
   id: string | undefined,
-  uids: string[] | undefined,
+  uids: string[] | undefined | null,
   postsPerPage = 10
 ): MultiUserPosts {
   const [isLoadingPosts, setIsLoadingPosts] = useState(initialIsLoadingPosts)
@@ -29,34 +29,58 @@ export default function useMultiUserPosts(
   const isMounted = useRef(true)
   const isInitiated = useRef(false)
   const { posts, isComplete } = status
+  const previousUids = useRef(uids)
+
+  const reinitialiseState = useCallback(() => {
+    isInitiated.current = false
+    setIsLoadingPosts(initialIsLoadingPosts)
+    setLoadNextPage(initialLoadNextPage)
+    setStatus(initialStatus)
+  }, [])
+
+  useEffect(() => {
+    if (Array.isArray(previousUids.current) !== Array.isArray(uids)) {
+      reinitialiseState()
+    }
+
+    previousUids.current = uids
+  }, [uids, reinitialiseState])
 
   useEffect(() => {
     if (id) {
-      isInitiated.current = false
-      setIsLoadingPosts(initialIsLoadingPosts)
-      setLoadNextPage(initialLoadNextPage)
-      setStatus(initialStatus)
+      reinitialiseState()
     }
-  }, [id])
+  }, [id, reinitialiseState])
 
   useEffect(() => {
     isMounted.current = true
-    if (uids && !isInitiated.current) {
-      const loadNextPageFunction = getMultiUserPosts(
-        uids,
-        data => isMounted.current && setStatus(data),
-        data => isMounted.current && setIsLoadingPosts(data),
-        postsPerPage
-      )
-      setLoadNextPage(() => loadNextPageFunction)
-      loadNextPageFunction().catch(console.error)
-      isInitiated.current = true
+    if (!isInitiated.current) {
+      if (uids) {
+        const loadNextPageFunction = getMultiUserPosts(
+          uids,
+          data => isMounted.current && setStatus(data),
+          data => isMounted.current && setIsLoadingPosts(data),
+          postsPerPage
+        )
+        setLoadNextPage(() => loadNextPageFunction)
+        loadNextPageFunction().catch(console.error)
+        isInitiated.current = true
+      } else if (uids === null) {
+        const loadNextPageFunction = getAllUserPosts(
+          data => isMounted.current && setStatus(data),
+          data => isMounted.current && setIsLoadingPosts(data),
+          postsPerPage
+        )
+        setLoadNextPage(() => loadNextPageFunction)
+        loadNextPageFunction().catch(console.error)
+        isInitiated.current = true
+      }
     }
 
     return () => {
       isMounted.current = false
     }
-  }, [postsPerPage, uids])
+  }, [id, postsPerPage, uids])
 
   return { posts, loadNextPage, isComplete, isLoadingPosts }
 }
