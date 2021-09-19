@@ -3,14 +3,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { HomeIcon, LogoutIcon } from '@heroicons/react/outline'
 import { signOut } from '../../services/firebase'
 import { UserContext } from '../../context/user'
-import Avatar from '../avatar'
 import * as ROUTES from '../../constants/routes'
 import logo from '../../images/logo.png'
+import UserProfile from '../user-profile'
 
 export default function Header(): JSX.Element {
   const { pathname } = useLocation()
   const currentUser = useContext(UserContext)
-  const { user, avatar, username } = currentUser
+  const { user } = currentUser
 
   return (
     <header className="mb-2 py-4 border-b bg-white lg:mb-8">
@@ -45,13 +45,12 @@ export default function Header(): JSX.Element {
                 >
                   <LogoutIcon className="h-8 w-8" />
                 </button>
-                <Link
-                  className="ml-3"
-                  to={`${ROUTES.PROFILES}/${username || ''}`}
-                  aria-label="profile"
-                >
-                  <Avatar className="w-8" uid={user.uid} src={avatar} alt="" />
-                </Link>
+                <UserProfile className="ml-3" user={currentUser}>
+                  <UserProfile.Avatar
+                    className="w-8"
+                    linkClassName="hover:opacity-70"
+                  />
+                </UserProfile>
               </>
             ) : (
               <>
