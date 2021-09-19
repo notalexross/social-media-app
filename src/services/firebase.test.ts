@@ -23,7 +23,8 @@ import {
   getLatestPosters,
   latestPostersCache,
   getCachedLatestPosters,
-  getSuggestedUsers
+  getSuggestedUsers,
+  getAllUserPosts
 } from './firebase'
 
 const user = {
@@ -839,6 +840,70 @@ describe(`${getMultiUserPosts.name}`, () => {
       isComplete: true,
       page: 1,
       stats: { fetchCount: 0, docsFetchedCount: 0, docReadCount: 0, chunks: 0, users: 0 }
+    })
+  })
+})
+
+describe(`${getAllUserPosts.name}`, () => {
+  const statusCallback = jest.fn()
+  const loadingCallback = jest.fn()
+
+  test('calls firebase methods', async () => {
+    const loadNextPage = getAllUserPosts(statusCallback, loadingCallback)
+
+    await loadNextPage()
+
+    expect(mockFunctions.orderBy).toBeCalledTimes(1)
+    expect(mockFunctions.limit).toBeCalledTimes(1)
+    expect(mockFunctions.get).toBeCalledTimes(5)
+  })
+
+  test('calls callbacks with correct data', async () => {
+    const loadNextPage = getAllUserPosts(statusCallback, loadingCallback)
+
+    await loadNextPage()
+
+    expect(loadingCallback).toHaveBeenCalledTimes(2)
+    expect(loadingCallback).toHaveBeenCalledWith(true)
+    expect(loadingCallback).toHaveBeenCalledWith(false)
+    expect(statusCallback).toHaveBeenCalledTimes(1)
+    expect(statusCallback).toHaveBeenCalledWith({
+      posts: [
+        expect.objectContaining({
+          id: 'post2',
+          ownerDetails: expect.objectContaining({ uid: 'user2' }) as unknown,
+          replyToOwnerDetails: expect.objectContaining({ uid: 'user1' }) as unknown
+        }),
+        expect.objectContaining({
+          id: 'post1',
+          ownerDetails: expect.objectContaining({ uid: 'user1' }) as unknown,
+          replyTo: null
+        })
+      ],
+      isComplete: true,
+      page: 1
+    })
+  })
+
+  test('given multiple pages, calls callbacks with correct data', async () => {
+    const loadNextPage = getAllUserPosts(statusCallback, loadingCallback, 1)
+
+    await loadNextPage()
+
+    expect(loadingCallback).toHaveBeenCalledTimes(2)
+    expect(loadingCallback).toHaveBeenCalledWith(true)
+    expect(loadingCallback).toHaveBeenCalledWith(false)
+    expect(statusCallback).toHaveBeenCalledTimes(1)
+    expect(statusCallback).toHaveBeenCalledWith({
+      posts: [
+        expect.objectContaining({
+          id: 'post2',
+          ownerDetails: expect.objectContaining({ uid: 'user2' }) as unknown,
+          replyToOwnerDetails: expect.objectContaining({ uid: 'user1' }) as unknown
+        })
+      ],
+      isComplete: false,
+      page: 1
     })
   })
 })

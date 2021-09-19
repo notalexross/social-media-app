@@ -75,7 +75,7 @@ export type PostsStatus = {
   posts: PostWithUserDetails[] | null
   isComplete: boolean
   page: number
-  stats: Stats
+  stats?: Stats
 }
 
 type FetchedPost = {
@@ -1098,6 +1098,73 @@ export function getMultiUserPosts(
 
         const posts = fetchedPostsSorted.slice(0, postIdx + 1).map(post => post.post)
         const postsStatus: PostsStatus = { posts, isComplete, page, stats }
+
+        statusCallback(postsStatus)
+
+        if (loadingCallback) {
+          loadingCallback(false)
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      window.alert(error)
+    }
+  }
+
+  return loadNextPage
+}
+
+export function getAllUserPosts(
+  statusCallback: (status: PostsStatus) => void,
+  loadingCallback?: (isLoading: boolean) => void,
+  postsPerPage = 10
+): () => Promise<void> {
+  const fetchedPosts: PostWithUserDetails[] = []
+  let last: firebase.firestore.QueryDocumentSnapshot<firebase.firestore.DocumentData> | null = null
+  let page = 0
+  let isComplete = false
+
+  const loadNextPage: () => Promise<void> = async () => {
+    try {
+      if (!isComplete) {
+        if (loadingCallback) {
+          loadingCallback(true)
+        }
+
+        page += 1
+
+        const numPostsToFetch = (page * postsPerPage + 1) - fetchedPosts.length
+
+        if (numPostsToFetch) {
+          let query = postsRef
+            .where('deleted', '==', false)
+            .orderBy('createdAt', 'desc')
+            .limit(numPostsToFetch)
+
+          if (last) {
+            query = query.startAfter(last)
+          }
+
+          const { docs } = await query.get()
+          const newPosts = await Promise.all(docs.map(async doc => {
+            const postContent = await getPostContent(doc.id)
+            const postPublic = doc.data() as PostPublic
+            const post = await addUserDetailsToPost({
+              ...postPublic,
+              ...postContent,
+              id: doc.id
+            })
+
+            return post
+          }))
+
+          last = docs[docs.length - 1]
+          isComplete = docs.length < numPostsToFetch
+          fetchedPosts.push(...newPosts)
+        }
+
+        const posts = fetchedPosts.slice(0, page * postsPerPage)
+        const postsStatus = { posts: posts.slice(0, page * postsPerPage), isComplete, page }
 
         statusCallback(postsStatus)
 
