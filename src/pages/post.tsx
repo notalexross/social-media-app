@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { PostContainer, SidebarContainer } from '../containers'
-import { usePosts, usePostsLive } from '../hooks'
+import { usePosts } from '../hooks'
 
 type PostPageProps = {
   compose?: boolean
@@ -8,8 +8,7 @@ type PostPageProps = {
 
 export default function PostPage({ compose = false }: PostPageProps): JSX.Element {
   const { postId } = useParams<{ postId: string }>()
-  const postSnaphot = usePosts(postId)
-  const [post] = usePostsLive(postSnaphot || null) || [null]
+  const post = usePosts(postId, { subscribe: true })
 
   return (
     <main className="mx-2 lg:mx-4">

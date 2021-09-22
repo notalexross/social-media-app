@@ -3,7 +3,7 @@ import type { PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import MenuContainer from './menu'
 import { Post, StatefulLink, UserProfile } from '../components'
-import { usePosts, usePostsLive } from '../hooks'
+import { usePosts } from '../hooks'
 import * as ROUTES from '../constants/routes'
 
 let WrappedPostContainer: (props: WrappedPostContainerProps) => JSX.Element = () => <></>
@@ -129,8 +129,7 @@ function Comment({
   isPostPage = false,
   ...restProps
 }: CommentProps) {
-  const postSnaphot = usePosts(id)
-  const [comment] = usePostsLive(postSnaphot || null) || [null]
+  const comment = usePosts(id, { subscribe: true })
 
   return comment ? (
     <PostContainer
