@@ -18,13 +18,13 @@ import {
   likePost,
   unlikePost,
   getMultiUserPosts,
+  getAllUserPosts,
   usersByIdCache,
   getRecentlySeenPosters,
   getLatestPosters,
   latestPostersCache,
   getCachedLatestPosters,
-  getSuggestedUsers,
-  getAllUserPosts
+  getSuggestedUsers
 } from './firebase'
 
 const user = {
@@ -723,7 +723,7 @@ describe(`${getMultiUserPosts.name}`, () => {
   test('calls firebase methods', async () => {
     const users = ['user1', 'user2']
 
-    const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback)
+    const loadNextPage = getMultiUserPosts(users, statusCallback, { loadingCallback })
 
     await loadNextPage()
 
@@ -735,7 +735,7 @@ describe(`${getMultiUserPosts.name}`, () => {
   test('calls callbacks with correct data', async () => {
     const users = ['user1', 'user2']
 
-    const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback)
+    const loadNextPage = getMultiUserPosts(users, statusCallback, { loadingCallback })
 
     await loadNextPage()
 
@@ -789,7 +789,10 @@ describe(`${getMultiUserPosts.name}`, () => {
   test('given multiple pages, calls callbacks with correct data', async () => {
     const users = ['user1', 'user2']
 
-    const loadNextPage = getMultiUserPosts(users, statusCallback, loadingCallback, 1)
+    const loadNextPage = getMultiUserPosts(users, statusCallback, {
+      loadingCallback,
+      postsPerPage: 1
+    })
 
     await loadNextPage()
 
@@ -827,7 +830,7 @@ describe(`${getMultiUserPosts.name}`, () => {
   })
 
   test('given no users supplied, callback argument includes empty posts array', async () => {
-    const loadNextPage = getMultiUserPosts([], statusCallback, loadingCallback)
+    const loadNextPage = getMultiUserPosts([], statusCallback, { loadingCallback })
 
     await loadNextPage()
 
@@ -849,7 +852,7 @@ describe(`${getAllUserPosts.name}`, () => {
   const loadingCallback = jest.fn()
 
   test('calls firebase methods', async () => {
-    const loadNextPage = getAllUserPosts(statusCallback, loadingCallback)
+    const loadNextPage = getAllUserPosts(statusCallback, { loadingCallback })
 
     await loadNextPage()
 
@@ -859,7 +862,7 @@ describe(`${getAllUserPosts.name}`, () => {
   })
 
   test('calls callbacks with correct data', async () => {
-    const loadNextPage = getAllUserPosts(statusCallback, loadingCallback)
+    const loadNextPage = getAllUserPosts(statusCallback, { loadingCallback })
 
     await loadNextPage()
 
@@ -886,7 +889,7 @@ describe(`${getAllUserPosts.name}`, () => {
   })
 
   test('given multiple pages, calls callbacks with correct data', async () => {
-    const loadNextPage = getAllUserPosts(statusCallback, loadingCallback, 1)
+    const loadNextPage = getAllUserPosts(statusCallback, { loadingCallback, postsPerPage: 1 })
 
     await loadNextPage()
 

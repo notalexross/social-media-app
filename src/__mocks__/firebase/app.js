@@ -288,6 +288,8 @@ function sortByField(docs, field, direction) {
 }
 
 const get = jest.fn(function () {
+  const metadata = { fromCache: false }
+
   let response
   if ('_docs' in this) {
     let docs = [...this._docs.entries()]
@@ -305,18 +307,21 @@ const get = jest.fn(function () {
       docs: docs.slice(0, this._limit).map(([id, doc]) => ({
         id,
         data: () => doc._fields
-      }))
+      })),
+      metadata
     }
   } else if ('_fields' in this) {
     response = {
       id: this._id,
       data: () => this._fields,
+      metadata,
       _collections: this._collections
     }
   } else if ('_id' in this) {
     response = {
       id: this._id,
-      data: () => []
+      data: () => [],
+      metadata
     }
   } else {
     return Promise.reject(new Error('Missing or insufficient permissions.'))

@@ -517,46 +517,41 @@ export function getPosts(
   maxRetries = 1
 ): Promise<(PostWithUserDetails | undefined)[]> {
   const promises = postIds.map(async postId => {
-    try {
-      if (!postId) {
-        return undefined
-      }
-
-      const { postPublicRef, postContentRef } = getPostQueries(postId)
-
-      const postWithId = await firestore.runTransaction(async transaction => {
-        // Retries necessary when grabbing a new post, by current user, with pending writes. Transactions use server data only, no local cache. As such, this transaction is racing against said pending writes.
-        for (let i = 0; i <= maxRetries; i++) {
-          // eslint-disable-next-line no-await-in-loop
-          const postPublicDoc = await transaction.get(postPublicRef)
-          if (postPublicDoc.exists) {
-            const postPublic = postPublicDoc.data() as PostPublic
-
-            let post: Post = { ...postPublic, attachment: '', message: '' }
-            if (!postPublic.deleted) {
-              // eslint-disable-next-line no-await-in-loop
-              const postContentDoc = await transaction.get(postContentRef)
-              const postContent = postContentDoc.data() as PostContent
-              post = { ...post, ...postContent }
-            }
-
-            return { ...post, id: postId }
-          }
-        }
-
-        return undefined
-      })
-
-      if (!postWithId) {
-        return undefined
-      }
-
-      return await addUserDetailsToPost(postWithId)
-    } catch (error) {
-      console.error(error)
-
+    if (!postId) {
       return undefined
     }
+
+    const { postPublicRef, postContentRef } = getPostQueries(postId)
+
+    const postWithId = await firestore.runTransaction(async transaction => {
+      // Retries necessary when grabbing a new post, by current user, with pending writes. Transactions use server data only, no local cache. As such, this transaction is racing against said pending writes.
+      for (let i = 0; i <= maxRetries; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        const postPublicDoc = await transaction.get(postPublicRef)
+
+        if (postPublicDoc.exists) {
+          const postPublic = postPublicDoc.data() as PostPublic
+
+          let post: Post = { ...postPublic, attachment: '', message: '' }
+          if (!postPublic.deleted) {
+            // eslint-disable-next-line no-await-in-loop
+            const postContentDoc = await transaction.get(postContentRef)
+            const postContent = postContentDoc.data() as PostContent
+            post = { ...post, ...postContent }
+          }
+
+          return { ...post, id: postId }
+        }
+      }
+
+      return undefined
+    })
+
+    if (!postWithId) {
+      return undefined
+    }
+
+    return addUserDetailsToPost(postWithId)
   })
 
   return Promise.all(promises)
@@ -993,7 +988,11 @@ async function fetchPostsAndUpdateUsers(
       query = query.startAfter(chunk.lastFetched)
     }
 
-    const { docs } = await query.get()
+    const { docs, metadata } = await query.get()
+
+    if (metadata.fromCache) {
+      throw new Error('Unable to get posts as currently offline')
+    }
 
     const chunkFetchedPosts = await Promise.all(
       docs.map(async doc => {
@@ -1026,25 +1025,25 @@ async function fetchPostsAndUpdateUsers(
     return chunkFetchedPosts
   })
 
-  try {
-    const fetchedPosts = (await Promise.all(requests)).reduce((acc, cur) => {
-      acc.push(...cur)
+  const fetchedPosts = (await Promise.all(requests)).reduce((acc, cur) => {
+    acc.push(...cur)
 
-      return acc
-    }, [])
+    return acc
+  }, [])
 
-    return fetchedPosts
-  } catch (error) {
-    console.error(error)
-    throw new Error(error)
-  }
+  return fetchedPosts
+}
+
+type GetUserPostsOptions = {
+  postsPerPage?: number
+  loadingCallback?: (isLoading: boolean) => void
+  errorCallback?: (error: unknown) => void
 }
 
 export function getMultiUserPosts(
   users: string[],
   statusCallback: (status: PostsStatus) => void,
-  loadingCallback?: (isLoading: boolean) => void,
-  postsPerPage = 10
+  { postsPerPage = 10, loadingCallback, errorCallback }: GetUserPostsOptions = {}
 ): () => Promise<void> {
   const userChunks = initUserChunks(users, 10)
   const fetchedPosts: FetchedPost[] = []
@@ -1060,20 +1059,23 @@ export function getMultiUserPosts(
   let page = 0
   let postIdx = -1
   let isComplete = false
+  let isLoading = false
 
   const loadNextPage: () => Promise<void> = async () => {
-    try {
-      if (!isComplete) {
-        if (loadingCallback) {
-          loadingCallback(true)
-        }
+    if (!isComplete && !isLoading) {
+      isLoading = true
 
-        if (users.length === 0) {
-          isComplete = true
-        }
+      if (loadingCallback) {
+        loadingCallback(true)
+      }
 
-        page += 1
+      if (users.length === 0) {
+        isComplete = true
+      }
 
+      page += 1
+
+      try {
         while (postIdx + 1 < postsPerPage * page && !isComplete) {
           if (chunksToFetch.length > 0) {
             // eslint-disable-next-line no-await-in-loop
@@ -1095,19 +1097,24 @@ export function getMultiUserPosts(
 
           isComplete = userChunks.every(chnk => chnk.isDone && chnk.numFetched === chnk.numReturned)
         }
-
-        const posts = fetchedPostsSorted.slice(0, postIdx + 1).map(post => post.post)
-        const postsStatus: PostsStatus = { posts, isComplete, page, stats }
-
-        statusCallback(postsStatus)
-
-        if (loadingCallback) {
-          loadingCallback(false)
+      } catch (error) {
+        page -= 1
+        console.error(error)
+        if (errorCallback) {
+          errorCallback(error)
         }
       }
-    } catch (error) {
-      console.error(error)
-      window.alert(error)
+
+      const posts = fetchedPostsSorted.slice(0, page * postsPerPage).map(post => post.post)
+      const postsStatus: PostsStatus = { posts, isComplete, page, stats }
+
+      statusCallback(postsStatus)
+
+      if (loadingCallback) {
+        loadingCallback(false)
+      }
+
+      isLoading = false
     }
   }
 
@@ -1116,65 +1123,78 @@ export function getMultiUserPosts(
 
 export function getAllUserPosts(
   statusCallback: (status: PostsStatus) => void,
-  loadingCallback?: (isLoading: boolean) => void,
-  postsPerPage = 10
+  { postsPerPage = 10, loadingCallback, errorCallback }: GetUserPostsOptions = {}
 ): () => Promise<void> {
   const fetchedPosts: PostWithUserDetails[] = []
   let last: firebase.firestore.QueryDocumentSnapshot<firebase.firestore.DocumentData> | null = null
   let page = 0
   let isComplete = false
+  let isLoading = false
 
   const loadNextPage: () => Promise<void> = async () => {
-    try {
-      if (!isComplete) {
-        if (loadingCallback) {
-          loadingCallback(true)
+    if (!isComplete && !isLoading) {
+      isLoading = true
+
+      if (loadingCallback) {
+        loadingCallback(true)
+      }
+
+      page += 1
+
+      const numPostsToFetch = page * postsPerPage + 1 - fetchedPosts.length
+
+      if (numPostsToFetch) {
+        let query = postsRef
+          .where('deleted', '==', false)
+          .orderBy('createdAt', 'desc')
+          .limit(numPostsToFetch)
+
+        if (last) {
+          query = query.startAfter(last)
         }
 
-        page += 1
+        try {
+          const { docs, metadata } = await query.get()
 
-        const numPostsToFetch = (page * postsPerPage + 1) - fetchedPosts.length
-
-        if (numPostsToFetch) {
-          let query = postsRef
-            .where('deleted', '==', false)
-            .orderBy('createdAt', 'desc')
-            .limit(numPostsToFetch)
-
-          if (last) {
-            query = query.startAfter(last)
+          if (metadata.fromCache) {
+            throw new Error('Unable to get posts as currently offline')
           }
 
-          const { docs } = await query.get()
-          const newPosts = await Promise.all(docs.map(async doc => {
-            const postContent = await getPostContent(doc.id)
-            const postPublic = doc.data() as PostPublic
-            const post = await addUserDetailsToPost({
-              ...postPublic,
-              ...postContent,
-              id: doc.id
-            })
+          const newPosts = await Promise.all(
+            docs.map(async doc => {
+              const postContent = await getPostContent(doc.id)
+              const postPublic = doc.data() as PostPublic
+              const post = await addUserDetailsToPost({
+                ...postPublic,
+                ...postContent,
+                id: doc.id
+              })
 
-            return post
-          }))
+              return post
+            })
+          )
 
           last = docs[docs.length - 1]
           isComplete = docs.length < numPostsToFetch
           fetchedPosts.push(...newPosts)
-        }
-
-        const posts = fetchedPosts.slice(0, page * postsPerPage)
-        const postsStatus = { posts: posts.slice(0, page * postsPerPage), isComplete, page }
-
-        statusCallback(postsStatus)
-
-        if (loadingCallback) {
-          loadingCallback(false)
+        } catch (error) {
+          page -= 1
+          if (errorCallback) {
+            errorCallback(error)
+          }
         }
       }
-    } catch (error) {
-      console.error(error)
-      window.alert(error)
+
+      const posts = fetchedPosts.slice(0, page * postsPerPage)
+      const postsStatus = { posts, isComplete, page }
+
+      statusCallback(postsStatus)
+
+      if (loadingCallback) {
+        loadingCallback(false)
+      }
+
+      isLoading = false
     }
   }
 
