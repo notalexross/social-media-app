@@ -13,7 +13,7 @@ export default function ProfilePage(): JSX.Element {
   const currentUser = useContext(UserContext)
   const user = useUser(params.username, { by: 'username', subscribe: true })
   const uid = !('error' in user) && user.uid ? user.uid : undefined
-  const { posts, loadNextPage, isComplete, isLoadingPosts } = useMultiUserPosts(
+  const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
     uid,
     uid ? [uid] : undefined,
     2
@@ -97,6 +97,7 @@ export default function ProfilePage(): JSX.Element {
             loadNextPage={loadNextPage}
             isComplete={isComplete}
             isLoadingPosts={isLoadingPosts}
+            error={error}
           />
           <SidebarContainer className="hidden self-start col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:col-span-1" />
         </div>

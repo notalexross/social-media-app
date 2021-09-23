@@ -10,7 +10,7 @@ type DashboardPageProps = {
 export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Element {
   useTitle('Dashboard')
   const { uid, following } = useContext(UserContext)
-  const { posts, loadNextPage, isComplete, isLoadingPosts } = useMultiUserPosts(
+  const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
     uid,
     timeline === 'master' ? null : following,
     2
@@ -26,6 +26,7 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
             loadNextPage={loadNextPage}
             isComplete={isComplete}
             isLoadingPosts={isLoadingPosts}
+            error={error}
           />
         </div>
         <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
