@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { UserContext } from '../context/user'
 import { TimelineContainer, SidebarContainer } from '../containers'
-import { useMultiUserPosts, usePostsLive, useTitle } from '../hooks'
+import { useMultiUserPosts, useTitle } from '../hooks'
 
 type DashboardPageProps = {
   timeline: 'master' | 'following'
@@ -15,14 +15,13 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
     timeline === 'master' ? null : following,
     2
   )
-  const postsLive = usePostsLive(posts)
 
   return (
     <main className="mx-2 lg:mx-4">
       <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
         <div className="col-span-3 lg:col-span-2">
           <TimelineContainer
-            posts={postsLive}
+            posts={posts}
             loadNextPage={loadNextPage}
             isComplete={isComplete}
             isLoadingPosts={isLoadingPosts}

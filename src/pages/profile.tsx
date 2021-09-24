@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
-import { useTitle, useMultiUserPosts, usePostsLive, useUser } from '../hooks'
+import { useTitle, useMultiUserPosts, useUser } from '../hooks'
 import { UserProfile } from '../components'
 import { TimelineContainer, SidebarContainer } from '../containers'
 import { formatDateTime, timestampToMillis } from '../utils'
@@ -18,8 +18,6 @@ export default function ProfilePage(): JSX.Element {
     uid ? [uid] : undefined,
     2
   )
-  const isCurrentUser = uid === currentUser.uid
-  const postsLive = usePostsLive(posts)
 
   if ('error' in user) {
     return <Redirect to={ROUTES.NOT_FOUND} />
@@ -30,17 +28,17 @@ export default function ProfilePage(): JSX.Element {
   const { createdAt, lastPostedAt, followersCount } = user
   const created = createdAt && formatDateTime(new Date(timestampToMillis(createdAt)))[2]
   const lastPosted = lastPostedAt && formatDateTime(new Date(timestampToMillis(lastPostedAt)))[2]
+  const isCurrentUser = uid === currentUser.uid
   const avatar = isCurrentUser ? currentUser.avatar : user.avatar
   const username = isCurrentUser ? currentUser.username : user.username
-  const timelinePosts =
-    postsLive?.map(postLive => ({
-      ...postLive,
-      ownerDetails: {
-        ...postLive.ownerDetails,
-        avatar,
-        username
-      }
-    })) || null
+  const timelinePosts = posts?.map(post => ({
+    ...post,
+    ownerDetails: {
+      ...post.ownerDetails,
+      avatar,
+      username
+    }
+  })) || null
 
   return (
     <main className="mx-4 lg:mx-4">

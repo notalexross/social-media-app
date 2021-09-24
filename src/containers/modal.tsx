@@ -6,7 +6,7 @@ import type { LocationState } from '../types'
 import type { PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import PostContainer from './post'
-import { useLockBody, usePosts, usePostsLive, useWindowDimensions } from '../hooks'
+import { useLockBody, usePost, useWindowDimensions } from '../hooks'
 import * as ROUTES from '../constants/routes'
 
 if (process.env.NODE_ENV !== 'test') {
@@ -35,12 +35,9 @@ export default function ModalContainer({
   const [isLargeScreen, setIsLargeScreen] = useState(mediaQuery.matches)
   const overlayRef = useRef<HTMLDivElement>(null)
   const history = useHistory<LocationState>()
-  const { postId: postIdFromPath } = useParams<{ postId: string | undefined }>()
+  const { postId } = useParams<{ postId: string | undefined }>()
   const back = history.location.state?.back
-  const postId = typeof post === 'string' ? post : post?.id || postIdFromPath
-  const postObject = usePosts(postId || '')
-  const [postLive] = usePostsLive(postObject || null) || [typeof post === 'string' ? null : post]
-  const postToEdit = edit && (post && typeof post !== 'string' ? post : postObject || false)
+  const postObject = usePost(post || postId)
   const [, windowHeight] = useWindowDimensions()
   const maxHeight = `${windowHeight * (1 - offsetTop) - headerHeight}px`
 
@@ -62,10 +59,8 @@ export default function ModalContainer({
   let composeContainer: JSX.Element | null = null
   if (compose) {
     composeContainer = <ComposeContainer />
-  } else if (edit) {
-    if (postToEdit && postToEdit.message) {
-      composeContainer = <ComposeContainer originalPost={postToEdit} />
-    }
+  } else if (edit && postObject && postObject.message) {
+    composeContainer = <ComposeContainer originalPost={postObject} />
   }
 
   let modalInner: JSX.Element | null = null
@@ -73,7 +68,7 @@ export default function ModalContainer({
     modalInner = (
       <PostContainer
         className="border-l border-r border-b rounded-b bg-white"
-        post={postLive || undefined}
+        post={postObject}
         commentsLimit={0}
         compose={compose}
       />

@@ -3,10 +3,9 @@ import type { PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import MenuContainer from './menu'
 import { Post, StatefulLink, UserProfile } from '../components'
-import { usePosts } from '../hooks'
+import { usePost } from '../hooks'
 import * as ROUTES from '../constants/routes'
 
-let WrappedPostContainer: (props: WrappedPostContainerProps) => JSX.Element = () => <></>
 let Comments: (props: CommentsProps) => JSX.Element = () => <></>
 
 type PostContainerProps = {
@@ -18,6 +17,7 @@ type PostContainerProps = {
   hideAttachment?: boolean
   isComment?: boolean
   isPostPage?: boolean
+  subscribe?: boolean
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function PostContainer({
@@ -29,30 +29,22 @@ export default function PostContainer({
   hideAttachment = false,
   isComment = false,
   isPostPage = false,
+  subscribe = true,
   ...restProps
 }: PostContainerProps): JSX.Element {
-  return typeof post === 'string' ? (
-    <WrappedPostContainer
-      postId={post}
-      commentsLimit={commentsLimit}
-      maxDepth={maxDepth}
-      currentDepth={currentDepth}
-      compose={compose}
-      hideAttachment={hideAttachment}
-      isPostPage={isPostPage}
-      {...restProps}
-    />
-  ) : (
+  const postLive = usePost(post, { subscribe })
+
+  return (
     <Post
       className="border rounded bg-white"
-      post={post}
+      post={postLive}
       hideAttachment={hideAttachment}
       isComment={isComment}
       isPostPage={isPostPage}
       {...restProps}
     >
       <div className="flex justify-between items-center p-3 border-b lg:p-4">
-        <UserProfile className="flex items-center" user={post?.ownerDetails || {}}>
+        <UserProfile className="flex items-center" user={postLive?.ownerDetails || {}}>
           <UserProfile.Avatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
           <div className="flex flex-col">
             <div>
@@ -66,7 +58,7 @@ export default function PostContainer({
             <UserProfile.FollowButton className="w-min text-sm text-gray-500 hover:underline" />
           </div>
         </UserProfile>
-        {post ? <MenuContainer className="pr-4" post={post} /> : null}
+        {postLive ? <MenuContainer className="pr-4" post={postLive} /> : null}
       </div>
       <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
       <div className="flex flex-col p-3 lg:p-4">
@@ -86,12 +78,12 @@ export default function PostContainer({
           <Post.LikeButton className="mr-2 w-6 hover:opacity-70" likedClassName="text-red-600" />
           <Post.LikesCount className="text-sm" />
         </div>
-        {compose && post ? (
-          <ComposeContainer className="mt-4" replyTo={{ id: post.id, owner: post.owner }} />
+        {compose && postLive ? (
+          <ComposeContainer className="mt-4" replyTo={{ id: postLive.id, owner: postLive.owner }} />
         ) : null}
-        {post ? (
+        {postLive ? (
           <Comments
-            post={post}
+            post={postLive}
             limit={commentsLimit}
             maxDepth={maxDepth}
             currentDepth={currentDepth + 1}
@@ -100,55 +92,6 @@ export default function PostContainer({
         ) : null}
       </div>
     </Post>
-  )
-}
-
-type WrappedPostContainerProps = Omit<PostContainerProps, 'post'> & { postId: string }
-
-WrappedPostContainer = ({ postId, ...restProps }: WrappedPostContainerProps) => {
-  const post = usePosts(postId)
-
-  return post ? <PostContainer post={post} {...restProps} /> : <PostContainer {...restProps} />
-}
-
-type CommentProps = {
-  id: string
-  limit?: number
-  maxDepth?: number
-  currentDepth?: number
-  hideAttachment?: boolean
-  isPostPage?: boolean
-} & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
-
-function Comment({
-  id,
-  limit = Infinity,
-  maxDepth = Infinity,
-  currentDepth = 0,
-  hideAttachment = false,
-  isPostPage = false,
-  ...restProps
-}: CommentProps) {
-  const comment = usePosts(id, { subscribe: true })
-
-  return comment ? (
-    <PostContainer
-      post={comment}
-      commentsLimit={limit}
-      maxDepth={maxDepth}
-      currentDepth={currentDepth}
-      hideAttachment={hideAttachment}
-      isPostPage={isPostPage}
-      isComment
-      {...restProps}
-    />
-  ) : (
-    <PostContainer
-      hideAttachment={hideAttachment}
-      isPostPage={isPostPage}
-      isComment
-      {...restProps}
-    />
   )
 }
 
@@ -162,14 +105,14 @@ type CommentsProps = {
   isPostPage?: boolean
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
-Comments = ({
+Comments = function CommentsContainer({
   post,
   limit = Infinity,
   maxDepth = Infinity,
   currentDepth = 0,
   isPostPage = false,
   ...restProps
-}: CommentsProps) => {
+}: CommentsProps) {
   const { replies } = post
   const [repliesPool, setRepliesPool] = useState(replies.slice().reverse())
   const [maxReplies, setMaxReplies] = useState(currentDepth > maxDepth ? 0 : limit)
@@ -241,15 +184,16 @@ Comments = ({
     <div {...restProps}>
       {before}
       {repliesShown.map(reply => (
-        <Comment
+        <PostContainer
           className="mt-4 border rounded bg-white"
           key={reply}
-          id={reply}
-          limit={limit}
+          post={reply}
+          commentsLimit={limit}
           maxDepth={maxDepth}
           currentDepth={currentDepth}
           isPostPage={isPostPage}
           hideAttachment
+          isComment
         />
       ))}
       {after}
