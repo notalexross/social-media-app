@@ -8,7 +8,8 @@ import {
   chunkArray,
   formatDateTime,
   modulo,
-  onIntervalAfter
+  onIntervalAfter,
+  stringifyError
 } from '.'
 
 describe(`${isValidSignUpInputs.name}`, () => {
@@ -380,5 +381,25 @@ describe(`${onIntervalAfter.name}`, () => {
       jest.advanceTimersByTime(interval * 1000)
       expect(callback).toBeCalledTimes(1001)
     })
+  })
+})
+
+describe(`${stringifyError.name}`, () => {
+  test('converts error of type Error to string', () => {
+    const result = stringifyError(new Error('error message'))
+
+    expect(result).toBe('error message')
+  })
+
+  test('converts error of type string to string', () => {
+    const result = stringifyError('error message')
+
+    expect(result).toBe('error message')
+  })
+
+  test('converts error of non string or Error types to string', () => {
+    const result = stringifyError({ error: 'error message' })
+
+    expect(result).toBe('{"error":"error message"}')
   })
 })

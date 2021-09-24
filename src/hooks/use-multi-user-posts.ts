@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PostsStatus, PostWithUserDetails } from '../services/firebase'
 import { getAllUserPosts, getMultiUserPosts } from '../services/firebase'
+import { stringifyError } from '../utils'
 
 type MultiUserPosts = {
   posts: PostWithUserDetails[] | null
@@ -40,16 +41,6 @@ export default function useMultiUserPosts(
     setStatus(initialStatus)
   }, [])
 
-  const handleError = useCallback((err: unknown) => {
-    if (err instanceof Error) {
-      setError(err.message)
-    } else if (typeof err === 'string') {
-      setError(err)
-    } else {
-      setError(JSON.stringify(err))
-    }
-  }, [])
-
   useEffect(() => {
     if (Array.isArray(previousUids.current) !== Array.isArray(uids)) {
       reinitialiseState()
@@ -69,7 +60,7 @@ export default function useMultiUserPosts(
     if (!isInitiated.current && (uids || uids === null)) {
       const statusCallback = (data: PostsStatus) => isMounted.current && setStatus(data)
       const loadingCallback = (data: boolean) => isMounted.current && setIsLoadingPosts(data)
-      const errorCallback = (data: unknown) => isMounted.current && handleError(data)
+      const errorCallback = (data: unknown) => isMounted.current && setError(stringifyError(data))
       const options = { postsPerPage, loadingCallback, errorCallback }
       let loadNextPageFunction: () => Promise<void>
 
@@ -91,7 +82,7 @@ export default function useMultiUserPosts(
     return () => {
       isMounted.current = false
     }
-  }, [id, handleError, postsPerPage, uids])
+  }, [id, postsPerPage, uids])
 
   return { posts, loadNextPage, isComplete, isLoadingPosts, error }
 }
