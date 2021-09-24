@@ -132,7 +132,7 @@ function getPublicDetails(uid: string): Promise<UserPublic> {
     .then(doc => doc.data() as UserPublic)
     .catch(error => {
       console.error(error)
-      throw new Error(error)
+      throw error
     })
 }
 
@@ -142,7 +142,7 @@ function getPrivateDetails(uid: string): Promise<UserPrivate> {
     .then(doc => doc.data() as UserPrivate)
     .catch(error => {
       console.error(error)
-      throw new Error(error)
+      throw error
     })
 }
 
@@ -152,7 +152,7 @@ function getFollowing(uid: string): Promise<UserFollowing> {
     .then(doc => ({ following: doc.data()?.uids as string[] }))
     .catch(error => {
       console.error(error)
-      throw new Error(error)
+      throw error
     })
 }
 
@@ -162,60 +162,122 @@ function getLikedPosts(uid: string): Promise<UserLikedPosts> {
     .then(doc => ({ likedPosts: doc.data()?.postIds as string[] }))
     .catch(error => {
       console.error(error)
-      throw new Error(error)
+      throw error
     })
 }
 
 function listenPublicDetails(
   uid: string,
-  callback: (details: { uid: string } & UserPublic) => void
+  callback: (details: { uid: string } & UserPublic) => void,
+  errorCallback?: (error: Error) => void
 ): () => void {
-  return getUserQueries(uid).userPublicRef.onSnapshot(snap => {
-    callback({ ...(snap.data() as UserPublic), uid })
-  })
+  return getUserQueries(uid).userPublicRef.onSnapshot(
+    snap => {
+      try {
+        if (!snap.metadata.fromCache && !snap.exists) {
+          throw new Error(`User with id "${uid}" does not exist`)
+        }
+
+        callback({ ...(snap.data() as UserPublic), uid })
+      } catch (error) {
+        console.error(error)
+        if (errorCallback) {
+          errorCallback(error)
+        }
+      }
+    },
+    error => {
+      console.error(error)
+      if (errorCallback) {
+        errorCallback(error)
+      }
+    }
+  )
 }
 
 function listenPrivateDetails(
   uid: string,
-  callback: (details: { uid: string } & UserPrivate) => void
+  callback: (details: { uid: string } & UserPrivate) => void,
+  errorCallback?: (error: Error) => void
 ): () => void {
   return getUserQueries(uid).userPrivateRef.onSnapshot(
     snap => {
-      callback({ ...(snap.data() as UserPrivate), uid })
+      try {
+        if (!snap.exists) {
+          throw new Error(`User with id "${uid}" does not exist`)
+        }
+
+        callback({ ...(snap.data() as UserPrivate), uid })
+      } catch (error) {
+        console.error(error)
+        if (errorCallback) {
+          errorCallback(error)
+        }
+      }
     },
     error => {
       console.error(error)
-      console.error(new Error(error.message))
+      if (errorCallback) {
+        errorCallback(error)
+      }
     }
   )
 }
 
 function listenFollowing(
   uid: string,
-  callback: (details: { uid: string } & UserFollowing) => void
+  callback: (details: { uid: string } & UserFollowing) => void,
+  errorCallback?: (error: Error) => void
 ): () => void {
   return getUserQueries(uid).userFollowingRef.onSnapshot(
     snap => {
-      callback({ uid, following: snap.data()?.uids as string[] })
+      try {
+        if (!snap.exists) {
+          throw new Error(`User with id "${uid}" does not exist`)
+        }
+
+        callback({ uid, following: snap.data()?.uids as string[] })
+      } catch (error) {
+        console.error(error)
+        if (errorCallback) {
+          errorCallback(error)
+        }
+      }
     },
     error => {
       console.error(error)
-      console.error(new Error(error.message))
+      if (errorCallback) {
+        errorCallback(error)
+      }
     }
   )
 }
 
 function listenLikedPosts(
   uid: string,
-  callback: (details: { uid: string } & UserLikedPosts) => void
+  callback: (details: { uid: string } & UserLikedPosts) => void,
+  errorCallback?: (error: Error) => void
 ): () => void {
   return getUserQueries(uid).userLikedPostsRef.onSnapshot(
     snap => {
-      callback({ uid, likedPosts: snap.data()?.postIds as string[] })
+      try {
+        if (!snap.exists) {
+          throw new Error(`User with id "${uid}" does not exist`)
+        }
+
+        callback({ uid, likedPosts: snap.data()?.postIds as string[] })
+      } catch (error) {
+        console.error(error)
+        if (errorCallback) {
+          errorCallback(error)
+        }
+      }
     },
     error => {
       console.error(error)
-      console.error(new Error(error.message))
+      if (errorCallback) {
+        errorCallback(error)
+      }
     }
   )
 }
@@ -231,7 +293,7 @@ function getUserId(username: string): Promise<{ uid: string } & UserPublic> {
     }))
     .catch(error => {
       console.error(error)
-      throw new Error(error)
+      throw error
     })
 }
 
@@ -300,6 +362,10 @@ export async function getCachedUserById(
   return usersByIdCache
     .get(uid, maxAge, uid, { includePrivate, includeFollowing, includeLikedPosts })
     .then(user => user?.data || { uid })
+    .catch(error => {
+      console.error(error)
+      throw error
+    })
 }
 
 export async function getCachedUserByUsername(
@@ -310,12 +376,28 @@ export async function getCachedUserByUsername(
   return usersByUsernameCache
     .get(username, maxAge, username, { includePrivate, includeFollowing, includeLikedPosts })
     .then(user => user?.data || {})
+    .catch(error => {
+      console.error(error)
+      throw error
+    })
+}
+
+type OnUserUpdatedOptions = {
+  includePrivate?: boolean
+  includeFollowing?: boolean
+  includeLikedPosts?: boolean
+  errorCallback?: (error: unknown) => void
 }
 
 export function onUserByIdUpdated(
   uid: string,
   callback: (details: User) => void,
-  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+  {
+    includePrivate = false,
+    includeFollowing = false,
+    includeLikedPosts = false,
+    errorCallback
+  }: OnUserUpdatedOptions = {}
 ): () => void {
   let fullDetails: User = { uid }
   let callCount = 0
@@ -334,18 +416,23 @@ export function onUserByIdUpdated(
     return callback(details)
   }
 
-  const listeners = [listenPublicDetails(uid, cachingCallback)]
-  if (includePrivate) listeners.push(listenPrivateDetails(uid, cachingCallback))
-  if (includeFollowing) listeners.push(listenFollowing(uid, cachingCallback))
-  if (includeLikedPosts) listeners.push(listenLikedPosts(uid, cachingCallback))
+  const listeners = [listenPublicDetails(uid, cachingCallback, errorCallback)]
+  if (includePrivate) listeners.push(listenPrivateDetails(uid, cachingCallback, errorCallback))
+  if (includeFollowing) listeners.push(listenFollowing(uid, cachingCallback, errorCallback))
+  if (includeLikedPosts) listeners.push(listenLikedPosts(uid, cachingCallback, errorCallback))
 
   return () => listeners.forEach(listener => listener())
 }
 
 export function onUserByUsernameUpdated(
   username: string,
-  callback: (details: User | { error: Error }) => void,
-  { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
+  callback: (details: User) => void,
+  {
+    includePrivate = false,
+    includeFollowing = false,
+    includeLikedPosts = false,
+    errorCallback
+  }: OnUserUpdatedOptions = {}
 ): () => void {
   let isCurrent = true
   let cleanup = () => {
@@ -379,13 +466,16 @@ export function onUserByUsernameUpdated(
         cleanup = onUserByIdUpdated(uid, cachingCallback, {
           includePrivate,
           includeFollowing,
-          includeLikedPosts
+          includeLikedPosts,
+          errorCallback
         })
       }
     })
     .catch((error: Error) => {
       console.error(error)
-      callback({ error })
+      if (errorCallback) {
+        errorCallback(error)
+      }
     })
 
   return () => cleanup()
@@ -422,7 +512,7 @@ function createUserInDB(
 
   return batch.commit().catch(error => {
     console.error(error)
-    throw new Error(error)
+    throw error
   })
 }
 
@@ -470,7 +560,7 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
   }
 
   await Promise.all(promises).catch(err => {
-    throw new Error(err)
+    throw err
   })
 }
 
@@ -492,7 +582,7 @@ function getPostContent(postId: string): Promise<PostContent> {
     .then(doc => doc.data() as PostContent)
     .catch(error => {
       console.error(error)
-      throw new Error(error)
+      throw error
     })
 }
 
@@ -631,7 +721,7 @@ function createPostInDB(
       .then(() => post.id)
       .catch(error => {
         console.error(error)
-        throw new Error(error)
+        throw error
       })
   }
 
@@ -711,7 +801,7 @@ function updateFollowInDB(
 
   return batch.commit().catch(error => {
     console.error(error)
-    throw new Error(error)
+    throw error
   })
 }
 
@@ -749,7 +839,7 @@ function updateLikeInDB(type: 'unlike' | 'like', likerUid: string, postId: strin
 
   return batch.commit().catch(error => {
     console.error(error)
-    throw new Error(error)
+    throw error
   })
 }
 
@@ -768,7 +858,7 @@ async function uploadFile(path: string, file: File): Promise<string> {
     return (await storagePathRef.getDownloadURL()) as string
   } catch (error) {
     console.error(error)
-    throw new Error(error)
+    throw error
   }
 }
 
@@ -776,12 +866,12 @@ export async function updateAvatar(uid: string, imageFile: File): Promise<string
   const { userPublicRef } = getUserQueries(uid)
   const avatar = await uploadFile(`avatars/${uid}`, imageFile).catch(error => {
     console.error(error)
-    throw new Error(error)
+    throw error
   })
 
   await userPublicRef.update({ avatar }).catch(error => {
     console.error(error)
-    throw new Error(error)
+    throw error
   })
 
   return avatar
@@ -874,7 +964,7 @@ async function getAttachmentUrl(directory: string, attachment?: File | string | 
     } else {
       url = await uploadFile(`attachments/${directory}/`, attachment).catch(error => {
         console.error(error)
-        throw new Error(error)
+        throw error
       })
     }
   }
@@ -1179,6 +1269,7 @@ export function getAllUserPosts(
           fetchedPosts.push(...newPosts)
         } catch (error) {
           page -= 1
+          console.error(error)
           if (errorCallback) {
             errorCallback(error)
           }

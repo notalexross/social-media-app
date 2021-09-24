@@ -6,6 +6,17 @@ import {
   onUserByIdUpdated,
   onUserByUsernameUpdated
 } from '../services/firebase'
+import { stringifyError } from '../utils'
+
+type UseUserOptions = {
+  by?: string
+  maxAge?: number
+  subscribe?: boolean
+  includePrivate?: boolean
+  includeFollowing?: boolean
+  includeLikedPosts?: boolean
+  errorCallback?: (error: string) => void
+}
 
 export default function useUser(
   uidOrUsername: string | undefined,
@@ -15,8 +26,9 @@ export default function useUser(
     subscribe = false,
     includePrivate = false,
     includeFollowing = false,
-    includeLikedPosts = false
-  } = {}
+    includeLikedPosts = false,
+    errorCallback
+  }: UseUserOptions = {}
 ): Partial<User> {
   const [userDetails, setUserDetails] = useState<Partial<User>>({})
 
@@ -24,6 +36,12 @@ export default function useUser(
     let isCurrent = true
 
     if (uidOrUsername) {
+      const handleError = (error: unknown) => {
+        if (isCurrent && errorCallback) {
+          errorCallback(stringifyError(error))
+        }
+      }
+
       if (by === 'uid') {
         const uid = uidOrUsername
 
@@ -34,7 +52,8 @@ export default function useUser(
             {
               includePrivate,
               includeFollowing,
-              includeLikedPosts
+              includeLikedPosts,
+              errorCallback: handleError
             }
           )
         }
@@ -45,7 +64,7 @@ export default function useUser(
           includeLikedPosts
         })
           .then(data => isCurrent && setUserDetails(data))
-          .catch(console.error)
+          .catch(handleError)
       } else {
         const username = uidOrUsername
 
@@ -56,7 +75,8 @@ export default function useUser(
             {
               includePrivate,
               includeFollowing,
-              includeLikedPosts
+              includeLikedPosts,
+              errorCallback: handleError
             }
           )
         }
@@ -67,7 +87,7 @@ export default function useUser(
           includeLikedPosts
         })
           .then(data => isCurrent && setUserDetails(data))
-          .catch(console.error)
+          .catch(handleError)
       }
     } else {
       setUserDetails({})
@@ -76,7 +96,16 @@ export default function useUser(
     return () => {
       isCurrent = false
     }
-  }, [by, includeFollowing, includeLikedPosts, includePrivate, maxAge, subscribe, uidOrUsername])
+  }, [
+    by,
+    errorCallback,
+    includeFollowing,
+    includeLikedPosts,
+    includePrivate,
+    maxAge,
+    subscribe,
+    uidOrUsername
+  ])
 
   return userDetails
 }

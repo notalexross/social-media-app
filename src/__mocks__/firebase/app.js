@@ -308,20 +308,23 @@ const get = jest.fn(function () {
         id,
         data: () => doc._fields
       })),
-      metadata
+      metadata,
+      exists: true
     }
   } else if ('_fields' in this) {
     response = {
       id: this._id,
       data: () => this._fields,
       metadata,
+      exists: true,
       _collections: this._collections
     }
   } else if ('_id' in this) {
     response = {
       id: this._id,
       data: () => [],
-      metadata
+      metadata,
+      exists: true
     }
   } else {
     return Promise.reject(new Error('Missing or insufficient permissions.'))

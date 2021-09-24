@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
 import { useTitle, useMultiUserPosts, useUser } from '../hooks'
 import { UserProfile } from '../components'
@@ -11,15 +11,16 @@ export default function ProfilePage(): JSX.Element {
   useTitle('Profile')
   const params = useParams<{ username: string }>()
   const currentUser = useContext(UserContext)
-  const user = useUser(params.username, { by: 'username', subscribe: true })
-  const uid = !('error' in user) && user.uid ? user.uid : undefined
+  const [userError, setUserError] = useState<string>()
+  const user = useUser(params.username, { by: 'username', subscribe: true, errorCallback: setUserError })
+  const { uid } = user
   const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
     uid,
     uid ? [uid] : undefined,
     2
   )
 
-  if ('error' in user) {
+  if (userError) {
     return <Redirect to={ROUTES.NOT_FOUND} />
   } else if (!uid) {
     return <></>
