@@ -525,48 +525,41 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
   })
 }
 
-function listenPostPublic(
+// prettier-ignore
+type PostDetails<T> =
+  T extends 'public'
+    ? PostPublic
+    : T extends 'content'
+      ? PostContent
+      : never
+
+function listenPostDetails<T extends 'public' | 'content'>(
   postId: string,
-  callback: (response: PostPublic) => void,
-  errorCallback?: (error: Error) => void
+  type: T,
+  callback: (response: PostDetails<T>) => void,
+  errorCallback?: (error: unknown) => void
 ): () => void {
-  return getPostQueries(postId).postPublicRef.onSnapshot(
+  const refNames = {
+    public: 'postPublicRef',
+    content: 'postContentRef'
+  } as const
+  const errorMessages = {
+    public: `Post with id "${postId}" does not exist`,
+    content: `No content found for post with id "${postId}"`
+  } as const
+
+  return getPostQueries(postId)[refNames[type]].onSnapshot(
     snap => {
       try {
         if (!snap.metadata.fromCache && !snap.exists) {
-          throw new Error(`Post with id "${postId}" does not exist`)
+          throw new Error(errorMessages[type])
         }
 
-        callback(snap.data() as PostPublic)
-      } catch (error) {
-        console.error(error)
-        if (errorCallback) {
-          errorCallback(error)
-        }
-      }
-    },
-    error => {
-      console.error(error)
-      if (errorCallback) {
-        errorCallback(error)
-      }
-    }
-  )
-}
+        const data = snap.data()
 
-function listenPostContent(
-  postId: string,
-  callback: (response: PostContent) => void,
-  errorCallback?: (error: Error) => void
-): () => void {
-  return getPostQueries(postId).postContentRef.onSnapshot(
-    snap => {
-      try {
-        if (!snap.metadata.fromCache && !snap.exists) {
-          throw new Error(`Post with id "${postId}" has no content`)
+        if (data) {
+          callback(data as PostDetails<T>)
         }
-
-        callback(snap.data() as PostContent)
       } catch (error) {
         console.error(error)
         if (errorCallback) {
@@ -679,8 +672,8 @@ export function onPostsUpdated(
     }
 
     acc.push(
-      listenPostPublic(postId, handleResponse, errorCallback),
-      listenPostContent(postId, handleResponse, errorCallback)
+      listenPostDetails(postId, 'public', handleResponse, errorCallback),
+      listenPostDetails(postId, 'content', handleResponse, errorCallback)
     )
 
     return acc
