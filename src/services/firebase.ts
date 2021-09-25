@@ -166,106 +166,58 @@ function getLikedPosts(uid: string): Promise<UserLikedPosts> {
     })
 }
 
-function listenPublicDetails(
+// prettier-ignore
+type UserDetails<T> =
+  T extends 'public'
+    ? UserPublic
+    : T extends 'private'
+      ? UserPrivate
+      : T extends 'following'
+        ? UserFollowing
+        : T extends 'likes'
+          ? UserLikedPosts
+          : never
+
+function listenUserDetails<T extends 'public' | 'private' | 'following' | 'likes'>(
   uid: string,
-  callback: (details: { uid: string } & UserPublic) => void,
-  errorCallback?: (error: Error) => void
+  type: T,
+  callback: (details: { uid: string } & UserDetails<T>) => void,
+  errorCallback?: (error: unknown) => void
 ): () => void {
-  return getUserQueries(uid).userPublicRef.onSnapshot(
+  const refNames = {
+    public: 'userPublicRef',
+    private: 'userPrivateRef',
+    following: 'userFollowingRef',
+    likes: 'userLikedPostsRef'
+  } as const
+  const errorMessages = {
+    public: `User with id "${uid}" does not exist`,
+    private: `No private details found for user with id "${uid}"`,
+    following: `No following details found for user with id "${uid}"`,
+    likes: `No liked posts details found for user with id "${uid}"`
+  } as const
+
+  return getUserQueries(uid)[refNames[type]].onSnapshot(
     snap => {
       try {
         if (!snap.metadata.fromCache && !snap.exists) {
-          throw new Error(`User with id "${uid}" does not exist`)
+          throw new Error(errorMessages[type])
         }
 
-        callback({ ...(snap.data() as UserPublic), uid })
-      } catch (error) {
-        console.error(error)
-        if (errorCallback) {
-          errorCallback(error)
-        }
-      }
-    },
-    error => {
-      console.error(error)
-      if (errorCallback) {
-        errorCallback(error)
-      }
-    }
-  )
-}
+        const data = snap.data()
 
-function listenPrivateDetails(
-  uid: string,
-  callback: (details: { uid: string } & UserPrivate) => void,
-  errorCallback?: (error: Error) => void
-): () => void {
-  return getUserQueries(uid).userPrivateRef.onSnapshot(
-    snap => {
-      try {
-        if (!snap.exists) {
-          throw new Error(`User with id "${uid}" does not exist`)
+        if (data) {
+          if (type === 'public' || type === 'private') {
+            const details = data as UserDetails<T>
+            callback({ ...details, uid })
+          } else if (type === 'following') {
+            const details = { following: data.uids as string[] } as UserDetails<T>
+            callback({ ...details, uid })
+          } else if (type === 'likes') {
+            const details = { likedPosts: data.postIds as string[] } as UserDetails<T>
+            callback({ ...details, uid })
+          }
         }
-
-        callback({ ...(snap.data() as UserPrivate), uid })
-      } catch (error) {
-        console.error(error)
-        if (errorCallback) {
-          errorCallback(error)
-        }
-      }
-    },
-    error => {
-      console.error(error)
-      if (errorCallback) {
-        errorCallback(error)
-      }
-    }
-  )
-}
-
-function listenFollowing(
-  uid: string,
-  callback: (details: { uid: string } & UserFollowing) => void,
-  errorCallback?: (error: Error) => void
-): () => void {
-  return getUserQueries(uid).userFollowingRef.onSnapshot(
-    snap => {
-      try {
-        if (!snap.exists) {
-          throw new Error(`User with id "${uid}" does not exist`)
-        }
-
-        callback({ uid, following: snap.data()?.uids as string[] })
-      } catch (error) {
-        console.error(error)
-        if (errorCallback) {
-          errorCallback(error)
-        }
-      }
-    },
-    error => {
-      console.error(error)
-      if (errorCallback) {
-        errorCallback(error)
-      }
-    }
-  )
-}
-
-function listenLikedPosts(
-  uid: string,
-  callback: (details: { uid: string } & UserLikedPosts) => void,
-  errorCallback?: (error: Error) => void
-): () => void {
-  return getUserQueries(uid).userLikedPostsRef.onSnapshot(
-    snap => {
-      try {
-        if (!snap.exists) {
-          throw new Error(`User with id "${uid}" does not exist`)
-        }
-
-        callback({ uid, likedPosts: snap.data()?.postIds as string[] })
       } catch (error) {
         console.error(error)
         if (errorCallback) {
@@ -416,10 +368,19 @@ export function onUserByIdUpdated(
     return callback(details)
   }
 
-  const listeners = [listenPublicDetails(uid, cachingCallback, errorCallback)]
-  if (includePrivate) listeners.push(listenPrivateDetails(uid, cachingCallback, errorCallback))
-  if (includeFollowing) listeners.push(listenFollowing(uid, cachingCallback, errorCallback))
-  if (includeLikedPosts) listeners.push(listenLikedPosts(uid, cachingCallback, errorCallback))
+  const listeners = [listenUserDetails(uid, 'public', cachingCallback, errorCallback)]
+
+  if (includePrivate) {
+    listeners.push(listenUserDetails(uid, 'private', cachingCallback, errorCallback))
+  }
+
+  if (includeFollowing) {
+    listeners.push(listenUserDetails(uid, 'following', cachingCallback, errorCallback))
+  }
+
+  if (includeLikedPosts) {
+    listeners.push(listenUserDetails(uid, 'likes', cachingCallback, errorCallback))
+  }
 
   return () => listeners.forEach(listener => listener())
 }
