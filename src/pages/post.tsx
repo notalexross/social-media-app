@@ -1,5 +1,7 @@
-import { useParams } from 'react-router-dom'
+import { useCallback } from 'react'
+import { useParams, useHistory } from 'react-router-dom'
 import { PostContainer, SidebarContainer } from '../containers'
+import * as ROUTES from '../constants/routes'
 
 type PostPageProps = {
   compose?: boolean
@@ -7,6 +9,11 @@ type PostPageProps = {
 
 export default function PostPage({ compose = false }: PostPageProps): JSX.Element {
   const { postId } = useParams<{ postId: string }>()
+  const history = useHistory()
+
+  const handleError = useCallback(() => {
+    history.replace(ROUTES.NOT_FOUND)
+  }, [history])
 
   return (
     <main className="mx-2 lg:mx-4">
@@ -18,6 +25,7 @@ export default function PostPage({ compose = false }: PostPageProps): JSX.Elemen
             maxDepth={1}
             compose={compose}
             isPostPage
+            errorHandler={handleError}
           />
         </div>
         <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
