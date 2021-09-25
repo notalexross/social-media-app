@@ -564,16 +564,62 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
   })
 }
 
-function listenPostPublic(postId: string, callback: (response: PostPublic) => void): () => void {
-  return getPostQueries(postId).postPublicRef.onSnapshot(snap => {
-    callback(snap.data() as PostPublic)
-  })
+function listenPostPublic(
+  postId: string,
+  callback: (response: PostPublic) => void,
+  errorCallback?: (error: Error) => void
+): () => void {
+  return getPostQueries(postId).postPublicRef.onSnapshot(
+    snap => {
+      try {
+        if (!snap.metadata.fromCache && !snap.exists) {
+          throw new Error(`Post with id "${postId}" does not exist`)
+        }
+
+        callback(snap.data() as PostPublic)
+      } catch (error) {
+        console.error(error)
+        if (errorCallback) {
+          errorCallback(error)
+        }
+      }
+    },
+    error => {
+      console.error(error)
+      if (errorCallback) {
+        errorCallback(error)
+      }
+    }
+  )
 }
 
-function listenPostContent(postId: string, callback: (response: PostContent) => void): () => void {
-  return getPostQueries(postId).postContentRef.onSnapshot(snap => {
-    callback(snap.data() as PostContent)
-  })
+function listenPostContent(
+  postId: string,
+  callback: (response: PostContent) => void,
+  errorCallback?: (error: Error) => void
+): () => void {
+  return getPostQueries(postId).postContentRef.onSnapshot(
+    snap => {
+      try {
+        if (!snap.metadata.fromCache && !snap.exists) {
+          throw new Error(`Post with id "${postId}" has no content`)
+        }
+
+        callback(snap.data() as PostContent)
+      } catch (error) {
+        console.error(error)
+        if (errorCallback) {
+          errorCallback(error)
+        }
+      }
+    },
+    error => {
+      console.error(error)
+      if (errorCallback) {
+        errorCallback(error)
+      }
+    }
+  )
 }
 
 function getPostContent(postId: string): Promise<PostContent> {
@@ -649,7 +695,8 @@ export function getPosts(
 
 export function onPostsUpdated(
   postIds: string[],
-  callback: (updatedPost: PostWithUserDetails) => void
+  callback: (updatedPost: PostWithUserDetails) => void,
+  errorCallback?: (error: unknown) => void
 ): () => void {
   const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
     if (!postId) {
@@ -670,7 +717,10 @@ export function onPostsUpdated(
       handleResponseAsync(response).catch(console.error)
     }
 
-    acc.push(listenPostPublic(postId, handleResponse), listenPostContent(postId, handleResponse))
+    acc.push(
+      listenPostPublic(postId, handleResponse, errorCallback),
+      listenPostContent(postId, handleResponse, errorCallback)
+    )
 
     return acc
   }, [])

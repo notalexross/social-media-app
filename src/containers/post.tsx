@@ -18,6 +18,7 @@ type PostContainerProps = {
   isComment?: boolean
   isPostPage?: boolean
   subscribe?: boolean
+  errorHandler?: (error: string) => void
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function PostContainer({
@@ -30,9 +31,10 @@ export default function PostContainer({
   isComment = false,
   isPostPage = false,
   subscribe = true,
+  errorHandler,
   ...restProps
 }: PostContainerProps): JSX.Element {
-  const postLive = usePost(post, { subscribe })
+  const postLive = usePost(post, { subscribe, errorCallback: errorHandler })
 
   return (
     <Post
