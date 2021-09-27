@@ -10,7 +10,7 @@ function Route({ children }) {
   return children
 }
 
-function Link({ children, to, ...restProps }) {
+function Link({ children, to, replace, ...restProps }) {
   return <a href={to} {...restProps}>{children}</a>
 }
 
