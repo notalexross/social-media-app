@@ -6,6 +6,7 @@ import { addPost, editPost } from '../../services/firebase'
 import type { IEmojiData } from '../emoji-picker'
 import EmojiPicker from '../emoji-picker'
 import FocusTrap from '../focus-trap'
+import { stringifyError } from '../../utils'
 
 type ComposeContextValue = {
   error: string
@@ -78,7 +79,7 @@ export default function Compose({
       if (err instanceof Error) {
         setError(err.toString())
       } else {
-        setError(err)
+        setError(stringifyError(err))
       }
     } finally {
       disabledElements.forEach(element => {
