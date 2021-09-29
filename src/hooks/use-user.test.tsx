@@ -13,7 +13,7 @@ function Component({
 
   return (
     <>
-      {Object.entries(user).map(([key, value]) => (
+      {user && Object.entries(user).map(([key, value]) => (
         <p key={key}>{`${key}: ${JSON.stringify(value)}`}</p>
       ))}
     </>

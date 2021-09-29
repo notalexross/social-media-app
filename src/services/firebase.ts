@@ -324,10 +324,10 @@ export async function getCachedUserByUsername(
   username: string,
   maxAge = 10000,
   { includePrivate = false, includeFollowing = false, includeLikedPosts = false } = {}
-): Promise<Partial<User>> {
+): Promise<User | undefined> {
   return usersByUsernameCache
     .get(username, maxAge, username, { includePrivate, includeFollowing, includeLikedPosts })
-    .then(user => user?.data || {})
+    .then(user => user?.data)
     .catch(error => {
       console.error(error)
       throw error

@@ -13,7 +13,7 @@ export default function ProfilePage(): JSX.Element {
   const currentUser = useContext(UserContext)
   const [userError, setUserError] = useState<string>()
   const user = useUser(params.username, { by: 'username', subscribe: true, errorCallback: setUserError })
-  const { uid } = user
+  const { uid } = user || {}
   const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
     uid,
     uid ? [uid] : undefined,
@@ -26,7 +26,7 @@ export default function ProfilePage(): JSX.Element {
     return <></>
   }
 
-  const { createdAt, lastPostedAt, followersCount } = user
+  const { createdAt, lastPostedAt, followersCount } = user || {}
   const created = createdAt && formatDateTime(new Date(timestampToMillis(createdAt)))[2]
   const lastPosted = lastPostedAt && formatDateTime(new Date(timestampToMillis(lastPostedAt)))[2]
   const isCurrentUser = uid === currentUser.uid

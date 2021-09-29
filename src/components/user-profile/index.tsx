@@ -8,14 +8,14 @@ import StatefulLink from '../stateful-link'
 import * as ROUTES from '../../constants/routes'
 
 type UserProfileContextValue = {
-  user: Partial<User>
+  user: Partial<User> | undefined
   noLinks: boolean
 }
 
 const UserProfileContext = createContext({} as UserProfileContextValue)
 
 type UserProfileProps = {
-  user: Partial<User>
+  user?: Partial<User>
   noLinks?: boolean
 } & React.ComponentPropsWithoutRef<'div'>
 
@@ -44,10 +44,10 @@ UserProfile.Avatar = function UserProfileAvatar({
 }: UserProfileAvatarProps) {
   const { uid } = useContext(UserContext)
   const { user, noLinks } = useContext(UserProfileContext)
-  const { avatar, username } = user
-  const isSelf = uid === user.uid
+  const { avatar, username } = user || {}
+  const isSelf = uid === user?.uid
 
-  if (!isSelf && user.deleted) {
+  if (!isSelf && user?.deleted) {
     return (
       <div {...restProps}>
         <Avatar src={null} alt="Deleted user avatar" />
@@ -68,7 +68,7 @@ UserProfile.Avatar = function UserProfileAvatar({
       className={linkClassName}
       src={avatar}
       alt={isSelf ? 'Your avatar' : `${username}'s avatar`}
-      uid={user.uid}
+      uid={user?.uid}
       updatable={updatable}
     />
   )
@@ -101,10 +101,10 @@ UserProfile.Username = function UserProfileUsername({
 }: UserProfileUsernameProps) {
   const { uid } = useContext(UserContext)
   const { user, noLinks } = useContext(UserProfileContext)
-  const { username } = user
-  const isSelf = user.uid === uid
+  const { username } = user || {}
+  const isSelf = user?.uid === uid
 
-  if (!isSelf && user.deleted) {
+  if (!isSelf && user?.deleted) {
     return <span {...restProps}>{deletedTextContent}</span>
   }
 
@@ -129,7 +129,7 @@ UserProfile.FullName = function UserProfileFullName(
   props: Omit<React.ComponentPropsWithoutRef<'span'>, 'children'>
 ) {
   const { user } = useContext(UserProfileContext)
-  const { fullName } = user
+  const { fullName } = user || {}
 
   if (!fullName) {
     return <Skeleton width="15ch" {...props} />
@@ -143,10 +143,10 @@ UserProfile.FollowButton = function UserProfileFollowButton(
 ) {
   const { following, uid } = useContext(UserContext)
   const { user } = useContext(UserProfileContext)
-  const isSelf = user.uid === uid
+  const isSelf = user?.uid === uid
   const isFollowing = !isSelf && user?.uid && following?.includes(user.uid)
 
-  if (!uid || !user.uid) {
+  if (!uid || !user?.uid) {
     return <Skeleton width="6ch" />
   }
 

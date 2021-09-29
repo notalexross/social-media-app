@@ -29,8 +29,8 @@ export default function useUser(
     includeLikedPosts = false,
     errorCallback
   }: UseUserOptions = {}
-): Partial<User> {
-  const [userDetails, setUserDetails] = useState<Partial<User>>({})
+): User | undefined {
+  const [userDetails, setUserDetails] = useState<User | undefined>()
 
   useEffect(() => {
     let isCurrent = true
@@ -90,7 +90,7 @@ export default function useUser(
           .catch(handleError)
       }
     } else {
-      setUserDetails({})
+      setUserDetails(undefined)
     }
 
     return () => {
