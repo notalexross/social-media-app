@@ -1,15 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
+import type { User } from '../services/firebase'
 import useUser from './use-user'
 
 function Component({
-  uid,
+  arg1,
   options = {}
 }: {
-  uid?: string
+  arg1?: string | User
   options?: Parameters<typeof useUser>[1]
 }) {
-  const user = useUser(uid, options)
+  const user = useUser(arg1, options)
 
   return (
     <>
@@ -29,7 +30,7 @@ test('given undefined uid, after having already passed a uid, returns empty data
         <button type="button" onClick={() => setUid(undefined)}>
           unset
         </button>
-        <Component uid={uid} />
+        <Component arg1={uid} />
       </>
     )
   }
@@ -49,7 +50,7 @@ describe('with default inclusions', () => {
     test('returns correct data', async () => {
       const uid = 'user1'
 
-      render(<Component uid={uid} />)
+      render(<Component arg1={uid} />)
 
       expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
       expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
@@ -62,7 +63,7 @@ describe('with default inclusions', () => {
       const uid = 'user1'
       const options = { subscribe: true }
 
-      render(<Component uid={uid} options={options} />)
+      render(<Component arg1={uid} options={options} />)
 
       expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
       expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
@@ -77,7 +78,7 @@ describe('with private data included', () => {
       const uid = 'user1'
       const options = { includePrivate: true }
 
-      render(<Component uid={uid} options={options} />)
+      render(<Component arg1={uid} options={options} />)
 
       expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
       expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
@@ -91,7 +92,7 @@ describe('with private data included', () => {
       const uid = 'user1'
       const options = { includePrivate: true, subscribe: true }
 
-      render(<Component uid={uid} options={options} />)
+      render(<Component arg1={uid} options={options} />)
 
       expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
       expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
@@ -107,7 +108,7 @@ describe('with following and likedPosts included', () => {
       const uid = 'user1'
       const options = { includeFollowing: true, includeLikedPosts: true }
 
-      render(<Component uid={uid} options={options} />)
+      render(<Component arg1={uid} options={options} />)
 
       expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
       expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
@@ -122,13 +123,39 @@ describe('with following and likedPosts included', () => {
       const uid = 'user1'
       const options = { includeFollowing: true, includeLikedPosts: true, subscribe: true }
 
-      render(<Component uid={uid} options={options} />)
+      render(<Component arg1={uid} options={options} />)
 
       expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
       expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
       expect(await screen.findByText('following: ["user3","user4"]')).toBeInTheDocument()
       expect(await screen.findByText('likedPosts: ["post1","post2"]')).toBeInTheDocument()
       expect(screen.queryByText('email: "email@email.com"')).not.toBeInTheDocument()
+    })
+  })
+})
+
+describe('by username', () => {
+  describe('without subscribe', () => {
+    test('returns correct data', async () => {
+      const username = 'Username'
+      const options = { by: 'username' as const }
+
+      render(<Component arg1={username} options={options} />)
+
+      expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
+      expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
+    })
+  })
+
+  describe('with subscribe', () => {
+    test('returns correct data', async () => {
+      const username = 'Username'
+      const options = { by: 'username' as const, subscribe: true }
+
+      render(<Component arg1={username} options={options} />)
+
+      expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
+      expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
     })
   })
 })
