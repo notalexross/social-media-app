@@ -9,9 +9,8 @@ type DashboardPageProps = {
 
 export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Element {
   useTitle('Dashboard')
-  const { uid, following } = useContext(UserContext)
+  const { following } = useContext(UserContext)
   const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
-    uid,
     timeline === 'master' ? null : following,
     2
   )

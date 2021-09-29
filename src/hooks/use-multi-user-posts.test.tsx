@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import useMultiUserPosts from './use-multi-user-posts'
 
 function Component({ uids }: { uids: string[] | null }) {
-  const { posts } = useMultiUserPosts('user3', uids)
+  const { posts } = useMultiUserPosts(uids)
 
   return <p>{JSON.stringify(posts)}</p>
 }

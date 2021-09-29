@@ -21,7 +21,6 @@ const initialStatus = {
 }
 
 export default function useMultiUserPosts(
-  id: string | undefined,
   uids: string[] | undefined | null,
   postsPerPage = 10
 ): MultiUserPosts {
@@ -50,12 +49,6 @@ export default function useMultiUserPosts(
   }, [uids, reinitialiseState])
 
   useEffect(() => {
-    if (id) {
-      reinitialiseState()
-    }
-  }, [id, reinitialiseState])
-
-  useEffect(() => {
     isMounted.current = true
     if (!isInitiated.current && (uids || uids === null)) {
       const statusCallback = (data: PostsStatus) => isMounted.current && setStatus(data)
@@ -82,7 +75,7 @@ export default function useMultiUserPosts(
     return () => {
       isMounted.current = false
     }
-  }, [id, postsPerPage, uids])
+  }, [postsPerPage, uids])
 
   return { posts, loadNextPage, isComplete, isLoadingPosts, error }
 }

@@ -15,7 +15,6 @@ export default function ProfilePage(): JSX.Element {
   const user = useUser(params.username, { by: 'username', subscribe: true, errorCallback: setUserError })
   const { uid } = user || {}
   const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
-    uid,
     uid ? [uid] : undefined,
     2
   )
