@@ -30,16 +30,6 @@ export default function ProfilePage(): JSX.Element {
   const created = createdAt && formatDateTime(new Date(timestampToMillis(createdAt)))[2]
   const lastPosted = lastPostedAt && formatDateTime(new Date(timestampToMillis(lastPostedAt)))[2]
   const isCurrentUser = uid === currentUser.uid
-  const avatar = isCurrentUser ? currentUser.avatar : user.avatar
-  const username = isCurrentUser ? currentUser.username : user.username
-  const timelinePosts = posts?.map(post => ({
-    ...post,
-    ownerDetails: {
-      ...post.ownerDetails,
-      avatar,
-      username
-    }
-  })) || null
 
   return (
     <main className="mx-4 lg:mx-4">
@@ -92,7 +82,7 @@ export default function ProfilePage(): JSX.Element {
           </div>
           <TimelineContainer
             className="col-span-3 lg:col-span-2"
-            posts={timelinePosts}
+            posts={posts}
             loadNextPage={loadNextPage}
             isComplete={isComplete}
             isLoadingPosts={isLoadingPosts}
