@@ -353,19 +353,18 @@ export function onUserByIdUpdated(
 ): () => void {
   let fullDetails: User = { uid }
   let callCount = 0
-  let minCallsForCaching = 1
-  if (includePrivate) minCallsForCaching += 1
-  if (includeFollowing) minCallsForCaching += 1
-  if (includeLikedPosts) minCallsForCaching += 1
+  let minCalls = 1
+  if (includePrivate) minCalls += 1
+  if (includeFollowing) minCalls += 1
+  if (includeLikedPosts) minCalls += 1
 
   const cachingCallback = (details: User): void => {
     callCount += 1
     fullDetails = { ...fullDetails, ...details }
-    if (callCount >= minCallsForCaching) {
+    if (callCount >= minCalls) {
       usersByIdCache.set(uid, fullDetails).catch(console.error)
+      callback(fullDetails)
     }
-
-    return callback(details)
   }
 
   const listeners = [listenUserDetails(uid, 'public', cachingCallback, errorCallback)]
@@ -406,21 +405,9 @@ export function onUserByUsernameUpdated(
         throw new Error(`User with username "${username}" not found.`)
       }
 
-      let fullDetails: User = { uid }
-      let callCount = 0
-      let minCallsForCaching = 1
-      if (includePrivate) minCallsForCaching += 1
-      if (includeFollowing) minCallsForCaching += 1
-      if (includeLikedPosts) minCallsForCaching += 1
-
       const cachingCallback = (details: User): void => {
-        callCount += 1
-        fullDetails = { ...fullDetails, ...details }
-        if (callCount >= minCallsForCaching) {
-          usersByUsernameCache.set(username, fullDetails).catch(console.error)
-        }
-
-        return callback(details)
+        usersByUsernameCache.set(username, details).catch(console.error)
+        callback(details)
       }
 
       if (isCurrent) {

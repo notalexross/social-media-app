@@ -170,10 +170,7 @@ describe(`${onUserByIdUpdated.name}`, () => {
     await waitFor(() => expect(callback).toHaveBeenCalled())
 
     expect(callback).toBeCalledTimes(1)
-    expect(callback).toHaveBeenCalledWith({
-      uid: user.uid,
-      ...user.public
-    })
+    expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.public })
   })
 
   test('returns a cleanup function', async () => {
@@ -202,15 +199,11 @@ describe(`${onUserByIdUpdated.name}`, () => {
       onUserByIdUpdated(user.uid, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(2)
+      expect(callback).toBeCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
-        ...user.public
-      })
-      expect(callback).toHaveBeenCalledWith({
-        uid: user.uid,
-        fullName: user.private.fullName,
-        email: user.private.email
+        ...user.public,
+        ...user.private
       })
     })
   })
@@ -231,13 +224,13 @@ describe(`${onUserByIdUpdated.name}`, () => {
       onUserByIdUpdated(user.uid, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(3)
+      expect(callback).toBeCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
-        ...user.public
+        ...user.public,
+        ...user.following,
+        ...user.likedPosts
       })
-      expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.following })
-      expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.likedPosts })
     })
   })
 })
@@ -257,10 +250,7 @@ describe(`${onUserByUsernameUpdated.name}`, () => {
     await waitFor(() => expect(callback).toHaveBeenCalled())
 
     expect(callback).toBeCalledTimes(1)
-    expect(callback).toHaveBeenCalledWith({
-      uid: user.uid,
-      ...user.public
-    })
+    expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.public })
   })
 
   test('returns a cleanup function', async () => {
@@ -290,15 +280,11 @@ describe(`${onUserByUsernameUpdated.name}`, () => {
       onUserByUsernameUpdated(user.public.username, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(2)
+      expect(callback).toBeCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
-        ...user.public
-      })
-      expect(callback).toHaveBeenCalledWith({
-        uid: user.uid,
-        fullName: user.private.fullName,
-        email: user.private.email
+        ...user.public,
+        ...user.private
       })
     })
   })
@@ -319,13 +305,13 @@ describe(`${onUserByUsernameUpdated.name}`, () => {
       onUserByUsernameUpdated(user.public.username, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(3)
+      expect(callback).toBeCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
-        ...user.public
+        ...user.public,
+        ...user.following,
+        ...user.likedPosts
       })
-      expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.following })
-      expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.likedPosts })
     })
   })
 })

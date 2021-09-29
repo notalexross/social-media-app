@@ -159,3 +159,66 @@ describe('by username', () => {
     })
   })
 })
+
+describe('with existing user object', () => {
+  describe('without subscribe', () => {
+    test('returns correct data', async () => {
+      const user = { uid: 'user1' }
+
+      render(<Component arg1={user} />)
+
+      expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
+      expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
+    })
+  })
+
+  describe('with subscribe', () => {
+    test('returns correct data', async () => {
+      const user = { uid: 'user1' }
+      const options = { subscribe: true }
+
+      render(<Component arg1={user} options={options} />)
+
+      expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
+      expect(await screen.findByText('username: "Username"')).toBeInTheDocument()
+    })
+  })
+})
+
+describe('with passthrough', () => {
+  describe('with existing user object', () => {
+    test('returns original user data', async () => {
+      const user = { uid: 'user1' }
+      const options = { passthrough: true }
+
+      render(<Component arg1={user} options={options} />)
+
+      expect(await screen.findByText('uid: "user1"')).toBeInTheDocument()
+      expect(screen.queryByText('username: "Username"')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('with uid', () => {
+    test('returns undefined', () => {
+      const uid = 'user1'
+      const options = { passthrough: true }
+
+      render(<Component arg1={uid} options={options} />)
+
+      expect(screen.queryByText('uid: "user1"')).not.toBeInTheDocument()
+      expect(screen.queryByText('username: "Username"')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('with username', () => {
+    test('returns undefined', () => {
+      const username = 'Username'
+      const options = { by: 'username' as const, passthrough: true }
+
+      render(<Component arg1={username} options={options} />)
+
+      expect(screen.queryByText('uid: "user1"')).not.toBeInTheDocument()
+      expect(screen.queryByText('username: "Username"')).not.toBeInTheDocument()
+    })
+  })
+})
