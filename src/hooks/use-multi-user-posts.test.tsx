@@ -13,7 +13,7 @@ test('given uids supplied, gets posts by given users ordered by creation date', 
   await waitFor(() => {
     expect(
       screen.getByText(
-        '[{"createdAt":{"seconds":1,"nanoseconds":0},"deleted":false,"owner":"user1","replies":["post2"],"replyTo":null,"likesCount":2,"attachment":"","message":"mock message","id":"post1","ownerDetails":{"avatar":"","createdAt":{"seconds":0,"nanoseconds":0},"lastPostedAt":{"seconds":1,"nanoseconds":0},"deleted":false,"followersCount":2,"username":"Username","usernameLowerCase":"username","uid":"user1"}}]'
+        '[{"createdAt":{"seconds":1,"nanoseconds":0},"deleted":false,"owner":"user1","replies":["post2"],"replyTo":null,"likesCount":2,"id":"post1"}]'
       )
     ).toBeInTheDocument()
   })
@@ -25,7 +25,7 @@ test('given null supplied to uids, gets posts from all users ordered by creation
   await waitFor(() => {
     expect(
       screen.getByText(
-        '[{"createdAt":{"seconds":2,"nanoseconds":0},"deleted":false,"owner":"user2","replies":[],"replyTo":{"id":"post1","owner":"user1"},"likesCount":1,"attachment":"","message":"mock message","id":"post2","ownerDetails":{"avatar":"","createdAt":{"seconds":1,"nanoseconds":0},"lastPostedAt":{"seconds":3,"nanoseconds":0},"deleted":false,"followersCount":0,"username":"Username2","usernameLowerCase":"username2","uid":"user2"},"replyToOwnerDetails":{"avatar":"","createdAt":{"seconds":0,"nanoseconds":0},"lastPostedAt":{"seconds":1,"nanoseconds":0},"deleted":false,"followersCount":2,"username":"Username","usernameLowerCase":"username","uid":"user1"}},{"createdAt":{"seconds":1,"nanoseconds":0},"deleted":false,"owner":"user1","replies":["post2"],"replyTo":null,"likesCount":2,"attachment":"","message":"mock message","id":"post1","ownerDetails":{"avatar":"","createdAt":{"seconds":0,"nanoseconds":0},"lastPostedAt":{"seconds":1,"nanoseconds":0},"deleted":false,"followersCount":2,"username":"Username","usernameLowerCase":"username","uid":"user1"}}]'
+        '[{"createdAt":{"seconds":2,"nanoseconds":0},"deleted":false,"owner":"user2","replies":[],"replyTo":{"id":"post1","owner":"user1"},"likesCount":1,"id":"post2"},{"createdAt":{"seconds":1,"nanoseconds":0},"deleted":false,"owner":"user1","replies":["post2"],"replyTo":null,"likesCount":2,"id":"post1"}]'
       )
     ).toBeInTheDocument()
   })

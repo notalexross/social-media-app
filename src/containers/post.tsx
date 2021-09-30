@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import type { PostWithUserDetails } from '../services/firebase'
+import type {
+  PostPublicWithId,
+  PostContentWithId,
+  PostWithId,
+  PostWithUserDetails
+} from '../services/firebase'
 import ComposeContainer from './compose'
 import MenuContainer from './menu'
 import { Post, StatefulLink, UserProfile } from '../components'
@@ -9,7 +14,7 @@ import * as ROUTES from '../constants/routes'
 let Comments: (props: CommentsProps) => JSX.Element = () => <></>
 
 type PostContainerProps = {
-  post?: PostWithUserDetails | string
+  post?: string | PostPublicWithId | PostContentWithId | PostWithId | PostWithUserDetails
   commentsLimit?: number
   maxDepth?: number
   currentDepth?: number

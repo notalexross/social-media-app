@@ -73,14 +73,14 @@ export type PostWithUserDetails = PostWithId & {
 }
 
 export type PostsStatus = {
-  posts: PostWithUserDetails[] | null
+  posts: PostPublicWithId[] | null
   isComplete: boolean
   page: number
   stats?: Stats
 }
 
 type FetchedPost = {
-  post: PostWithUserDetails
+  post: PostPublicWithId
   createdAt: firebase.firestore.Timestamp
   chunkIndex: number
 }
@@ -564,36 +564,7 @@ function listenPostDetails<T extends 'public' | 'content'>(
   )
 }
 
-function getPostContent(postId: string): Promise<PostContent> {
-  return getPostQueries(postId)
-    .postContentRef.get()
-    .then(doc => doc.data() as PostContent)
-    .catch(error => {
-      console.error(error)
-      throw error
-    })
-}
-
-async function addUserDetailsToPost(post: PostWithId) {
-  let postWithUserDetails: PostWithUserDetails
-  if (post.replyTo) {
-    const [ownerDetails, replyToOwnerDetails] = await Promise.all([
-      getCachedUserById(post.owner),
-      getCachedUserById(post.replyTo.owner)
-    ])
-    postWithUserDetails = { ...post, ownerDetails, replyToOwnerDetails }
-  } else {
-    const ownerDetails = await getCachedUserById(post.owner)
-    postWithUserDetails = { ...post, ownerDetails }
-  }
-
-  return postWithUserDetails
-}
-
-export function getPosts(
-  postIds: string[],
-  maxRetries = 1
-): Promise<(PostWithUserDetails | undefined)[]> {
+export function getPosts(postIds: string[], maxRetries = 1): Promise<(PostWithId | undefined)[]> {
   const promises = postIds.map(async postId => {
     if (!postId) {
       return undefined
@@ -625,11 +596,7 @@ export function getPosts(
       return undefined
     })
 
-    if (!postWithId) {
-      return undefined
-    }
-
-    return addUserDetailsToPost(postWithId)
+    return postWithId
   })
 
   return Promise.all(promises)
@@ -637,7 +604,7 @@ export function getPosts(
 
 export function onPostsUpdated(
   postIds: string[],
-  callback: (updatedPost: PostWithUserDetails) => void,
+  callback: (updatedPost: PostWithId) => void,
   errorCallback?: (error: unknown) => void
 ): () => void {
   const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
@@ -647,16 +614,11 @@ export function onPostsUpdated(
 
     let post: Post | PostPublic | PostContent | Record<string, never> = {}
 
-    const handleResponseAsync = async (response: PostPublic | PostContent) => {
+    const handleResponse = (response: PostPublic | PostContent) => {
       post = { ...post, ...response }
       if ('owner' in post && 'message' in post) {
-        const postWithUserDetails = await addUserDetailsToPost({ ...post, id: postId })
-        callback(postWithUserDetails)
+        callback({ ...post, id: postId })
       }
-    }
-
-    const handleResponse = (response: PostPublic | PostContent) => {
-      handleResponseAsync(response).catch(console.error)
     }
 
     acc.push(
@@ -1054,7 +1016,7 @@ function initUserChunks(usersArray: string[], numPerChunk = 10): UserChunk[] {
   return chunks
 }
 
-async function fetchPostsAndUpdateUsers(
+async function fetchPosts(
   chunks: UserChunk[],
   limitPerChunk: number,
   stats?: Stats
@@ -1077,14 +1039,9 @@ async function fetchPostsAndUpdateUsers(
     }
 
     const chunkFetchedPosts = await Promise.all(
-      docs.map(async doc => {
-        const postContent = await getPostContent(doc.id)
+      docs.map(doc => {
         const postPublic = doc.data() as PostPublic
-        const post = await addUserDetailsToPost({
-          ...postPublic,
-          ...postContent,
-          id: doc.id
-        })
+        const post = { ...postPublic, id: doc.id }
 
         return {
           post,
@@ -1161,7 +1118,7 @@ export function getMultiUserPosts(
         while (postIdx + 1 < postsPerPage * page && !isComplete) {
           if (chunksToFetch.length > 0) {
             // eslint-disable-next-line no-await-in-loop
-            const newPosts = await fetchPostsAndUpdateUsers(chunksToFetch, postsPerPage + 1, stats)
+            const newPosts = await fetchPosts(chunksToFetch, postsPerPage + 1, stats)
             fetchedPosts.push(...newPosts)
             fetchedPostsSorted = sortByTimestamp(fetchedPosts, 'createdAt', 'desc')
             chunksToFetch = []
@@ -1207,7 +1164,7 @@ export function getAllUserPosts(
   statusCallback: (status: PostsStatus) => void,
   { postsPerPage = 10, loadingCallback, errorCallback }: GetUserPostsOptions = {}
 ): () => Promise<void> {
-  const fetchedPosts: PostWithUserDetails[] = []
+  const fetchedPosts: PostPublicWithId[] = []
   let last: firebase.firestore.QueryDocumentSnapshot<firebase.firestore.DocumentData> | null = null
   let page = 0
   let isComplete = false
@@ -1243,14 +1200,9 @@ export function getAllUserPosts(
           }
 
           const newPosts = await Promise.all(
-            docs.map(async doc => {
-              const postContent = await getPostContent(doc.id)
+            docs.map(doc => {
               const postPublic = doc.data() as PostPublic
-              const post = await addUserDetailsToPost({
-                ...postPublic,
-                ...postContent,
-                id: doc.id
-              })
+              const post = { ...postPublic, id: doc.id }
 
               return post
             })

@@ -715,7 +715,7 @@ describe(`${getMultiUserPosts.name}`, () => {
 
     expect(mockFunctions.orderBy).toBeCalledTimes(1)
     expect(mockFunctions.limit).toBeCalledTimes(1)
-    expect(mockFunctions.get).toBeCalledTimes(5)
+    expect(mockFunctions.get).toBeCalledTimes(1)
   })
 
   test('calls callbacks with correct data', async () => {
@@ -732,38 +732,25 @@ describe(`${getMultiUserPosts.name}`, () => {
     expect(statusCallback).toHaveBeenCalledWith({
       posts: [
         {
-          attachment: '',
           createdAt: { seconds: 2, nanoseconds: 0 },
           deleted: false,
           id: 'post2',
           likesCount: 1,
-          message: 'mock message',
           owner: 'user2',
           replies: [],
           replyTo: {
             id: 'post1',
             owner: 'user1'
-          },
-          ownerDetails: expect.objectContaining({
-            uid: 'user2'
-          }) as unknown,
-          replyToOwnerDetails: expect.objectContaining({
-            uid: 'user1'
-          }) as unknown
+          }
         },
         {
-          attachment: '',
           createdAt: { seconds: 1, nanoseconds: 0 },
           deleted: false,
           id: 'post1',
           likesCount: 2,
-          message: 'mock message',
           owner: 'user1',
           replies: ['post2'],
-          replyTo: null,
-          ownerDetails: expect.objectContaining({
-            uid: 'user1'
-          }) as unknown
+          replyTo: null
         }
       ],
       isComplete: true,
@@ -789,24 +776,16 @@ describe(`${getMultiUserPosts.name}`, () => {
     expect(statusCallback).toHaveBeenCalledWith({
       posts: [
         {
-          attachment: '',
           createdAt: { seconds: 2, nanoseconds: 0 },
           deleted: false,
           id: 'post2',
           likesCount: 1,
-          message: 'mock message',
           owner: 'user2',
           replies: [],
           replyTo: {
             id: 'post1',
             owner: 'user1'
-          },
-          ownerDetails: expect.objectContaining({
-            uid: 'user2'
-          }) as unknown,
-          replyToOwnerDetails: expect.objectContaining({
-            uid: 'user1'
-          }) as unknown
+          }
         }
       ],
       isComplete: false,
@@ -844,7 +823,7 @@ describe(`${getAllUserPosts.name}`, () => {
 
     expect(mockFunctions.orderBy).toBeCalledTimes(1)
     expect(mockFunctions.limit).toBeCalledTimes(1)
-    expect(mockFunctions.get).toBeCalledTimes(5)
+    expect(mockFunctions.get).toBeCalledTimes(1)
   })
 
   test('calls callbacks with correct data', async () => {
@@ -857,18 +836,7 @@ describe(`${getAllUserPosts.name}`, () => {
     expect(loadingCallback).toHaveBeenCalledWith(false)
     expect(statusCallback).toHaveBeenCalledTimes(1)
     expect(statusCallback).toHaveBeenCalledWith({
-      posts: [
-        expect.objectContaining({
-          id: 'post2',
-          ownerDetails: expect.objectContaining({ uid: 'user2' }) as unknown,
-          replyToOwnerDetails: expect.objectContaining({ uid: 'user1' }) as unknown
-        }),
-        expect.objectContaining({
-          id: 'post1',
-          ownerDetails: expect.objectContaining({ uid: 'user1' }) as unknown,
-          replyTo: null
-        })
-      ],
+      posts: [expect.objectContaining({ id: 'post2' }), expect.objectContaining({ id: 'post1' })],
       isComplete: true,
       page: 1
     })
@@ -884,13 +852,7 @@ describe(`${getAllUserPosts.name}`, () => {
     expect(loadingCallback).toHaveBeenCalledWith(false)
     expect(statusCallback).toHaveBeenCalledTimes(1)
     expect(statusCallback).toHaveBeenCalledWith({
-      posts: [
-        expect.objectContaining({
-          id: 'post2',
-          ownerDetails: expect.objectContaining({ uid: 'user2' }) as unknown,
-          replyToOwnerDetails: expect.objectContaining({ uid: 'user1' }) as unknown
-        })
-      ],
+      posts: [expect.objectContaining({ id: 'post2' })],
       isComplete: false,
       page: 1
     })

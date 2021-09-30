@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { PostsStatus, PostWithUserDetails } from '../services/firebase'
+import type { PostsStatus, PostPublicWithId } from '../services/firebase'
 import { getAllUserPosts, getMultiUserPosts } from '../services/firebase'
 import { stringifyError } from '../utils'
 
 type MultiUserPosts = {
-  posts: PostWithUserDetails[] | null
+  posts: PostPublicWithId[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean
   isLoadingPosts: boolean

@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react'
-import type { PostWithUserDetails } from '../services/firebase'
+import type {
+  PostPublicWithId,
+  PostContentWithId,
+  PostWithId,
+  PostWithUserDetails
+} from '../services/firebase'
 import PostContainer from './post'
 import { Spinner } from '../components'
 
 type TimelineContainerProps = {
-  posts: PostWithUserDetails[] | null
+  posts: (PostPublicWithId | PostContentWithId | PostWithId | PostWithUserDetails)[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean
   isLoadingPosts: boolean
