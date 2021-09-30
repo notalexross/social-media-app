@@ -63,8 +63,9 @@ type PostUpdatable = Partial<
   Omit<Post, 'createdAt' | 'likesCount' | 'owner' | 'replyTo' | 'replies' | 'updatedAt'>
 >
 
-type PostWithId = Post & { id: string }
-
+export type PostPublicWithId = PostPublic & { id: string }
+export type PostContentWithId = PostContent & { id: string }
+export type PostWithId = Post & { id: string }
 export type PostWithUserDetails = PostWithId & {
   ownerDetails: User
 } & {
