@@ -69,7 +69,7 @@ Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: Pos
 
   return (
     <span {...restProps}>
-      {' · '}
+      &nbsp;·&nbsp;
       {createdAt !== undefined ? (
         <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
           <TimeAgo timestamp={createdAt} />

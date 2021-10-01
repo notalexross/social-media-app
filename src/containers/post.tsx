@@ -52,7 +52,10 @@ export default function PostContainer({
     >
       <div className="flex justify-between items-center p-3 border-b lg:p-4">
         <UserProfile className="flex items-center" user={postLive?.ownerDetails || {}}>
-          <UserProfile.Avatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
+          <UserProfile.Avatar
+            className="flex-shrink-0 mr-4 w-12"
+            linkClassName="hover:opacity-70"
+          />
           <div className="flex flex-col">
             <div>
               <UserProfile.Username
@@ -60,12 +63,22 @@ export default function PostContainer({
                 linkClassName="hover:underline"
                 deletedTextContent="[Deleted]"
               />
-              <Post.DateCreated className="text-sm text-gray-500" linkClassName="hover:underline" />
+              <Post.DateCreated
+                className="inline-block text-sm text-gray-500"
+                linkClassName="hover:underline"
+              />
             </div>
             <UserProfile.FollowButton className="w-min text-sm text-gray-500 hover:underline" />
           </div>
         </UserProfile>
-        {postLive ? <MenuContainer className="pr-4" post={postLive} /> : null}
+        {postLive ? (
+          <MenuContainer
+            className="pr-4"
+            horizontalDotsClassName="hidden sm:block"
+            verticalDotsClassName="block sm:hidden"
+            post={postLive}
+          />
+        ) : null}
       </div>
       <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
       <div className="flex flex-col p-3 lg:p-4">
@@ -192,7 +205,7 @@ Comments = function CommentsContainer({
       {before}
       {repliesShown.map(reply => (
         <PostContainer
-          className="mt-4 border rounded bg-white"
+          className="mt-3 border rounded bg-white lg:mt-4"
           key={reply}
           post={reply}
           commentsLimit={limit}

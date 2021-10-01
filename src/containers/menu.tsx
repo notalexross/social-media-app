@@ -3,6 +3,7 @@ import {
   ArrowsExpandIcon,
   ChatAlt2Icon,
   DotsHorizontalIcon,
+  DotsVerticalIcon,
   DuplicateIcon,
   HeartIcon,
   PencilIcon,
@@ -21,9 +22,16 @@ import * as ROUTES from '../constants/routes'
 
 type MenuContainerProps = {
   post: PostWithUserDetails
+  horizontalDotsClassName?: string
+  verticalDotsClassName?: string
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
-export default function MenuContainer({ post, ...restProps }: MenuContainerProps): JSX.Element {
+export default function MenuContainer({
+  post,
+  horizontalDotsClassName = 'block',
+  verticalDotsClassName = 'hidden',
+  ...restProps
+}: MenuContainerProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
   const { following, likedPosts, uid } = useContext(UserContext)
   const { deleted, id, owner, ownerDetails } = post
@@ -82,7 +90,8 @@ export default function MenuContainer({ post, ...restProps }: MenuContainerProps
         {...restProps}
       >
         <Menu.Open className="block w-6 text-gray-500 hover:opacity-70">
-          <DotsHorizontalIcon />
+          <DotsHorizontalIcon className={horizontalDotsClassName} />
+          <DotsVerticalIcon className={verticalDotsClassName} />
         </Menu.Open>
         <Menu.Items className="mb-4 w-screen max-w-xs border rounded bg-white">
           {!isOwner && !ownerDeleted ? (
