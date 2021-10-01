@@ -9,7 +9,8 @@ import {
   formatDateTime,
   modulo,
   onIntervalAfter,
-  stringifyError
+  stringifyError,
+  paginateArray
 } from '.'
 
 describe(`${isValidSignUpInputs.name}`, () => {
@@ -401,5 +402,80 @@ describe(`${stringifyError.name}`, () => {
     const result = stringifyError({ error: 'error message' })
 
     expect(result).toBe('{"error":"error message"}')
+  })
+})
+
+describe(`${paginateArray.name}`, () => {
+  const array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  const callback = jest.fn(() => {})
+
+  test('returns a function', () => {
+    const loadNextPage = paginateArray(array, callback)
+
+    expect(typeof loadNextPage).toBe('function')
+  })
+
+  test('callback is called when returned function called', () => {
+    const entriesPerPage = 2
+
+    const loadNextPage = paginateArray(array, callback, entriesPerPage)
+    loadNextPage()
+    loadNextPage()
+
+    expect(callback).toHaveBeenCalledTimes(2)
+  })
+
+  test('callback called with a status object', () => {
+    const entriesPerPage = 2
+
+    const loadNextPage = paginateArray(array, callback, entriesPerPage)
+    loadNextPage()
+
+    expect(callback).toHaveBeenCalledTimes(1)
+    expect(callback).toHaveBeenCalledWith({
+      entries: array.slice(0, 2),
+      isComplete: false,
+      page: 1
+    })
+  })
+
+  test('"entries" in status object contains page * entriesPerPage array entries', () => {
+    const entriesPerPage = 2
+
+    const loadNextPage = paginateArray(array, callback, entriesPerPage)
+    loadNextPage()
+    loadNextPage()
+
+    expect(callback).toHaveBeenCalledTimes(2)
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({
+      entries: array.slice(0, 4),
+      page: 2
+    }))
+  })
+
+  test('page count increments on calling returned function', () => {
+    const entriesPerPage = 2
+
+    const loadNextPage = paginateArray(array, callback, entriesPerPage)
+    loadNextPage()
+    loadNextPage()
+
+    expect(callback).toHaveBeenCalledTimes(2)
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }))
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ page: 2 }))
+  })
+
+  test('given all array entries returned, page count stops incrementing', () => {
+    const entriesPerPage = 5
+
+    const loadNextPage = paginateArray(array, callback, entriesPerPage)
+    loadNextPage()
+    loadNextPage()
+    loadNextPage()
+
+    expect(callback).toHaveBeenCalledTimes(2)
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ page: 1, isComplete: false }))
+    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ page: 2, isComplete: true }))
+    expect(callback).not.toHaveBeenCalledWith(expect.objectContaining({ page: 3 }))
   })
 })

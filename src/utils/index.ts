@@ -181,3 +181,24 @@ export function stringifyError(err: unknown): string {
 
   return JSON.stringify(err)
 }
+
+export function paginateArray<T extends unknown>(
+  array: T[],
+  callback: (status: { entries: T[]; isComplete: boolean; page: number }) => void,
+  entriesPerPage = 10
+): () => void {
+  const paginated: T[][] = chunkArray(array, entriesPerPage)
+  let page = 0
+  let isComplete = paginated.length === 0
+
+  const loadNextPage: () => void = () => {
+    if (!isComplete) {
+      page += 1
+      const entries = paginated.slice(0, page).flat(1)
+      isComplete = paginated.length === page
+      callback({ entries, isComplete, page })
+    }
+  }
+
+  return loadNextPage
+}
