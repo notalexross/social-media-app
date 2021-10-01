@@ -101,7 +101,10 @@ export default function ProfilePage(): JSX.Element {
                   <UserProfile.Username className="font-bold text-lg sm:text-xl lg:text-2xl" />
                   <div className="w-max mx-auto text-gray-500 sm:mx-0">
                     {isCurrentUser ? (
-                      <UserProfile.FullName className="hover:underline" title="Not visible to other users" />
+                      <UserProfile.FullName
+                        className="hover:underline"
+                        title="Not visible to other users"
+                      />
                     ) : (
                       <UserProfile.FollowButton className="hover:underline" />
                     )}
