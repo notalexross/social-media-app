@@ -1,23 +1,74 @@
-import { useContext, useState } from 'react'
-import { Redirect, useParams } from 'react-router-dom'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { Link, Redirect, useParams, useLocation } from 'react-router-dom'
 import { useTitle, useMultiUserPosts, useUser } from '../hooks'
 import { UserProfile } from '../components'
 import { TimelineContainer, SidebarContainer } from '../containers'
-import { formatDateTime, timestampToMillis } from '../utils'
+import { formatDateTime, timestampToMillis, paginateArray } from '../utils'
 import * as ROUTES from '../constants/routes'
 import { UserContext } from '../context/user'
 
-export default function ProfilePage(): JSX.Element {
-  useTitle('Profile')
-  const params = useParams<{ username: string }>()
-  const currentUser = useContext(UserContext)
-  const [userError, setUserError] = useState<string>()
-  const user = useUser(params.username, { by: 'username', subscribe: true, errorCallback: setUserError })
-  const { uid } = user || {}
+type PostsTimelineContainerProps = {
+  uid: string
+  postsPerPage?: number
+}
+
+function PostsTimelineContainer({ uid, postsPerPage = 10 }: PostsTimelineContainerProps) {
   const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
     uid ? [uid] : undefined,
-    2
+    postsPerPage
   )
+
+  return (
+    <TimelineContainer
+      posts={posts}
+      loadNextPage={loadNextPage}
+      isComplete={isComplete}
+      isLoadingPosts={isLoadingPosts}
+      error={error}
+    />
+  )
+}
+
+type LikesTimelineContainerProps = {
+  postIds: string[] | undefined
+  postsPerPage?: number
+}
+
+function LikesTimelineContainer({ postIds, postsPerPage = 10 }: LikesTimelineContainerProps) {
+  const isInitiated = useRef(false)
+  const [loadNextPage, setLoadNextPage] = useState(() => () => Promise.resolve())
+  const [status, setStatus] = useState({ entries: [] as string[], isComplete: true, page: 0 })
+  const { entries, isComplete } = status
+
+  useEffect(() => {
+    if (!isInitiated.current && postIds && postsPerPage > 0) {
+      const loadNextPageFunction = paginateArray(postIds, setStatus, postsPerPage)
+      setLoadNextPage(() => () => Promise.resolve(loadNextPageFunction()))
+      loadNextPageFunction()
+      isInitiated.current = true
+    }
+  }, [postIds, postsPerPage])
+
+  if (!postIds) {
+    return <></>
+  }
+
+  return <TimelineContainer posts={entries} loadNextPage={loadNextPage} isComplete={isComplete} />
+}
+
+export default function ProfilePage(): JSX.Element {
+  useTitle('Profile')
+  const { pathname } = useLocation()
+  const { username } = useParams<{ username: string }>()
+  const currentUser = useContext(UserContext)
+  const [userError, setUserError] = useState<string>()
+  const user = useUser(username, {
+    by: 'username',
+    subscribe: true,
+    includeLikedPosts: true,
+    errorCallback: setUserError
+  })
+  const { uid, likedPosts } = user || {}
 
   if (userError) {
     return <Redirect to={ROUTES.NOT_FOUND} />
@@ -29,6 +80,10 @@ export default function ProfilePage(): JSX.Element {
   const created = createdAt && formatDateTime(new Date(timestampToMillis(createdAt)))[2]
   const lastPosted = lastPostedAt && formatDateTime(new Date(timestampToMillis(lastPostedAt)))[2]
   const isCurrentUser = uid === currentUser.uid
+  const likes = likedPosts?.slice().reverse()
+
+  const isPostsPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`
+  const isLikesPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`
 
   return (
     <main className="mx-4 lg:mx-4">
@@ -79,14 +134,28 @@ export default function ProfilePage(): JSX.Element {
               </div>
             </UserProfile>
           </div>
-          <TimelineContainer
-            className="col-span-3 lg:col-span-2"
-            posts={posts}
-            loadNextPage={loadNextPage}
-            isComplete={isComplete}
-            isLoadingPosts={isLoadingPosts}
-            error={error}
-          />
+          <div className="col-span-3 lg:col-span-2">
+            <ul className="flex mb-2 p-3 bg-white border rounded font-bold text-gray-800 lg:mb-8 lg:p-4">
+              <li>
+                <Link
+                  className="hover:underline hover:opacity-70"
+                  to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
+                >
+                  <span className={isPostsPath ? 'underline' : ''}>Posts</span>
+                </Link>
+              </li>
+              <li className="ml-4">
+                <Link
+                  className="hover:underline hover:opacity-70"
+                  to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`}
+                >
+                  <span className={isLikesPath ? 'underline' : ''}>Likes</span>
+                </Link>
+              </li>
+            </ul>
+            {isPostsPath && <PostsTimelineContainer uid={uid} postsPerPage={2} />}
+            {isLikesPath && <LikesTimelineContainer postIds={likes} postsPerPage={2} />}
+          </div>
           <SidebarContainer className="hidden self-start col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:col-span-1" />
         </div>
       </div>

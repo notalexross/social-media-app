@@ -9,25 +9,25 @@ import PostContainer from './post'
 import { Spinner } from '../components'
 
 type TimelineContainerProps = {
-  posts: (PostPublicWithId | PostContentWithId | PostWithId | PostWithUserDetails)[] | null
+  posts: (string | PostPublicWithId | PostContentWithId | PostWithId | PostWithUserDetails)[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean
-  isLoadingPosts: boolean
-  error: string
+  isLoadingPosts?: boolean
+  error?: string
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function TimelineContainer({
   posts,
   loadNextPage,
   isComplete,
-  isLoadingPosts,
-  error,
+  isLoadingPosts = false,
+  error = '',
   ...restProps
 }: TimelineContainerProps): JSX.Element {
   const intersectRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!intersectRef.current || isLoadingPosts || error) {
+    if (!intersectRef.current || !posts || isLoadingPosts || error) {
       return () => {}
     }
 
@@ -52,7 +52,7 @@ export default function TimelineContainer({
     observer.observe(ref)
 
     return () => observer.unobserve(ref)
-  }, [loadNextPage, isLoadingPosts, error])
+  }, [loadNextPage, posts, isLoadingPosts, error])
 
   let loader = <></>
   if (!isComplete) {
@@ -90,7 +90,7 @@ export default function TimelineContainer({
         {posts.map(post => (
           <PostContainer
             className="mb-2 border rounded bg-white lg:mb-8"
-            key={post.id}
+            key={typeof post === 'string' ? post : post.id}
             post={post}
             commentsLimit={1}
             maxDepth={1}
