@@ -67,23 +67,32 @@ Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: Pos
 
   const { id, createdAt, updatedAt } = post
 
-  return (
-    <span {...restProps}>
-      &nbsp;·&nbsp;
+  const createdAtSpan = (
+    <span className="inline-block">
+      <span>&nbsp;·&nbsp;</span>
       {createdAt !== undefined ? (
         <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
           <TimeAgo timestamp={createdAt} />
         </StatefulLink>
       ) : null}
-      {updatedAt !== undefined ? (
-        <>
-          <span> · edited (</span>
-          <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
-            <TimeAgo timestamp={updatedAt} />
-          </StatefulLink>
-          <span>)</span>
-        </>
-      ) : null}
+    </span>
+  )
+
+  const updatedAtSpan =
+    updatedAt !== undefined ? (
+      <span className="inline-block">
+        <span>&nbsp;·&nbsp;edited (</span>
+        <StatefulLink className={linkClassName} to={`${ROUTES.POSTS}/${id}`}>
+          <TimeAgo timestamp={updatedAt} />
+        </StatefulLink>
+        <span>)</span>
+      </span>
+    ) : null
+
+  return (
+    <span {...restProps}>
+      {createdAtSpan}
+      {updatedAtSpan}
     </span>
   )
 }
