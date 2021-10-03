@@ -73,7 +73,7 @@ export default function PostContainer({
         </UserProfile>
         {postLive ? (
           <MenuContainer
-            className="pr-4"
+            className="flex-shrink-0 pr-1 sm:pr-4"
             horizontalDotsClassName="hidden sm:block"
             verticalDotsClassName="block sm:hidden"
             post={postLive}

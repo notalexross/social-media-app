@@ -89,22 +89,26 @@ export default function MenuContainer({
         requestCloseOnItemClick
         {...restProps}
       >
-        <Menu.Open className="block w-6 text-gray-500 hover:opacity-70">
+        <Menu.Open className="block w-5 text-gray-500 sm:w-6 hover:opacity-70">
           <DotsHorizontalIcon className={horizontalDotsClassName} />
           <DotsVerticalIcon className={verticalDotsClassName} />
         </Menu.Open>
-        <Menu.Items className="mb-4 w-screen max-w-xs border rounded bg-white">
+        <Menu.Items className="mb-4 w-screen max-w-max border rounded bg-white sm:max-w-xs">
           {!isOwner && !ownerDeleted ? (
             <Menu.Item className={itemClassName} type="button" onClick={toggleFollow}>
               <UserAddIcon className={iconClassName} />
-              {isFollowing ? 'Unfollow' : 'Follow'}
-              {username ? ` ${username}` : ''}
+              <span>
+                {isFollowing ? 'Unfollow' : 'Follow'}
+                {username ? ` ${username}` : ''}
+              </span>
             </Menu.Item>
           ) : null}
           <Menu.Item className={itemClassName} type="button" onClick={toggleLike}>
             <HeartIcon className={iconClassName} />
-            {isLiked ? 'Unlike' : 'Like'}
-            {' Post'}
+            <span>
+              {isLiked ? 'Unlike' : 'Like'}
+              {' Post'}
+            </span>
           </Menu.Item>
           <Menu.Item
             className={itemClassName}
@@ -114,15 +118,15 @@ export default function MenuContainer({
             modal
           >
             <ChatAlt2Icon className={iconClassName} />
-            Reply
+            <span>Reply</span>
           </Menu.Item>
           <Menu.Item className={itemClassName} type="button" onClick={copyLinkToClipboard}>
             <DuplicateIcon className={iconClassName} />
-            Copy Link
+            <span>Copy Link</span>
           </Menu.Item>
           <Menu.Item className={itemClassName} type="link" to={`${ROUTES.POSTS}/${id}`}>
             <ArrowsExpandIcon className={iconClassName} />
-            View Post
+            <span>View Post</span>
           </Menu.Item>
           {isOwner && !deleted ? (
             <Menu.Item
@@ -133,7 +137,7 @@ export default function MenuContainer({
               modal
             >
               <PencilIcon className={iconClassName} />
-              Edit
+              <span>Edit</span>
             </Menu.Item>
           ) : null}
         </Menu.Items>
