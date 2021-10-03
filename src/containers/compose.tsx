@@ -65,7 +65,7 @@ export default function ComposeContainer({
                 </Compose.EmojiButton>
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center ml-2">
               <Compose.ProgressBar
                 className="mr-4 text-blue-500 text-sm font-bold"
                 nearLimitClassName="text-yellow-500"
