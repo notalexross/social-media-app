@@ -709,16 +709,20 @@ function updatePostInDB(
 
   const postPublicUpdates: Partial<PostPublic> = postPublicKeys.reduce(callback, {})
   const postContentUpdates: Partial<PostContent> = postContentKeys.reduce(callback, {})
+  const updatedProperties = [...Object.keys(postPublicUpdates), ...Object.keys(postContentUpdates)]
 
-  if (Object.keys(postPublicUpdates).length || Object.keys(postContentUpdates).length) {
+  if (updatedProperties.length) {
     const batch = firebase.firestore().batch()
 
-    batch.update(postPublicRef, {
-      ...postPublicUpdates,
-      updatedAt: FieldValue.serverTimestamp()
-    })
-
-    batch.update(postContentRef, postContentUpdates)
+    if (updatedProperties.length === 1 && updatedProperties[0] === 'deleted') {
+      batch.update(postPublicRef, postPublicUpdates)
+    } else {
+      batch.update(postPublicRef, {
+        ...postPublicUpdates,
+        updatedAt: FieldValue.serverTimestamp()
+      })
+      batch.update(postContentRef, postContentUpdates)
+    }
 
     return batch.commit()
   }
@@ -959,7 +963,7 @@ export async function addPost({
 
 type EditPostOptions = {
   deleted?: boolean
-  attachment?: File | string | null
+  attachment?: File | string
   message?: string
 }
 
@@ -967,9 +971,13 @@ export async function editPost(
   post: PostUpdatable & { id: string; owner: string },
   { attachment, ...restUpdates }: EditPostOptions = {}
 ): Promise<void> {
-  const url = await getAttachmentUrl(post.owner, attachment)
+  if (attachment !== undefined) {
+    const url = await getAttachmentUrl(post.owner, attachment)
 
-  return updatePostInDB(post, { attachment: url, ...restUpdates })
+    return updatePostInDB(post, { attachment: url, ...restUpdates })
+  }
+
+  return updatePostInDB(post, restUpdates)
 }
 
 export async function followUser(uid: string): Promise<void> {

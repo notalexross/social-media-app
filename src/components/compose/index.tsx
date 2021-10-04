@@ -12,10 +12,10 @@ type ComposeContextValue = {
   error: string
   message: string
   setMessage: React.Dispatch<React.SetStateAction<string>>
-  attachment: File | string | null
-  setAttachment: React.Dispatch<React.SetStateAction<File | string | null>>
-  previewSrc: string | null
-  setPreviewSrc: React.Dispatch<React.SetStateAction<string | null>>
+  attachment: File | string | undefined
+  setAttachment: React.Dispatch<React.SetStateAction<File | string | undefined>>
+  previewSrc: string | undefined
+  setPreviewSrc: React.Dispatch<React.SetStateAction<string | undefined>>
   showEmojiSelect: boolean
   setShowEmojiSelect: React.Dispatch<React.SetStateAction<boolean>>
   hasChanges: boolean
@@ -41,8 +41,8 @@ export default function Compose({
 }: ComposeProps): JSX.Element {
   const [error, setError] = useState('')
   const [message, setMessage] = useState(originalPost?.message || '')
-  const [previewSrc, setPreviewSrc] = useState<string | null>(originalPost?.attachment || null)
-  const [attachment, setAttachment] = useState<File | string | null>(previewSrc)
+  const [previewSrc, setPreviewSrc] = useState<string | undefined>(originalPost?.attachment)
+  const [attachment, setAttachment] = useState<File | string | undefined>(previewSrc)
   const [showEmojiSelect, setShowEmojiSelect] = useState(false)
   const [hasChanges, setHasChanges] = useState(!originalPost)
   const history = useHistory<LocationState>()
@@ -89,7 +89,7 @@ export default function Compose({
   useEffect(() => {
     if (originalPost) {
       const isSameMessage = message === originalPost.message
-      const isSameAttachment = attachment === (originalPost.attachment || null)
+      const isSameAttachment = attachment === originalPost.attachment
       setHasChanges(!isSameMessage || !isSameAttachment)
     }
   }, [attachment, message, originalPost])
@@ -275,8 +275,8 @@ Compose.AttachmentPreview = function ComposeAttachmentPreview({
   const { previewSrc, setAttachment, setPreviewSrc } = useContext(ComposeContext)
 
   const removeAttachment = () => {
-    setAttachment(null)
-    setPreviewSrc(null)
+    setAttachment(undefined)
+    setPreviewSrc(undefined)
   }
 
   return previewSrc ? (
@@ -326,8 +326,8 @@ Compose.AttachButton = function ComposeAttachButton({
       setAttachment(file)
       setPreviewSrc(URL.createObjectURL(file))
     } else {
-      setAttachment(null)
-      setPreviewSrc(null)
+      setAttachment(undefined)
+      setPreviewSrc(undefined)
     }
   }
 

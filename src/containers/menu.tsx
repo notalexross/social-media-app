@@ -1,4 +1,4 @@
-import { useCallback, useContext, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import {
   ArrowsExpandIcon,
   ChatAlt2Icon,
@@ -7,9 +7,11 @@ import {
   DuplicateIcon,
   HeartIcon,
   PencilIcon,
+  TrashIcon,
   UserAddIcon
 } from '@heroicons/react/outline'
 import {
+  editPost,
   followUser,
   likePost,
   PostWithUserDetails,
@@ -33,6 +35,7 @@ export default function MenuContainer({
   ...restProps
 }: MenuContainerProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
+  const [confirmDeletion, setConfirmDeletion] = useState(false)
   const { following, likedPosts, uid } = useContext(UserContext)
   const { deleted, id, owner, ownerDetails } = post
   const { username, deleted: ownerDeleted } = ownerDetails
@@ -66,6 +69,20 @@ export default function MenuContainer({
     }
   }
 
+  const handleConfirmDelete = () => {
+    if (confirmDeletion) {
+      editPost(post, { deleted: true }).catch(console.error)
+      setConfirmDeletion(false)
+      closeMenu()
+    } else {
+      setConfirmDeletion(true)
+    }
+  }
+
+  const handleUndoDelete = () => {
+    editPost(post, { deleted: false }).catch(console.error)
+  }
+
   const copyLinkToClipboard = () => {
     const { activeElement } = document
     const textArea = document.createElement('textarea')
@@ -79,6 +96,12 @@ export default function MenuContainer({
       activeElement.focus()
     }
   }
+
+  useEffect(() => {
+    if (!isOpen) {
+      setConfirmDeletion(false)
+    }
+  }, [isOpen])
 
   return (
     <div>
@@ -138,6 +161,26 @@ export default function MenuContainer({
             >
               <PencilIcon className={iconClassName} />
               <span>Edit</span>
+            </Menu.Item>
+          ) : null}
+          {isOwner && !deleted ? (
+            <Menu.Item
+              className={itemClassName}
+              type="button"
+              onClick={handleConfirmDelete}
+              ignoreRequestCloseOnItemClick
+            >
+              <TrashIcon className={iconClassName} />
+              <span>Delete</span>
+              {confirmDeletion ? (
+                <span className="text-red-500">&nbsp;Confirm Deletion?</span>
+              ) : null}
+            </Menu.Item>
+          ) : null}
+          {isOwner && deleted ? (
+            <Menu.Item className={itemClassName} type="button" onClick={handleUndoDelete}>
+              <TrashIcon className={iconClassName} />
+              <span>Undo Delete</span>
             </Menu.Item>
           ) : null}
         </Menu.Items>
