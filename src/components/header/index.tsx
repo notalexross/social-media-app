@@ -25,7 +25,7 @@ export default function Header(): JSX.Element {
               </Link>
             </h1>
             <div className="hidden items-center justify-between w-full sm:flex">
-              <nav className="ml-8 font-bold text-gray-800">
+              <nav className="ml-8 font-bold">
                 <ul className="flex">
                   <li>
                     <Link className="hover:underline hover:opacity-70" to={ROUTES.DASHBOARD}>
@@ -90,7 +90,7 @@ export default function Header(): JSX.Element {
           </div>
         </div>
       </header>
-      <nav className="absolute z-30 inset-x-0 -mt-2 text-gray-800 text-lg text-center sm:hidden">
+      <nav className="absolute z-30 inset-x-0 -mt-2 text-lg text-center sm:hidden">
         <Dropdown.Items className="py-2 border-b bg-white shadow-xl outline-none" role="menu">
           <Dropdown.Item className="block p-4 font-bold" to={ROUTES.DASHBOARD}>
             Home

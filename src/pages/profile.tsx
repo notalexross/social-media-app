@@ -138,7 +138,7 @@ export default function ProfilePage(): JSX.Element {
             </UserProfile>
           </div>
           <div className="col-span-3 lg:col-span-2">
-            <ul className="flex mb-2 p-3 bg-white border rounded font-bold text-gray-800 lg:mb-8 lg:p-4">
+            <ul className="flex mb-2 p-3 bg-white border rounded font-bold lg:mb-8 lg:p-4">
               <li>
                 <Link
                   className="hover:underline hover:opacity-70"
