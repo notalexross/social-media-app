@@ -41,10 +41,8 @@ export default function Compose({
 }: ComposeProps): JSX.Element {
   const [error, setError] = useState('')
   const [message, setMessage] = useState(originalPost?.message || '')
-  const [attachment, setAttachment] = useState<File | string | null>(
-    originalPost?.attachment || null
-  )
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null)
+  const [previewSrc, setPreviewSrc] = useState<string | null>(originalPost?.attachment || null)
+  const [attachment, setAttachment] = useState<File | string | null>(previewSrc)
   const [showEmojiSelect, setShowEmojiSelect] = useState(false)
   const [hasChanges, setHasChanges] = useState(!originalPost)
   const history = useHistory<LocationState>()
