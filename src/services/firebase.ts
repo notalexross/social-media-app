@@ -616,14 +616,23 @@ export function onPostsUpdated(
 
     const handleResponse = (response: PostPublic | PostContent) => {
       post = { ...post, ...response }
-      if ('owner' in post && 'message' in post) {
-        callback({ ...post, id: postId })
+
+      if ('owner' in post) {
+        if ('message' in post) {
+          callback({ ...post, id: postId })
+        } else {
+          callback({ ...post, message: '', attachment: '', id: postId })
+        }
       }
+    }
+
+    const handleContentError = () => {
+      console.error('Unable to get post content, post possibly deleted.')
     }
 
     acc.push(
       listenPostDetails(postId, 'public', handleResponse, errorCallback),
-      listenPostDetails(postId, 'content', handleResponse, errorCallback)
+      listenPostDetails(postId, 'content', handleResponse, handleContentError)
     )
 
     return acc
