@@ -1,9 +1,9 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Link, Redirect, useParams, useLocation } from 'react-router-dom'
-import { useTitle, useMultiUserPosts, useUser } from '../hooks'
+import { useTitle, useMultiUserPosts, useUser, usePagination } from '../hooks'
 import { UserProfile } from '../components'
 import { TimelineContainer, SidebarContainer } from '../containers'
-import { formatDateTime, timestampToMillis, paginateArray } from '../utils'
+import { formatDateTime, timestampToMillis } from '../utils'
 import * as ROUTES from '../constants/routes'
 import { UserContext } from '../context/user'
 
@@ -35,19 +35,7 @@ type LikesTimelineContainerProps = {
 }
 
 function LikesTimelineContainer({ postIds, postsPerPage = 10 }: LikesTimelineContainerProps) {
-  const isInitiated = useRef(false)
-  const [loadNextPage, setLoadNextPage] = useState(() => () => Promise.resolve())
-  const [status, setStatus] = useState({ entries: [] as string[], isComplete: true, page: 0 })
-  const { entries, isComplete } = status
-
-  useEffect(() => {
-    if (!isInitiated.current && postIds && postsPerPage > 0) {
-      const loadNextPageFunction = paginateArray(postIds, setStatus, postsPerPage)
-      setLoadNextPage(() => () => Promise.resolve(loadNextPageFunction()))
-      loadNextPageFunction()
-      isInitiated.current = true
-    }
-  }, [postIds, postsPerPage])
+  const [entries, loadNextPage, isComplete] = usePagination(postIds, postsPerPage)
 
   if (!postIds) {
     return <></>
