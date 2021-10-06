@@ -4,6 +4,7 @@ import { getSuggestedUsers } from '../services/firebase'
 import { UserContext } from '../context/user'
 import { UserProfile } from '../components'
 import { useWindowDimensions } from '../hooks'
+import UserListContainer from './user-list'
 
 export default function SidebarContainer(
   props: Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
@@ -41,19 +42,7 @@ export default function SidebarContainer(
           {suggestions.length ? (
             <div className="py-3 border-t flex-grow-1 overflow-auto lg:py-4">
               <h3 className="px-3 lg:px-4">Recommendations</h3>
-              {suggestions.map(suggestion => (
-                <UserProfile
-                  className="flex justify-between items-center mt-3 px-3 text-sm min-w-min lg:mt-4 lg:px-4"
-                  key={suggestion.uid}
-                  user={suggestion}
-                >
-                  <div className="flex items-center">
-                    <UserProfile.Avatar className="w-8 mr-3" linkClassName="hover:opacity-70" />
-                    <UserProfile.Username linkClassName="hover:underline" />
-                  </div>
-                  <UserProfile.FollowButton className="ml-4 text-gray-500 hover:underline" />
-                </UserProfile>
-              ))}
+              <UserListContainer users={suggestions} />
             </div>
           ) : null}
         </div>
