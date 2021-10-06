@@ -1,4 +1,5 @@
 export { default as useAuthListener } from './use-auth-listener'
+export { default as useInfiniteScrolling } from './use-infinite-scrolling'
 export { default as useLineHeight } from './use-line-height'
 export { default as useLockBody } from './use-lock-body'
 export { default as useMultiUserPosts } from './use-multi-user-posts'

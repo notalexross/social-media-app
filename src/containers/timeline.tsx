@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import type {
   PostPublicWithId,
   PostContentWithId,
@@ -6,7 +5,7 @@ import type {
   PostWithUserDetails
 } from '../services/firebase'
 import PostContainer from './post'
-import { Spinner } from '../components'
+import { useInfiniteScrolling } from '../hooks'
 
 type TimelineContainerProps = {
   posts: (string | PostPublicWithId | PostContentWithId | PostWithId | PostWithUserDetails)[] | null
@@ -24,60 +23,13 @@ export default function TimelineContainer({
   error = '',
   ...restProps
 }: TimelineContainerProps): JSX.Element {
-  const intersectRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!intersectRef.current || !posts || isLoadingPosts || error) {
-      return () => {}
-    }
-
-    const ref = intersectRef.current
-    let observer: IntersectionObserver
-
-    const observerCallback: IntersectionObserverCallback = entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          loadNextPage().catch(console.error)
-          observer.unobserve(ref)
-        }
-      })
-    }
-
-    observer = new IntersectionObserver(observerCallback, {
-      root: null,
-      rootMargin: '0px 0px 200px 0px',
-      threshold: 0
-    })
-
-    observer.observe(ref)
-
-    return () => observer.unobserve(ref)
-  }, [loadNextPage, posts, isLoadingPosts, error])
-
-  let loader = <></>
-  if (!isComplete) {
-    if (error) {
-      loader = (
-        <button
-          className="block px-6 py-2 w-full border rounded bg-blue-500 font-bold text-white hover:opacity-70"
-          type="button"
-          onClick={loadNextPage}
-        >
-          Load More
-        </button>
-      )
-    } else {
-      loader = (
-        <Spinner
-          className="mx-auto w-min"
-          foregroundClassName="text-blue-300"
-          backgroundClassName="opacity-0"
-          widthRem={2.5}
-          thicknessRem={0.35}
-        />
-      )
-    }
-  }
+  const [intersectRef, loader] = useInfiniteScrolling(
+    posts,
+    loadNextPage,
+    isComplete,
+    isLoadingPosts,
+    !!error
+  )
 
   let timelineInner: JSX.Element
   if (!posts) {
