@@ -4,6 +4,8 @@ import { useTitle, useUser } from '../hooks'
 import { UserProfile } from '../components'
 import {
   SidebarContainer,
+  RecommendationsContainer,
+  FollowingContainer,
   UserPostsTimelineContainer,
   PaginatedPostsTimelineContainer
 } from '../containers'
@@ -39,7 +41,12 @@ export default function ProfilePage(): JSX.Element {
 
   const isPostsPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`
   const isLikesPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`
-  const isValidPath = isPostsPath || isLikesPath
+  const isFollowingPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_FOLLOWING}`
+  const isRecomPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_RECOMMENDATIONS}`
+
+  const isCurrentUserOnlyPath = isFollowingPath || isRecomPath
+  const existsPath = isPostsPath || isLikesPath || isFollowingPath || isRecomPath
+  const isValidPath = existsPath && (isCurrentUser || !isCurrentUserOnlyPath)
 
   if (!isValidPath) {
     return <Redirect to={`${ROUTES.PROFILES}/${username}`} />
@@ -98,26 +105,62 @@ export default function ProfilePage(): JSX.Element {
             </UserProfile>
           </div>
           <div className="col-span-3 lg:col-span-2">
-            <ul className="flex mb-2 p-3 bg-white border rounded font-bold lg:mb-8 lg:p-4">
-              <li>
-                <Link
-                  className="hover:underline hover:opacity-70"
-                  to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
-                >
-                  <span className={isPostsPath ? 'underline' : ''}>Posts</span>
-                </Link>
-              </li>
-              <li className="ml-4">
-                <Link
-                  className="hover:underline hover:opacity-70"
-                  to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`}
-                >
-                  <span className={isLikesPath ? 'underline' : ''}>Likes</span>
-                </Link>
-              </li>
-            </ul>
+            <div className="overflow-hidden mb-2 p-3 bg-white border rounded font-bold lg:mb-8 lg:p-4">
+              <ul
+                className="flex flex-wrap justify-center -mt-1 -ml-4 sm:justify-start"
+                style={{ width: 'calc(100% + 1rem)' }}
+              >
+                <li className="mt-1 ml-4">
+                  <Link
+                    className="hover:underline hover:opacity-70"
+                    to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
+                  >
+                    <span className={isPostsPath ? 'underline' : ''}>Posts</span>
+                  </Link>
+                </li>
+                <li className="mt-1 ml-4">
+                  <Link
+                    className="hover:underline hover:opacity-70"
+                    to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`}
+                  >
+                    <span className={isLikesPath ? 'underline' : ''}>Likes</span>
+                  </Link>
+                </li>
+                {isCurrentUser ? (
+                  <li className="mt-1 ml-4">
+                    <Link
+                      className="hover:underline hover:opacity-70"
+                      to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_FOLLOWING}`}
+                    >
+                      <span className={isFollowingPath ? 'underline' : ''}>Following</span>
+                    </Link>
+                  </li>
+                ) : null}
+                {isCurrentUser ? (
+                  <li className="mt-1 ml-4">
+                    <Link
+                      className="hover:underline hover:opacity-70"
+                      to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_RECOMMENDATIONS}`}
+                    >
+                      <span className={isRecomPath ? 'underline' : ''}>Recommendations</span>
+                    </Link>
+                  </li>
+                ) : null}
+              </ul>
+            </div>
             {isPostsPath && <UserPostsTimelineContainer uid={uid} postsPerPage={2} />}
             {isLikesPath && <PaginatedPostsTimelineContainer postIds={likes} postsPerPage={2} />}
+            {isFollowingPath && (
+              <FollowingContainer className="mb-2 pb-3 border rounded bg-white lg:mb-8 lg:pb-4" />
+            )}
+            {isRecomPath && (
+              <RecommendationsContainer
+                className="mb-2 pb-3 border rounded bg-white lg:mb-8 lg:pb-4"
+                emptyText="You don't currently have any recommendations."
+                max={20}
+                infiniteScroll
+              />
+            )}
           </div>
           <SidebarContainer className="hidden self-start col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:col-span-1" />
         </div>
