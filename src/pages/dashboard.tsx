@@ -26,7 +26,7 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
           isLoadingPosts={isLoadingPosts}
           error={error}
         />
-        <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
+        <SidebarContainer className="hidden self-start order-first col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
       </div>
     </main>
   )

@@ -29,7 +29,7 @@ export default function PostPage({ compose = false }: PostPageProps): JSX.Elemen
             errorHandler={handleError}
           />
         </div>
-        <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
+        <SidebarContainer className="hidden self-start order-first col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
       </div>
     </main>
   )
