@@ -1,26 +1,15 @@
 import { useContext, useState } from 'react'
 import { Link, Redirect, useParams, useLocation } from 'react-router-dom'
-import { useTitle, useUser, usePagination } from '../hooks'
+import { useTitle, useUser } from '../hooks'
 import { UserProfile } from '../components'
-import { TimelineContainer, SidebarContainer, UserPostsTimelineContainer } from '../containers'
+import {
+  SidebarContainer,
+  UserPostsTimelineContainer,
+  PaginatedPostsTimelineContainer
+} from '../containers'
 import { formatDateTime, timestampToMillis } from '../utils'
 import * as ROUTES from '../constants/routes'
 import { UserContext } from '../context/user'
-
-type LikesTimelineContainerProps = {
-  postIds: string[] | undefined
-  postsPerPage?: number
-}
-
-function LikesTimelineContainer({ postIds, postsPerPage = 10 }: LikesTimelineContainerProps) {
-  const [entries, loadNextPage, isComplete] = usePagination(postIds, postsPerPage)
-
-  if (!postIds) {
-    return <></>
-  }
-
-  return <TimelineContainer posts={entries} loadNextPage={loadNextPage} isComplete={isComplete} />
-}
 
 export default function ProfilePage(): JSX.Element {
   useTitle('Profile')
@@ -128,7 +117,7 @@ export default function ProfilePage(): JSX.Element {
               </li>
             </ul>
             {isPostsPath && <UserPostsTimelineContainer uid={uid} postsPerPage={2} />}
-            {isLikesPath && <LikesTimelineContainer postIds={likes} postsPerPage={2} />}
+            {isLikesPath && <PaginatedPostsTimelineContainer postIds={likes} postsPerPage={2} />}
           </div>
           <SidebarContainer className="hidden self-start col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:col-span-1" />
         </div>
