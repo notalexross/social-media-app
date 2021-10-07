@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useState } from 'react'
 import { Link, Redirect, useParams, useLocation } from 'react-router-dom'
 import { useTitle, useMultiUserPosts, useUser, usePagination } from '../hooks'
 import { UserProfile } from '../components'
@@ -72,6 +72,11 @@ export default function ProfilePage(): JSX.Element {
 
   const isPostsPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`
   const isLikesPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`
+  const isValidPath = isPostsPath || isLikesPath
+
+  if (!isValidPath) {
+    return <Redirect to={`${ROUTES.PROFILES}/${username}`} />
+  }
 
   return (
     <main className="mx-4 lg:mx-4">

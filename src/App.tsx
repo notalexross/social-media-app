@@ -27,6 +27,11 @@ export default function App(): JSX.Element {
             from={`${ROUTES.POSTS}/:postId/${ROUTES.EDIT}`}
             to={`${ROUTES.POSTS}/:postId`}
           />
+          <Redirect
+            exact
+            from={`${ROUTES.PROFILES}/:username`}
+            to={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_POSTS}`}
+          />
           <Route path={ROUTES.SIGN_UP}>
             <SignUpPage />
           </Route>
@@ -37,15 +42,7 @@ export default function App(): JSX.Element {
             <Header />
             <Suspense fallback={null}>
               <Switch location={isModal ? back : location}>
-                <Redirect
-                  exact
-                  from={`${ROUTES.PROFILES}/:username`}
-                  to={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_POSTS}`}
-                />
-                <Route exact path={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_POSTS}`}>
-                  <ProfilePage />
-                </Route>
-                <Route exact path={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_LIKES}`}>
+                <Route path={`${ROUTES.PROFILES}/:username`}>
                   <ProfilePage />
                 </Route>
                 <Route exact path={`${ROUTES.POSTS}/:postId`}>
