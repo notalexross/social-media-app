@@ -11,7 +11,7 @@ import Dropdown from '../dropdown'
 export default function Header(): JSX.Element {
   const { pathname } = useLocation()
   const currentUser = useContext(UserContext)
-  const { user } = currentUser
+  const { user, username } = currentUser
 
   return (
     <Dropdown closeAfterClick>
@@ -101,6 +101,11 @@ export default function Header(): JSX.Element {
           <Dropdown.Item className="block p-4 font-bold" type="link" to={ROUTES.EXPLORE}>
             Explore
           </Dropdown.Item>
+          {username !== undefined ? (
+            <Dropdown.Item className="block p-4 font-bold" to={`${ROUTES.PROFILES}/${username}`}>
+              Profile
+            </Dropdown.Item>
+          ) : null}
           {user.uid !== undefined && (
             <Dropdown.Item className="w-full p-4 font-bold" onClick={signOut}>
               Sign Out
