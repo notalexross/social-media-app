@@ -1,33 +1,11 @@
 import { useContext, useState } from 'react'
 import { Link, Redirect, useParams, useLocation } from 'react-router-dom'
-import { useTitle, useMultiUserPosts, useUser, usePagination } from '../hooks'
+import { useTitle, useUser, usePagination } from '../hooks'
 import { UserProfile } from '../components'
-import { TimelineContainer, SidebarContainer } from '../containers'
+import { TimelineContainer, SidebarContainer, UserPostsTimelineContainer } from '../containers'
 import { formatDateTime, timestampToMillis } from '../utils'
 import * as ROUTES from '../constants/routes'
 import { UserContext } from '../context/user'
-
-type PostsTimelineContainerProps = {
-  uid: string
-  postsPerPage?: number
-}
-
-function PostsTimelineContainer({ uid, postsPerPage = 10 }: PostsTimelineContainerProps) {
-  const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
-    uid ? [uid] : undefined,
-    postsPerPage
-  )
-
-  return (
-    <TimelineContainer
-      posts={posts}
-      loadNextPage={loadNextPage}
-      isComplete={isComplete}
-      isLoadingPosts={isLoadingPosts}
-      error={error}
-    />
-  )
-}
 
 type LikesTimelineContainerProps = {
   postIds: string[] | undefined
@@ -149,7 +127,7 @@ export default function ProfilePage(): JSX.Element {
                 </Link>
               </li>
             </ul>
-            {isPostsPath && <PostsTimelineContainer uid={uid} postsPerPage={2} />}
+            {isPostsPath && <UserPostsTimelineContainer uid={uid} postsPerPage={2} />}
             {isLikesPath && <LikesTimelineContainer postIds={likes} postsPerPage={2} />}
           </div>
           <SidebarContainer className="hidden self-start col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:col-span-1" />
