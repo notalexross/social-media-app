@@ -1,4 +1,5 @@
 export { default as ComposeContainer } from './compose'
+export { default as FollowingContainer } from './following'
 export { default as MenuContainer } from './menu'
 export { default as ModalContainer } from './modal'
 export { default as PaginatedPostsTimelineContainer } from './paginated-posts-timeline'
