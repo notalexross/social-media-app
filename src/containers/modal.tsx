@@ -14,6 +14,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 type ModalContainerProps = {
+  children?: React.ReactNode
   post?: PostWithUserDetails | string
   offsetTopSm?: number
   offsetTopMd?: number
@@ -22,6 +23,7 @@ type ModalContainerProps = {
 }
 
 export default function ModalContainer({
+  children,
   post,
   offsetTopSm = 0,
   offsetTopMd = 0.05,
@@ -56,15 +58,14 @@ export default function ModalContainer({
     }
   }
 
-  let composeContainer: JSX.Element | null = null
-  if (compose) {
-    composeContainer = <ComposeContainer />
-  } else if (edit && postObject && postObject.message) {
-    composeContainer = <ComposeContainer originalPost={postObject} />
-  }
-
-  let modalInner: JSX.Element | null = null
-  if (post && !edit) {
+  let modalInner: React.ReactNode | null = null
+  if (children) {
+    modalInner = (
+      <div className="border-l border-r border-b rounded-b bg-white">
+        <div className="p-4">{children}</div>
+      </div>
+    )
+  } else if (post && !edit) {
     modalInner = (
       <PostContainer
         className="border-l border-r border-b rounded-b bg-white"
@@ -74,9 +75,15 @@ export default function ModalContainer({
       />
     )
   } else if (compose || edit) {
+    const postHasMessage = !!postObject?.message
+
     modalInner = (
       <div className="border-l border-r border-b rounded-b bg-white">
-        <div className="flex flex-col p-4">{composeContainer}</div>
+        <div className="p-4">
+          {compose || postHasMessage ? (
+            <ComposeContainer originalPost={postHasMessage ? postObject : undefined} />
+          ) : null}
+        </div>
       </div>
     )
   }
