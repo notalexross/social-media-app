@@ -26,6 +26,16 @@
     "@typescript-eslint/semi": ["error", "never"],
     "@typescript-eslint/type-annotation-spacing": ["error", { "after": true }],
     "arrow-parens": ["error", "as-needed"],
+    "jsx-a11y/label-has-associated-control": [
+      "error",
+      {
+        "labelComponents": [],
+        "labelAttributes": [],
+        "controlComponents": [],
+        "assert": "either",
+        "depth": 25
+      }
+    ],
     "linebreak-style": 0,
     "max-len": [
       "error",
