@@ -202,3 +202,28 @@ export function paginateArray<T extends unknown>(
 
   return loadNextPage
 }
+
+export function disableElements(elements: Element[]): void {
+  elements.forEach(element => {
+    element.setAttribute('disabled', '')
+  })
+}
+
+export function enableElements(elements: Element[]): void {
+  elements.forEach(element => {
+    element.removeAttribute('disabled')
+  })
+}
+
+export function disableForm(form: HTMLFormElement): Element[] {
+  const elements: Element[] = []
+  Array.from(form.elements).forEach(element => {
+    if (element.getAttribute('disabled') === null) {
+      elements.push(element)
+    }
+  })
+
+  disableElements(elements)
+
+  return elements
+}

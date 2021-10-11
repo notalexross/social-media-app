@@ -6,7 +6,7 @@ import { addPost, editPost } from '../../services/firebase'
 import type { IEmojiData } from '../emoji-picker'
 import EmojiPicker from '../emoji-picker'
 import FocusTrap from '../focus-trap'
-import { stringifyError } from '../../utils'
+import { disableForm, enableElements, stringifyError } from '../../utils'
 
 type ComposeContextValue = {
   error: string
@@ -51,14 +51,7 @@ export default function Compose({
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async event => {
     event.preventDefault()
-    const form = event.currentTarget
-    const disabledElements: Element[] = []
-    Array.from(form.elements).forEach(element => {
-      if (element.getAttribute('disabled')) {
-        disabledElements.push(element)
-        element.setAttribute('disabled', '')
-      }
-    })
+    const disabledElements = disableForm(event.currentTarget)
 
     try {
       if (originalPost) {
@@ -74,15 +67,9 @@ export default function Compose({
         history.push(truncatedPath, state)
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.toString())
-      } else {
-        setError(stringifyError(err))
-      }
+      setError(stringifyError(err))
     } finally {
-      disabledElements.forEach(element => {
-        element.removeAttribute('disabled')
-      })
+      enableElements(disabledElements)
     }
   }
 

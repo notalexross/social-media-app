@@ -10,7 +10,10 @@ import {
   modulo,
   onIntervalAfter,
   stringifyError,
-  paginateArray
+  paginateArray,
+  disableElements,
+  enableElements,
+  disableForm
 } from '.'
 
 describe(`${isValidSignUpInputs.name}`, () => {
@@ -477,5 +480,63 @@ describe(`${paginateArray.name}`, () => {
     expect(callback).toHaveBeenCalledWith(expect.objectContaining({ page: 1, isComplete: false }))
     expect(callback).toHaveBeenCalledWith(expect.objectContaining({ page: 2, isComplete: true }))
     expect(callback).not.toHaveBeenCalledWith(expect.objectContaining({ page: 3 }))
+  })
+})
+
+describe(`${disableElements.name}`, () => {
+  test('disables all elements in an array of DOM elements', () => {
+    const elements = [document.createElement('button'), document.createElement('input')]
+
+    disableElements(elements)
+
+    elements.forEach(element => {
+      expect(element).toHaveAttribute('disabled')
+    })
+  })
+})
+
+describe(`${enableElements.name}`, () => {
+  test('enables all elements in an array of DOM elements', () => {
+    const elements = [document.createElement('button'), document.createElement('input')]
+    disableElements(elements)
+
+    enableElements(elements)
+
+    elements.forEach(element => {
+      expect(element).not.toHaveAttribute('disabled')
+    })
+  })
+})
+
+describe(`${disableForm.name}`, () => {
+  test('disables all form elements', () => {
+    const form = document.createElement('form')
+    const formElements = [document.createElement('button'), document.createElement('input')]
+    formElements.forEach(element => form.appendChild(element))
+
+    const result = disableForm(form)
+
+    expect(result).toHaveLength(2)
+    result.forEach(element => {
+      expect(element).toHaveAttribute('disabled')
+    })
+  })
+
+  test('returns array of newly disabled elements', () => {
+    const form = document.createElement('form')
+    const formElements = [
+      document.createElement('button'),
+      document.createElement('button'),
+      document.createElement('input')
+    ]
+    formElements.forEach(element => form.appendChild(element))
+    disableElements([formElements[0]])
+
+    const result = disableForm(form)
+
+    expect(result).toHaveLength(2)
+    result.forEach(element => {
+      expect(element).toHaveAttribute('disabled')
+    })
   })
 })
