@@ -250,12 +250,14 @@ const onAuthStateChanged = jest.fn(callback => {
 })
 
 const updateEmail = jest.fn(() => Promise.resolve())
+const updatePassword = jest.fn(() => Promise.resolve())
 
 const auth = jest.fn(() => ({
   currentUser: {
     uid: userCredentials.uid,
     email: userCredentials.email,
-    updateEmail
+    updateEmail,
+    updatePassword
   },
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -474,6 +476,7 @@ const mockFunctions = {
   handleAuthStateChanged,
   onAuthStateChanged,
   updateEmail,
+  updatePassword,
   auth,
   get,
   onSnapshotCleanupFunction,

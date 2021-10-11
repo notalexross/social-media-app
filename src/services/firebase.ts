@@ -965,6 +965,22 @@ export async function changeEmail(newEmail: string, currentPassword: string): Pr
     })
 }
 
+export async function changePassword(newPassword: string, currentPassword: string): Promise<void> {
+  const { currentUser } = auth
+
+  if (!currentUser || !currentUser.email) {
+    throw new Error('No user.')
+  }
+
+  return auth
+    .signInWithEmailAndPassword(currentUser.email, currentPassword)
+    .then(() => currentUser.updatePassword(newPassword))
+    .catch(error => {
+      console.error(error)
+      throw error
+    })
+}
+
 export async function editUser(updates: {
   avatar?: string
   deleted?: boolean

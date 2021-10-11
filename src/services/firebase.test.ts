@@ -25,7 +25,8 @@ import {
   latestPostersCache,
   getCachedLatestPosters,
   getSuggestedUsers,
-  changeEmail
+  changeEmail,
+  changePassword
 } from './firebase'
 
 const user = {
@@ -1099,5 +1100,30 @@ describe(`${changeEmail.name}`, () => {
     const result = changeEmail(newEmail, password)
 
     await expect(result).rejects.toThrowError('The email address is badly formatted.')
+  })
+})
+
+describe(`${changePassword.name}`, () => {
+  const email = 'email@email.com'
+  const password = 'password'
+
+  test('updates password in authentication system', async () => {
+    const newPassword = 'newpassword'
+
+    const result = changePassword(newPassword, password)
+
+    await expect(result).resolves.toBeUndefined()
+    expect(mockFunctions.updatePassword).toBeCalledTimes(1)
+    expect(mockFunctions.updatePassword).toBeCalledWith(newPassword)
+  })
+
+  test('signs user in again', async () => {
+    const newPassword = 'newpassword'
+
+    const result = changePassword(newPassword, password)
+
+    await expect(result).resolves.toBeUndefined()
+    expect(mockFunctions.signInWithEmailAndPassword).toBeCalledTimes(1)
+    expect(mockFunctions.signInWithEmailAndPassword).toBeCalledWith(email, password)
   })
 })
