@@ -430,6 +430,10 @@ export function onUserByUsernameUpdated(
   return () => cleanup()
 }
 
+export async function isUsernameAvailable(username = ''): Promise<boolean> {
+  return getUserId(username).then(user => user.uid === undefined)
+}
+
 function createUserInDB(
   uid: string,
   { avatar = '', email = '', fullName = '', username = '' }: UserCreatable
@@ -481,6 +485,10 @@ async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void
   )
 
   if (publicUpdates.username) {
+    if (!(await isUsernameAvailable(publicUpdates.username))) {
+      throw new Error(`The username "${publicUpdates.username}" is already taken.`)
+    }
+
     publicUpdates.usernameLowerCase = publicUpdates.username.toLowerCase()
   }
 
@@ -852,10 +860,6 @@ export function onAuthStateChanged(
 
 export async function signOut(): Promise<void> {
   return auth.signOut()
-}
-
-export async function isUsernameAvailable(username = ''): Promise<boolean> {
-  return getUserId(username).then(user => user.uid === undefined)
 }
 
 export async function signUp({
