@@ -1,5 +1,6 @@
 export { default as Avatar } from './avatar'
 export { default as Compose } from './compose'
+export { default as EditUser } from './edit-user'
 export { default as EmojiPicker } from './emoji-picker'
 export { default as FocusTrap } from './focus-trap'
 export { default as Dropdown } from './dropdown'
