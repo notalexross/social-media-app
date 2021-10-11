@@ -1,5 +1,11 @@
 import firebase from 'firebase/app'
-import { isValidSignUpInputs, isValidSignInInputs, sortByTimestamp, chunkArray } from '../utils'
+import {
+  isValidEmail,
+  isValidSignUpInputs,
+  isValidSignInInputs,
+  sortByTimestamp,
+  chunkArray
+} from '../utils'
 import { SelfUpdatingCache } from '../classes'
 
 type UserPublic = {
@@ -23,12 +29,6 @@ type UserCreatable = Partial<
   Omit<
     UserPublic & UserPrivate,
     'createdAt' | 'deleted' | 'followersCount' | 'usernameLowerCase' | 'lastPostedAt'
-  >
->
-type UserUpdatable = Partial<
-  Omit<
-    UserPublic & UserPrivate,
-    'createdAt' | 'followersCount' | 'usernameLowerCase' | 'lastPostedAt'
   >
 >
 type UserQuery = Promise<UserPublic | UserPrivate | UserFollowing | UserLikedPosts>
@@ -469,10 +469,36 @@ function createUserInDB(
   })
 }
 
-async function updateUserInDB(uid: string, updates: UserUpdatable): Promise<void> {
+function updateEmailInDB(uid: string, email: string): Promise<void> {
+  if (!email) {
+    throw new Error('Invalid email supplied.')
+  }
+
+  const { userPrivateRef } = getUserQueries(uid)
+
+  return userPrivateRef
+    .update({
+      email,
+      lastUpdatedAt: FieldValue.serverTimestamp()
+    })
+    .catch(error => {
+      console.error(error)
+      throw error
+    })
+}
+
+async function updateUserInDB(
+  uid: string,
+  updates: {
+    avatar?: string
+    deleted?: boolean
+    fullName?: string
+    username?: string
+  }
+): Promise<void> {
   const { userPublicRef, userPrivateRef } = getUserQueries(uid)
   const publicKeys = ['avatar', 'deleted', 'username'] as const
-  const privateKeys = ['email', 'fullName'] as const
+  const privateKeys = ['fullName'] as const
 
   const publicUpdates: Partial<UserPublic> = publicKeys.reduce(
     (acc, cur) => (cur in updates ? { ...acc, [cur]: updates[cur] } : acc),
@@ -917,7 +943,34 @@ export async function signIn({
   return auth.signInWithEmailAndPassword(email, password)
 }
 
-export async function editUser(updates: UserUpdatable): Promise<void> {
+export async function changeEmail(newEmail: string, currentPassword: string): Promise<void> {
+  const { currentUser } = auth
+
+  if (!currentUser || !currentUser.email) {
+    throw new Error('No user.')
+  }
+
+  if (!isValidEmail(newEmail)) {
+    throw new Error('The email address is badly formatted.')
+  }
+
+  // WARNING: If connection lost then auth email may be different from database email.
+  return auth
+    .signInWithEmailAndPassword(currentUser.email, currentPassword)
+    .then(() => currentUser.updateEmail(newEmail))
+    .then(() => updateEmailInDB(currentUser.uid, newEmail))
+    .catch(error => {
+      console.error(error)
+      throw error
+    })
+}
+
+export async function editUser(updates: {
+  avatar?: string
+  deleted?: boolean
+  fullName?: string
+  username?: string
+}): Promise<void> {
   const { currentUser } = auth
 
   if (!currentUser) {

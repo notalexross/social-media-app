@@ -1,3 +1,7 @@
+export function isValidEmail(email: string | undefined): boolean {
+  return !!(email?.match(/.@./g)?.length === 1)
+}
+
 export function isValidSignUpInputs({
   username,
   fullName,
@@ -12,7 +16,7 @@ export function isValidSignUpInputs({
   const hasUsername = !!username
   const hasFullName = !!fullName
   const hasPassword = !!password
-  const hasValidEmail = !!(email?.match(/.@./g)?.length === 1)
+  const hasValidEmail = isValidEmail(email)
 
   return hasUsername && hasFullName && hasPassword && hasValidEmail
 }
@@ -25,7 +29,7 @@ export function isValidSignInInputs({
   password?: string
 }): boolean {
   const hasPassword = !!password
-  const hasValidEmail = !!(email?.match(/.@./g)?.length === 1)
+  const hasValidEmail = isValidEmail(email)
 
   return hasPassword && hasValidEmail
 }

@@ -24,7 +24,8 @@ import {
   getLatestPosters,
   latestPostersCache,
   getCachedLatestPosters,
-  getSuggestedUsers
+  getSuggestedUsers,
+  changeEmail
 } from './firebase'
 
 const user = {
@@ -1066,5 +1067,37 @@ describe(`${getSuggestedUsers.name}`, () => {
       expect.objectContaining({ uid: 'user4' }),
       expect.objectContaining({ uid: 'user2' })
     ])
+  })
+})
+
+describe(`${changeEmail.name}`, () => {
+  const password = 'password'
+
+  test('updates email in authentication system', async () => {
+    const newEmail = 'newemail@email.com'
+
+    const result = changeEmail(newEmail, password)
+
+    await expect(result).resolves.toBeUndefined()
+    expect(mockFunctions.updateEmail).toBeCalledTimes(1)
+    expect(mockFunctions.updateEmail).toBeCalledWith(newEmail)
+  })
+
+  test('updates email in database', async () => {
+    const newEmail = 'newemail@email.com'
+
+    const result = changeEmail(newEmail, password)
+
+    await expect(result).resolves.toBeUndefined()
+    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.update).toBeCalledWith(expect.objectContaining({ email: newEmail }))
+  })
+
+  test('given invalid email, throws error', async () => {
+    const newEmail = 'email@'
+
+    const result = changeEmail(newEmail, password)
+
+    await expect(result).rejects.toThrowError('The email address is badly formatted.')
   })
 })

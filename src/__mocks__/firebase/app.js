@@ -249,8 +249,14 @@ const onAuthStateChanged = jest.fn(callback => {
   return () => firebaseEventTarget.removeEventListener('change', handleChange)
 })
 
+const updateEmail = jest.fn(() => Promise.resolve())
+
 const auth = jest.fn(() => ({
-  currentUser: { uid: userCredentials.uid },
+  currentUser: {
+    uid: userCredentials.uid,
+    email: userCredentials.email,
+    updateEmail
+  },
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -467,6 +473,7 @@ const mockFunctions = {
   signOut,
   handleAuthStateChanged,
   onAuthStateChanged,
+  updateEmail,
   auth,
   get,
   onSnapshotCleanupFunction,
