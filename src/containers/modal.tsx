@@ -127,7 +127,7 @@ export default function ModalContainer({
       isOpen
     >
       <div className="top-0 px-4 py-3 border rounded-t bg-white" ref={measuredHeaderRef}>
-        <button className="block hover:opacity-70" type="button" onClick={exit} aria-label="close">
+        <button className="block ml-auto hover:opacity-70" type="button" onClick={exit} aria-label="close">
           <XIcon className="w-6" />
         </button>
       </div>
