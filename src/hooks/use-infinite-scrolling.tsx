@@ -43,7 +43,7 @@ export default function useInfiniteScrolling<T extends unknown>(
     if (isError) {
       loader = (
         <button
-          className="block px-6 py-2 w-full border rounded bg-blue-500 font-bold text-white hover:opacity-70"
+          className="block px-6 py-2 w-full rounded bg-blue-500 font-bold text-white hover:opacity-70"
           type="button"
           onClick={loadNextPage}
         >
