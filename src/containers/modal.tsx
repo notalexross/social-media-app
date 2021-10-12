@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import Modal from 'react-modal'
 import { XIcon } from '@heroicons/react/outline'
@@ -31,7 +31,7 @@ export default function ModalContainer({
   edit = false
 }: ModalContainerProps): JSX.Element {
   useLockBody()
-  const mediaQuery = window.matchMedia('(min-width: 768px)')
+  const mediaQuery = useMemo(() => window.matchMedia('(min-width: 768px)'), [])
   const [headerHeight, setHeaderHeight] = useState(0)
   const [offsetTop, setOffsetTop] = useState(mediaQuery.matches ? offsetTopMd : offsetTopSm)
   const [isLargeScreen, setIsLargeScreen] = useState(mediaQuery.matches)
@@ -45,7 +45,9 @@ export default function ModalContainer({
 
   const measuredHeaderRef = useCallback((node: HTMLDivElement) => {
     if (node !== null) {
-      setHeaderHeight(node.offsetHeight)
+      setTimeout(() => {
+        setHeaderHeight(node.offsetHeight)
+      }, 0)
     }
   }, [])
 
