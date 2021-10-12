@@ -40,6 +40,10 @@ function usePost(
   const replyToOwnerDetails = useUser(replyUserState, { passthrough: hasReplyUser, maxAge: 10000 })
 
   useEffect(() => {
+    setPost(postState)
+  }, [postOrId, postState])
+
+  useEffect(() => {
     let isCurrent = true
 
     if (shouldUpdatePost) {

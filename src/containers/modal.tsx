@@ -118,7 +118,6 @@ export default function ModalContainer({
       className="relative mx-auto max-w-2xl outline-none"
       overlayClassName="fixed inset-0 bg-white z-40 md:bg-opacity-75"
       style={{ content: { top: `${offsetTop * 100}%` } }}
-      key={postId}
       contentLabel="Current Post Modal"
       onRequestClose={exit}
       shouldCloseOnOverlayClick={isLargeScreen}
