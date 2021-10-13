@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import FocusTrap from '../focus-trap'
+import StatefulLink from '../stateful-link'
 
 type DropdownContextValue = {
   closeAfterClick: boolean
@@ -92,7 +92,7 @@ Dropdown.Items = function DropdownItems({
 }
 
 Dropdown.Item = function DropdownItem(
-  props: Parameters<Link>[0] | React.ComponentPropsWithoutRef<'button'>
+  props: Parameters<typeof StatefulLink>[0] | React.ComponentPropsWithoutRef<'button'>
 ): JSX.Element {
   const { closeAfterClick, close } = useContext(DropdownContext)
 
@@ -109,7 +109,7 @@ Dropdown.Item = function DropdownItem(
   let inner = <></>
   if ('to' in props) {
     const { type, onClick, ...restProps } = props
-    inner = <Link tabIndex={0} onClick={handleClick} {...restProps} />
+    inner = <StatefulLink tabIndex={0} onClick={handleClick} {...restProps} />
   } else {
     const { type, onClick, ...restProps } = props
     inner = <button type="button" onClick={handleClick} {...restProps} />

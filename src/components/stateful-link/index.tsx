@@ -6,7 +6,7 @@ type StatefulLinkProps = {
   to: string
   post?: PostWithUserDetails | string
   modal?: boolean
-} & React.ComponentPropsWithoutRef<'a'>
+} & Parameters<Link>[0]
 
 export default function StatefulLink({
   children,

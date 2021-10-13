@@ -100,6 +100,9 @@ export default function Header(): JSX.Element {
       </header>
       <nav className="absolute z-30 inset-x-0 -mt-2 text-lg text-center sm:hidden">
         <Dropdown.Items className="py-2 border-b bg-white shadow-xl outline-none" role="menu">
+          <Dropdown.Item className="block p-4 font-bold" modal to={ROUTES.COMPOSE}>
+            New Post
+          </Dropdown.Item>
           <Dropdown.Item className="block p-4 font-bold" to={ROUTES.DASHBOARD}>
             Home
           </Dropdown.Item>
