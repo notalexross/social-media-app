@@ -12,6 +12,7 @@ const PostPage = lazy(() => import('./pages/post'))
 const DashboardPage = lazy(() => import('./pages/dashboard'))
 const NotFoundPage = lazy(() => import('./pages/not-found'))
 const ModalContainer = lazy(() => import('./containers/modal'))
+const EditUserContainer = lazy(() => import('./containers/edit-user'))
 
 export default function App(): JSX.Element {
   const location = useLocation<LocationState>()
@@ -82,6 +83,11 @@ export default function App(): JSX.Element {
             </Route>
             <Route exact path={ROUTES.COMPOSE}>
               <ModalContainer compose />
+            </Route>
+            <Route exact path={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_EDIT}`}>
+              <ModalContainer>
+                <EditUserContainer />
+              </ModalContainer>
             </Route>
           </Switch>
         </Suspense>

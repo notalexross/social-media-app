@@ -1,7 +1,7 @@
-import { useContext, useState } from 'react'
-import { Link, Redirect, useParams, useLocation } from 'react-router-dom'
+import { useCallback, useContext } from 'react'
+import { Link, Redirect, useHistory, useLocation, useParams } from 'react-router-dom'
 import { useTitle, useUser } from '../hooks'
-import { UserProfile } from '../components'
+import { StatefulLink, UserProfile } from '../components'
 import {
   SidebarContainer,
   RecommendationsContainer,
@@ -18,18 +18,19 @@ export default function ProfilePage(): JSX.Element {
   const { pathname } = useLocation()
   const { username } = useParams<{ username: string }>()
   const currentUser = useContext(UserContext)
-  const [userError, setUserError] = useState<string>()
+  const history = useHistory()
+  const handleError = useCallback(() => history.replace(ROUTES.NOT_FOUND), [history])
   const user = useUser(username, {
     by: 'username',
     subscribe: true,
     includeLikedPosts: true,
-    errorCallback: setUserError
+    errorCallback: handleError
   })
   const { uid, likedPosts } = user || {}
 
-  if (userError) {
-    return <Redirect to={ROUTES.NOT_FOUND} />
-  } else if (!uid) {
+  const currentUsername = user?.username || username
+
+  if (!uid) {
     return <></>
   }
 
@@ -49,7 +50,7 @@ export default function ProfilePage(): JSX.Element {
   const isValidPath = existsPath && (isCurrentUser || !isCurrentUserOnlyPath)
 
   if (!isValidPath) {
-    return <Redirect to={`${ROUTES.PROFILES}/${username}`} />
+    return <Redirect to={`${ROUTES.PROFILES}/${currentUsername}`} />
   }
 
   return (
@@ -101,6 +102,15 @@ export default function ProfilePage(): JSX.Element {
                     </p>
                   </div>
                 </div>
+                {isCurrentUser ? (
+                  <StatefulLink
+                    className="block mt-2 mx-auto w-max py-1 px-5 rounded bg-blue-500 font-bold text-sm text-white sm:mx-0 hover:opacity-70"
+                    to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_EDIT}`}
+                    modal
+                  >
+                    Edit Details
+                  </StatefulLink>
+                ) : null}
               </div>
             </UserProfile>
           </div>
@@ -113,7 +123,7 @@ export default function ProfilePage(): JSX.Element {
                 <li className="mt-1 ml-4">
                   <Link
                     className="hover:underline hover:opacity-70"
-                    to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
+                    to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_POSTS}`}
                   >
                     <span className={isPostsPath ? 'underline' : ''}>Posts</span>
                   </Link>
@@ -121,7 +131,7 @@ export default function ProfilePage(): JSX.Element {
                 <li className="mt-1 ml-4">
                   <Link
                     className="hover:underline hover:opacity-70"
-                    to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`}
+                    to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_LIKES}`}
                   >
                     <span className={isLikesPath ? 'underline' : ''}>Likes</span>
                   </Link>
@@ -130,7 +140,7 @@ export default function ProfilePage(): JSX.Element {
                   <li className="mt-1 ml-4">
                     <Link
                       className="hover:underline hover:opacity-70"
-                      to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_FOLLOWING}`}
+                      to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_FOLLOWING}`}
                     >
                       <span className={isFollowingPath ? 'underline' : ''}>Following</span>
                     </Link>
@@ -140,7 +150,7 @@ export default function ProfilePage(): JSX.Element {
                   <li className="mt-1 ml-4">
                     <Link
                       className="hover:underline hover:opacity-70"
-                      to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_RECOMMENDATIONS}`}
+                      to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_RECOMMENDATIONS}`}
                     >
                       <span className={isRecomPath ? 'underline' : ''}>Recommendations</span>
                     </Link>
