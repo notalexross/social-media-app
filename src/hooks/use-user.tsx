@@ -64,6 +64,7 @@ export default function useUser(
 
   useEffect(() => {
     let isCurrent = true
+    let cleanup: () => void
 
     if (!passthrough) {
       if (shouldUpdateUser) {
@@ -77,7 +78,7 @@ export default function useUser(
 
         if (by === 'uid') {
           if (subscribe) {
-            return onUserByIdUpdated(
+            cleanup = onUserByIdUpdated(
               uidOrUsername,
               changes => setUser(state => ({ ...state, ...changes })),
               {
@@ -85,14 +86,14 @@ export default function useUser(
                 errorCallback: handleError
               }
             )
+          } else {
+            getCachedUserById(uidOrUsername, maxAge, getOptions)
+              .then(data => isCurrent && setUser(data))
+              .catch(handleError)
           }
-
-          getCachedUserById(uidOrUsername, maxAge, getOptions)
-            .then(data => isCurrent && setUser(data))
-            .catch(handleError)
-        } else {
+        } else if (by === 'username') {
           if (subscribe) {
-            return onUserByUsernameUpdated(
+            cleanup = onUserByUsernameUpdated(
               uidOrUsername,
               changes => setUser(state => ({ ...state, ...changes })),
               {
@@ -100,17 +101,21 @@ export default function useUser(
                 errorCallback: handleError
               }
             )
+          } else {
+            getCachedUserByUsername(uidOrUsername, maxAge, getOptions)
+              .then(data => isCurrent && setUser(data))
+              .catch(handleError)
           }
-
-          getCachedUserByUsername(uidOrUsername, maxAge, getOptions)
-            .then(data => isCurrent && setUser(data))
-            .catch(handleError)
         }
       }
     }
 
     return () => {
       isCurrent = false
+
+      if (cleanup) {
+        cleanup()
+      }
     }
   }, [
     by,

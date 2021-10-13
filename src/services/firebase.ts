@@ -402,16 +402,16 @@ export function onUserByUsernameUpdated(
 
   getUserId(username)
     .then(({ uid }) => {
-      if (uid === undefined) {
-        throw new Error(`User with username "${username}" not found.`)
-      }
-
-      const cachingCallback = (details: User): void => {
-        usersByUsernameCache.set(username, details).catch(console.error)
-        callback(details)
-      }
-
       if (isCurrent) {
+        if (uid === undefined) {
+          throw new Error(`User with username "${username}" not found.`)
+        }
+
+        const cachingCallback = (details: User): void => {
+          usersByUsernameCache.set(username, details).catch(console.error)
+          callback(details)
+        }
+
         cleanup = onUserByIdUpdated(uid, cachingCallback, {
           includePrivate,
           includeFollowing,
