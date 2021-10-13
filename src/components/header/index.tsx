@@ -7,6 +7,7 @@ import * as ROUTES from '../../constants/routes'
 import logo from '../../images/logo.png'
 import UserProfile from '../user-profile'
 import Dropdown from '../dropdown'
+import StatefulLink from '../stateful-link'
 
 export default function Header(): JSX.Element {
   const { pathname } = useLocation()
@@ -24,8 +25,8 @@ export default function Header(): JSX.Element {
                 <img className="h-7" src={logo} alt="Logo" />
               </Link>
             </h1>
-            <div className="hidden items-center justify-between w-full sm:flex">
-              <nav className="ml-8 font-bold">
+            <div className="flex items-center justify-between w-full">
+              <nav className="hidden ml-8 font-bold sm:block">
                 <ul className="flex">
                   <li>
                     <Link className="hover:underline hover:opacity-70" to={ROUTES.DASHBOARD}>
@@ -43,7 +44,14 @@ export default function Header(): JSX.Element {
                   </li>
                 </ul>
               </nav>
-              <div className="flex items-center text-sm">
+              <StatefulLink
+                className="block ml-4 mr-auto w-max py-1 px-5 rounded bg-blue-500 font-bold text-sm text-white hover:opacity-70"
+                to={`${ROUTES.COMPOSE}`}
+                modal
+              >
+                New Post
+              </StatefulLink>
+              <div className="hidden items-center text-sm sm:flex">
                 {user.uid !== undefined && (
                   <Link to={ROUTES.DASHBOARD} aria-label="home">
                     <HomeIcon className="h-8 w-8" />
