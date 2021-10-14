@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Switch, Route, useLocation, Redirect } from 'react-router-dom'
+import type { Location } from 'history'
 import type { LocationState } from './types'
 import { UserContextProvider } from './context/user'
 import * as ROUTES from './constants/routes'
@@ -14,16 +15,47 @@ const NotFoundPage = lazy(() => import('./pages/not-found'))
 const ModalContainer = lazy(() => import('./containers/modal'))
 const EditUserContainer = lazy(() => import('./containers/edit-user'))
 
-export default function App(): JSX.Element {
-  const location = useLocation<LocationState>()
+const buildDOMTree = (location: Location<LocationState>, currentElements?: React.ReactNode[]) => {
+  const { pathname } = location
   const isModal = (location.state?.modalDepth || 0) > 0
   const back = location.state?.back
   const post = location.state?.post
+  const elements = currentElements?.slice() || []
 
-  return (
-    <UserContextProvider>
-      <Suspense fallback={<h1>Loading...</h1>}>
-        <Switch location={isModal ? back : location}>
+  if (back) {
+    elements.push(...buildDOMTree(back))
+  }
+
+  if (isModal || pathname === ROUTES.COMPOSE) {
+    elements.push(
+      <Suspense key={`modal-${pathname}`} fallback={null}>
+        <Switch location={location}>
+          <Route exact path={`${ROUTES.POSTS}/:postId`}>
+            <ModalContainer post={post} />
+          </Route>
+          <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
+            <ModalContainer post={post} compose />
+          </Route>
+          <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.EDIT}`}>
+            <ModalContainer post={post} edit />
+          </Route>
+          <Route exact path={ROUTES.COMPOSE}>
+            <ModalContainer compose />
+          </Route>
+          <Route exact path={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_EDIT}`}>
+            <ModalContainer>
+              <EditUserContainer />
+            </ModalContainer>
+          </Route>
+        </Switch>
+      </Suspense>
+    )
+  }
+
+  if (!isModal) {
+    elements.push(
+      <Suspense key={pathname} fallback={<h1>Loading...</h1>}>
+        <Switch location={location}>
           <Redirect
             from={`${ROUTES.POSTS}/:postId/${ROUTES.EDIT}`}
             to={`${ROUTES.POSTS}/:postId`}
@@ -42,7 +74,7 @@ export default function App(): JSX.Element {
           <Route path="*">
             <Header />
             <Suspense fallback={null}>
-              <Switch location={isModal ? back : location}>
+              <Switch>
                 <Route path={`${ROUTES.PROFILES}/:username`}>
                   <ProfilePage />
                 </Route>
@@ -69,29 +101,15 @@ export default function App(): JSX.Element {
           </Route>
         </Switch>
       </Suspense>
-      {isModal || location.pathname === ROUTES.COMPOSE ? (
-        <Suspense fallback={null}>
-          <Switch>
-            <Route exact path={`${ROUTES.POSTS}/:postId`}>
-              <ModalContainer post={post} />
-            </Route>
-            <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
-              <ModalContainer post={post} compose />
-            </Route>
-            <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.EDIT}`}>
-              <ModalContainer post={post} edit />
-            </Route>
-            <Route exact path={ROUTES.COMPOSE}>
-              <ModalContainer compose />
-            </Route>
-            <Route exact path={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_EDIT}`}>
-              <ModalContainer>
-                <EditUserContainer />
-              </ModalContainer>
-            </Route>
-          </Switch>
-        </Suspense>
-      ) : null}
-    </UserContextProvider>
-  )
+    )
+  }
+
+  return elements
+}
+
+export default function App(): JSX.Element {
+  const location = useLocation<LocationState>()
+  const tree = buildDOMTree(location)
+
+  return <UserContextProvider>{tree}</UserContextProvider>
 }
