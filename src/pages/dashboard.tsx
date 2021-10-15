@@ -9,24 +9,35 @@ type DashboardPageProps = {
 
 export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Element {
   useTitle('Dashboard')
-  const { following } = useContext(UserContext)
+  const { uid, following } = useContext(UserContext)
   const { posts, loadNextPage, isComplete, isLoadingPosts, error } = useMultiUserPosts(
     timeline === 'master' ? null : following,
     2
   )
+  const showTimeline = timeline === 'master' || (timeline === 'following' && uid)
 
   return (
     <main className="mx-2 lg:mx-4">
       <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
-        <TimelineContainer
-          className="col-span-3 lg:col-span-2"
-          posts={posts}
-          loadNextPage={loadNextPage}
-          isComplete={isComplete}
-          isLoadingPosts={isLoadingPosts}
-          error={error}
+        {showTimeline ? (
+          <TimelineContainer
+            className="col-span-3 lg:col-span-2"
+            posts={posts}
+            loadNextPage={loadNextPage}
+            isComplete={isComplete}
+            isLoadingPosts={isLoadingPosts}
+            error={error}
+          />
+        ) : (
+          <div className="hidden col-span-3 lg:col-span-2 lg:block">
+            <p className="text-2xl text-center">Sign in to follow other users.</p>
+          </div>
+        )}
+        <SidebarContainer
+          className={`self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1 ${
+            showTimeline ? 'hidden lg:block' : ''
+          }`}
         />
-        <SidebarContainer className="hidden self-start order-first col-span-3 mb-2 lg:block lg:sticky lg:top-4 lg:order-1 lg:col-span-1" />
       </div>
     </main>
   )

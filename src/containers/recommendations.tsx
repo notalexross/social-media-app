@@ -26,17 +26,15 @@ export default function RecommendationsContainer({
   const [intersectRef, loader] = useInfiniteScrolling(entries, loadNextPage, isComplete)
 
   useEffect(() => {
-    if (uid && loadedFollowing && following) {
-      getSuggestedUsers(uid, {
-        exclude: [uid, ...following],
-        max,
-        fractionLatestPosters: 0.5
-      })
-        .then(setSuggestions)
-        .catch(console.error)
-    }
+    getSuggestedUsers(uid || 'signed-out', {
+      exclude: uid ? [uid, ...(following || [])] : following || [],
+      max,
+      fractionLatestPosters: 0.5
+    })
+      .then(setSuggestions)
+      .catch(console.error)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadedFollowing, uid])
+  }, [loadedFollowing, max, uid])
 
   if (!entries || !suggestions) {
     return <></>

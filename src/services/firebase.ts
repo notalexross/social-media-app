@@ -1382,7 +1382,7 @@ export async function getRecentlySeenPosters({
 export const latestPostersCache = new SelfUpdatingCache('latest-posters', getLatestPosters)
 
 export async function getCachedLatestPosters(
-  uid: string,
+  key: string,
   {
     maxAge = 0,
     exclude = [] as string[],
@@ -1399,7 +1399,7 @@ export async function getCachedLatestPosters(
   while (!exhausted && count < 2 && filtered.length < num) {
     // eslint-disable-next-line no-await-in-loop
     const latestPosters = await latestPostersCache
-      .get(uid, count > 0 ? 0 : maxAge, {
+      .get(key, count > 0 ? 0 : maxAge, {
         exclude,
         minUnexcluded: num + buffer,
         maxRequests,
@@ -1416,7 +1416,7 @@ export async function getCachedLatestPosters(
 }
 
 export async function getSuggestedUsers(
-  uid: string,
+  key: string,
   {
     exclude = [] as string[],
     max = 10,
@@ -1439,7 +1439,7 @@ export async function getSuggestedUsers(
 
   if (suggestions.length < max) {
     suggestions.push(
-      ...(await getCachedLatestPosters(uid, {
+      ...(await getCachedLatestPosters(key, {
         maxAge: 10 * 60 * 10000,
         exclude: [...exclude, ...suggestions.map(user => user.uid)],
         num: max - suggestions.length,
