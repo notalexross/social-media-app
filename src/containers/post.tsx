@@ -63,7 +63,7 @@ export default function PostContainer({
           <div className="flex flex-col overflow-hidden break-words">
             <div className="leading-none">
               <UserProfile.Username
-                className={`font-bold ${isComment ? 'text-sm sm:text-md' : 'text-md'}`}
+                className={`font-bold ${isComment ? 'text-sm sm:text-base' : 'text-base'}`}
                 linkClassName="hover:underline"
                 deletedTextContent="[Deleted]"
               />
