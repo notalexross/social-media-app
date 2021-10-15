@@ -7,6 +7,7 @@ export { default as PaginatedPostsTimelineContainer } from './paginated-posts-ti
 export { default as PostContainer } from './post'
 export { default as RecommendationsContainer } from './recommendations'
 export { default as SidebarContainer } from './sidebar'
+export { default as SignInPrompContainer } from './sign-in-prompt'
 export { default as TimelineContainer } from './timeline'
 export { default as UserListContainer } from './user-list'
 export { default as UserPostsTimelineContainer } from './user-posts-timeline'
