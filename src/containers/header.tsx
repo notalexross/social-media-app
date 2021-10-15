@@ -1,15 +1,13 @@
 import { useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { HomeIcon, LogoutIcon, MenuIcon } from '@heroicons/react/outline'
-import { signOut } from '../../services/firebase'
-import { UserContext } from '../../context/user'
-import * as ROUTES from '../../constants/routes'
-import logo from '../../images/logo.png'
-import UserProfile from '../user-profile'
-import Dropdown from '../dropdown'
-import StatefulLink from '../stateful-link'
+import { signOut } from '../services/firebase'
+import { UserContext } from '../context/user'
+import * as ROUTES from '../constants/routes'
+import logo from '../images/logo.png'
+import { Dropdown, StatefulLink, UserProfile } from '../components'
 
-export default function Header(): JSX.Element {
+export default function HeaderContainer(): JSX.Element {
   const { pathname } = useLocation()
   const currentUser = useContext(UserContext)
   const { user, username } = currentUser

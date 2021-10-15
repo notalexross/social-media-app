@@ -5,7 +5,7 @@ import type { LocationState } from './types'
 import { UserContextProvider } from './context/user'
 import * as ROUTES from './constants/routes'
 
-const Header = lazy(() => import('./components/header'))
+const HeaderContainer = lazy(() => import('./containers/header'))
 const SignUpPage = lazy(() => import('./pages/sign-up'))
 const SignInPage = lazy(() => import('./pages/sign-in'))
 const ProfilePage = lazy(() => import('./pages/profile'))
@@ -47,7 +47,7 @@ const buildDOMTree = (location: Location<LocationState>) => {
             <SignInPage />
           </Route>
           <Route path="*">
-            <Header />
+            <HeaderContainer />
             <Suspense fallback={null}>
               <Switch>
                 <Route path={`${ROUTES.PROFILES}/:username`}>

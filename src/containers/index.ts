@@ -1,6 +1,7 @@
 export { default as ComposeContainer } from './compose'
 export { default as EditUserContainer } from './edit-user'
 export { default as FollowingContainer } from './following'
+export { default as HeaderContainer } from './header'
 export { default as MenuContainer } from './menu'
 export { default as ModalContainer } from './modal'
 export { default as PaginatedPostsTimelineContainer } from './paginated-posts-timeline'
