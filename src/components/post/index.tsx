@@ -3,9 +3,8 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
-import { likePost, unlikePost } from '../../services/firebase'
 import { UserContext } from '../../context/user'
-import { useLineHeight, useTimeAgo } from '../../hooks'
+import { useLineHeight, useProtectedFunctions, useTimeAgo } from '../../hooks'
 import StatefulLink from '../stateful-link'
 import * as ROUTES from '../../constants/routes'
 
@@ -254,6 +253,7 @@ type PostLikeButtonProps = {
 } & Omit<React.ComponentPropsWithoutRef<'button'>, 'children'>
 
 Post.LikeButton = function PostLikeButton({ likedClassName, ...restProps }: PostLikeButtonProps) {
+  const { likePost, unlikePost } = useProtectedFunctions()
   const { likedPosts } = useContext(UserContext)
   const { post } = useContext(PostContext)
 

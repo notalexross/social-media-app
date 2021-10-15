@@ -10,17 +10,11 @@ import {
   TrashIcon,
   UserAddIcon
 } from '@heroicons/react/outline'
-import {
-  editPost,
-  followUser,
-  likePost,
-  PostWithUserDetails,
-  unfollowUser,
-  unlikePost
-} from '../services/firebase'
+import type { PostWithUserDetails } from '../services/firebase'
 import { UserContext } from '../context/user'
 import { Menu } from '../components'
 import * as ROUTES from '../constants/routes'
+import { useProtectedFunctions } from '../hooks'
 
 type MenuContainerProps = {
   post: PostWithUserDetails
@@ -34,6 +28,7 @@ export default function MenuContainer({
   verticalDotsClassName = 'hidden',
   ...restProps
 }: MenuContainerProps): JSX.Element {
+  const { editPost, followUser, likePost, unfollowUser, unlikePost } = useProtectedFunctions()
   const [isOpen, setIsOpen] = useState(false)
   const [confirmDeletion, setConfirmDeletion] = useState(false)
   const { following, likedPosts, uid } = useContext(UserContext)

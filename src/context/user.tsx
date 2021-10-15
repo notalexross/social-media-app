@@ -1,7 +1,8 @@
 import type firebase from 'firebase'
 import { createContext } from 'react'
 import type { User } from '../services/firebase'
-import { useAuthListener, useUser } from '../hooks'
+import useAuthListener from '../hooks/use-auth-listener'
+import useUser from '../hooks/use-user'
 
 type UserContextValue = {
   user: Partial<firebase.User>

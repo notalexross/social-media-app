@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import type { User } from '../../services/firebase'
-import { followUser, unfollowUser } from '../../services/firebase'
 import { UserContext } from '../../context/user'
 import Avatar from '../avatar'
 import StatefulLink from '../stateful-link'
 import * as ROUTES from '../../constants/routes'
+import { useProtectedFunctions } from '../../hooks'
 
 type UserProfileContextValue = {
   user: Partial<User> | undefined
@@ -141,12 +141,13 @@ UserProfile.FullName = function UserProfileFullName(
 UserProfile.FollowButton = function UserProfileFollowButton(
   props: Omit<React.ComponentPropsWithoutRef<'button'>, 'children'>
 ) {
+  const { followUser, unfollowUser } = useProtectedFunctions()
   const { following, uid } = useContext(UserContext)
   const { user } = useContext(UserProfileContext)
   const isSelf = user?.uid === uid
   const isFollowing = !isSelf && user?.uid && following?.includes(user.uid)
 
-  if (!uid || !user?.uid) {
+  if (!user?.uid) {
     return <Skeleton width="6ch" />
   }
 

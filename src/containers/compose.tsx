@@ -1,8 +1,6 @@
-import { useContext } from 'react'
 import { EmojiHappyIcon, PaperClipIcon } from '@heroicons/react/outline'
 import type { PostWithUserDetails, ReplyTo } from '../services/firebase'
 import { Compose } from '../components'
-import { UserContext } from '../context/user'
 import { useResponsivePopper, useWindowDimensions } from '../hooks'
 
 type ComposeContainerProps = {
@@ -15,16 +13,11 @@ export default function ComposeContainer({
   replyTo,
   ...restProps
 }: ComposeContainerProps): JSX.Element {
-  const { username } = useContext(UserContext)
   const [windowWidth, windowHeight] = useWindowDimensions()
   const [popperRef, popperRelativeRef] = useResponsivePopper<HTMLDivElement, HTMLDivElement>({
     offsetY: -0.5
   })
   const replyToPost = replyTo || originalPost?.replyTo
-
-  if (!username) {
-    return <></>
-  }
 
   let submitButtonContent = originalPost ? 'Update ' : ''
   submitButtonContent += replyToPost ? 'Reply' : 'Post'

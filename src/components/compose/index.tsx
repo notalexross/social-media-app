@@ -2,11 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useHistory } from 'react-router-dom'
 import type { LocationState } from '../../types'
 import type { PostWithUserDetails, ReplyTo } from '../../services/firebase'
-import { addPost, editPost } from '../../services/firebase'
 import type { IEmojiData } from '../emoji-picker'
 import EmojiPicker from '../emoji-picker'
 import FocusTrap from '../focus-trap'
 import { disableForm, enableElements, stringifyError } from '../../utils'
+import { useProtectedFunctions } from '../../hooks'
 
 type ComposeContextValue = {
   error: string
@@ -39,6 +39,7 @@ export default function Compose({
   hardCharacterLimit = 1150,
   ...restProps
 }: ComposeProps): JSX.Element {
+  const { addPost, editPost } = useProtectedFunctions()
   const [error, setError] = useState('')
   const [message, setMessage] = useState(originalPost?.message || '')
   const [previewSrc, setPreviewSrc] = useState<string | undefined>(originalPost?.attachment)
@@ -60,7 +61,7 @@ export default function Compose({
         await addPost({ message, replyTo, attachment })
       }
 
-      const isModal = (state?.modalDepth || 0) > 0
+      const isModal = !!state?.modal
       if (isModal) {
         history.replace(truncatedPath, state)
       } else {

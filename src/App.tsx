@@ -14,47 +14,22 @@ const DashboardPage = lazy(() => import('./pages/dashboard'))
 const NotFoundPage = lazy(() => import('./pages/not-found'))
 const ModalContainer = lazy(() => import('./containers/modal'))
 const EditUserContainer = lazy(() => import('./containers/edit-user'))
+const SignInPromptContainer = lazy(() => import('./containers/sign-in-prompt'))
 
-const buildDOMTree = (location: Location<LocationState>, currentElements?: React.ReactNode[]) => {
+const buildDOMTree = (location: Location<LocationState>) => {
   const { pathname } = location
-  const isModal = (location.state?.modalDepth || 0) > 0
-  const back = location.state?.back
-  const post = location.state?.post
-  const elements = currentElements?.slice() || []
+  const { back, modal, props, post } = location.state || {}
+  const isModal = !!modal
+  const isSignInPromptModal = modal === 'signInPrompt'
+  const elements: React.ReactNode[] = []
 
   if (back) {
     elements.push(...buildDOMTree(back))
   }
 
-  if (isModal || pathname === ROUTES.COMPOSE) {
-    elements.push(
-      <Suspense key={`modal-${pathname}`} fallback={null}>
-        <Switch location={location}>
-          <Route exact path={`${ROUTES.POSTS}/:postId`}>
-            <ModalContainer post={post} />
-          </Route>
-          <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
-            <ModalContainer post={post} compose />
-          </Route>
-          <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.EDIT}`}>
-            <ModalContainer post={post} edit />
-          </Route>
-          <Route exact path={ROUTES.COMPOSE}>
-            <ModalContainer compose />
-          </Route>
-          <Route exact path={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_EDIT}`}>
-            <ModalContainer>
-              <EditUserContainer />
-            </ModalContainer>
-          </Route>
-        </Switch>
-      </Suspense>
-    )
-  }
-
   if (!isModal) {
     elements.push(
-      <Suspense key={pathname} fallback={<h1>Loading...</h1>}>
+      <Suspense key={elements.length} fallback={<h1>Loading...</h1>}>
         <Switch location={location}>
           <Redirect
             from={`${ROUTES.POSTS}/:postId/${ROUTES.EDIT}`}
@@ -100,6 +75,38 @@ const buildDOMTree = (location: Location<LocationState>, currentElements?: React
             </Suspense>
           </Route>
         </Switch>
+      </Suspense>
+    )
+  }
+
+  if (isModal || pathname === ROUTES.COMPOSE) {
+    elements.push(
+      <Suspense key={elements.length} fallback={null}>
+        {isSignInPromptModal ? (
+          <ModalContainer>
+            <SignInPromptContainer {...props} />
+          </ModalContainer>
+        ) : (
+          <Switch location={location}>
+            <Route exact path={`${ROUTES.POSTS}/:postId`}>
+              <ModalContainer post={post} />
+            </Route>
+            <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
+              <ModalContainer post={post} compose />
+            </Route>
+            <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.EDIT}`}>
+              <ModalContainer post={post} edit />
+            </Route>
+            <Route exact path={ROUTES.COMPOSE}>
+              <ModalContainer compose />
+            </Route>
+            <Route exact path={`${ROUTES.PROFILES}/:username${ROUTES.PROFILE_EDIT}`}>
+              <ModalContainer>
+                <EditUserContainer />
+              </ModalContainer>
+            </Route>
+          </Switch>
+        )}
       </Suspense>
     )
   }

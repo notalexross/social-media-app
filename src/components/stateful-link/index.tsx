@@ -19,9 +19,7 @@ export default function StatefulLink({
   ...restProps
 }: StatefulLinkProps): JSX.Element {
   const location = useLocation<LocationState>()
-  const currentModalDepth = location.state?.modalDepth || 0
-  const modalDepth = modal ? currentModalDepth + 1 : 0
-  const modalOpen = currentModalDepth > 0
+  const modalOpen = !!location.state?.modal
   const replace = to === location.pathname || (modalOpen && !nestModal)
 
   let back: Location<LocationState> | undefined
@@ -33,7 +31,7 @@ export default function StatefulLink({
     }
   }
 
-  const state: LocationState = { back, post, modalDepth }
+  const state: LocationState = { back, post, modal }
 
   return (
     <Link<LocationState> to={{ pathname: to, state }} replace={replace} {...restProps}>
