@@ -37,8 +37,10 @@ export default function MenuContainer({
   const isOwner = uid && owner === uid
   const isLiked = likedPosts?.includes(id)
   const isFollowing = following?.includes(owner)
-  const itemClassName = 'flex items-center px-5 py-4 w-full hover:bg-gray-100 hover:opacity-70'
-  const iconClassName = 'w-6 mr-2'
+  const itemClassName =
+    'flex items-center px-5 py-4 w-full text-left hover:bg-gray-100 hover:opacity-70'
+  const iconClassName = 'flex-shrink-0 w-6 mr-2'
+  const itemTextClassName = 'min-w-0'
 
   const openMenu = useCallback(() => {
     setIsOpen(true)
@@ -111,11 +113,11 @@ export default function MenuContainer({
           <DotsHorizontalIcon className={horizontalDotsClassName} />
           <DotsVerticalIcon className={verticalDotsClassName} />
         </Menu.Open>
-        <Menu.Items className="mb-4 w-screen max-w-max border rounded bg-white sm:max-w-xs">
+        <Menu.Items className="mb-4 w-96 p-0.5 border rounded bg-white overflow-hidden break-words">
           {!isOwner && !ownerDeleted ? (
             <Menu.Item className={itemClassName} type="button" onClick={toggleFollow}>
               <UserAddIcon className={iconClassName} />
-              <span>
+              <span className={itemTextClassName}>
                 {isFollowing ? 'Unfollow' : 'Follow'}
                 {username ? ` ${username}` : ''}
               </span>
@@ -123,7 +125,7 @@ export default function MenuContainer({
           ) : null}
           <Menu.Item className={itemClassName} type="button" onClick={toggleLike}>
             <HeartIcon className={iconClassName} />
-            <span>
+            <span className={itemTextClassName}>
               {isLiked ? 'Unlike' : 'Like'}
               {' Post'}
             </span>
@@ -136,15 +138,15 @@ export default function MenuContainer({
             modal
           >
             <ChatAlt2Icon className={iconClassName} />
-            <span>Reply</span>
+            <span className={itemTextClassName}>Reply</span>
           </Menu.Item>
           <Menu.Item className={itemClassName} type="button" onClick={copyLinkToClipboard}>
             <DuplicateIcon className={iconClassName} />
-            <span>Copy Link</span>
+            <span className={itemTextClassName}>Copy Link</span>
           </Menu.Item>
           <Menu.Item className={itemClassName} type="link" to={`${ROUTES.POSTS}/${id}`}>
             <ArrowsExpandIcon className={iconClassName} />
-            <span>View Post</span>
+            <span className={itemTextClassName}>View Post</span>
           </Menu.Item>
           {isOwner && !deleted ? (
             <Menu.Item
@@ -155,7 +157,7 @@ export default function MenuContainer({
               modal
             >
               <PencilIcon className={iconClassName} />
-              <span>Edit</span>
+              <span className={itemTextClassName}>Edit</span>
             </Menu.Item>
           ) : null}
           {isOwner && !deleted ? (
@@ -166,7 +168,7 @@ export default function MenuContainer({
               ignoreRequestCloseOnItemClick
             >
               <TrashIcon className={iconClassName} />
-              <span>Delete</span>
+              <span className={itemTextClassName}>Delete</span>
               {confirmDeletion ? (
                 <span className="text-red-500">&nbsp;Confirm Deletion?</span>
               ) : null}
@@ -175,7 +177,7 @@ export default function MenuContainer({
           {isOwner && deleted ? (
             <Menu.Item className={itemClassName} type="button" onClick={handleUndoDelete}>
               <TrashIcon className={iconClassName} />
-              <span>Undo Delete</span>
+              <span className={itemTextClassName}>Undo Delete</span>
             </Menu.Item>
           ) : null}
         </Menu.Items>
