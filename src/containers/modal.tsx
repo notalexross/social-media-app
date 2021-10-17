@@ -20,7 +20,7 @@ type ModalContainerProps = {
   offsetTopMd?: number
   compose?: boolean
   edit?: boolean
-}
+} & Partial<Modal['props']>
 
 export default function ModalContainer({
   children,
@@ -28,7 +28,8 @@ export default function ModalContainer({
   offsetTopSm = 0,
   offsetTopMd = 0.05,
   compose = false,
-  edit = false
+  edit = false,
+  ...restProps
 }: ModalContainerProps): JSX.Element {
   useLockBody()
   const mediaQuery = useMemo(() => window.matchMedia('(min-width: 768px)'), [])
@@ -62,32 +63,13 @@ export default function ModalContainer({
 
   let modalInner: React.ReactNode | null = null
   if (children) {
-    modalInner = (
-      <div className="border-l border-r border-b rounded-b bg-white">
-        <div className="p-4">{children}</div>
-      </div>
-    )
+    modalInner = <div className="p-4">{children}</div>
   } else if (post && !edit) {
     modalInner = (
-      <PostContainer
-        className="border-l border-r border-b rounded-b bg-white"
-        post={postObject}
-        commentsLimit={0}
-        compose={compose}
-      />
+      <PostContainer className="" post={postObject} commentsLimit={0} compose={compose} />
     )
   } else if (compose || edit) {
-    const postHasMessage = !!postObject?.message
-
-    modalInner = (
-      <div className="border-l border-r border-b rounded-b bg-white">
-        <div className="p-4">
-          {compose || postHasMessage ? (
-            <ComposeContainer originalPost={postHasMessage ? postObject : undefined} />
-          ) : null}
-        </div>
-      </div>
-    )
+    modalInner = <ComposeContainer className="p-4" originalPost={postObject} />
   }
 
   useEffect(() => {
@@ -101,14 +83,6 @@ export default function ModalContainer({
     return () => mediaQuery.removeEventListener('change', handleResize)
   }, [mediaQuery, offsetTopMd, offsetTopSm])
 
-  const handleClick: React.MouseEventHandler = event => {
-    if (event.target === event.currentTarget) {
-      setTimeout(() => {
-        overlayRef.current?.click()
-      }, 0)
-    }
-  }
-
   const OverlayElement = ({ ref, ...props }: Record<string, unknown>, content: JSX.Element) => (
     <div ref={overlayRef} {...props}>
       {content}
@@ -117,7 +91,7 @@ export default function ModalContainer({
 
   return (
     <Modal
-      className="relative mx-auto max-w-2xl outline-none"
+      className="relative mx-auto max-w-2xl rounded outline-none"
       overlayClassName="fixed inset-0 bg-white z-40 md:bg-opacity-75"
       style={{ content: { top: `${offsetTop * 100}%` } }}
       contentLabel="Current Post Modal"
@@ -125,14 +99,22 @@ export default function ModalContainer({
       shouldCloseOnOverlayClick={isLargeScreen}
       overlayElement={OverlayElement}
       isOpen
+      {...restProps}
     >
-      <div className="top-0 px-4 py-3 border rounded-t bg-white" ref={measuredHeaderRef}>
-        <button className="block ml-auto hover:opacity-70" type="button" onClick={exit} aria-label="close">
+      <div className="px-4 py-3 border rounded-t bg-white" ref={measuredHeaderRef}>
+        <button
+          className="block ml-auto hover:opacity-70"
+          type="button"
+          onClick={exit}
+          aria-label="close"
+        >
           <XIcon className="w-6" />
         </button>
       </div>
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div onClick={handleClick} className="overflow-y-auto h-screen" style={{ maxHeight }}>
+      <div
+        className="border-l border-r border-b rounded-b bg-white overflow-y-auto"
+        style={{ maxHeight }}
+      >
         {modalInner}
       </div>
     </Modal>
