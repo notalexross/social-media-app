@@ -65,9 +65,7 @@ export default function ModalContainer({
   if (children) {
     modalInner = <div className="p-4">{children}</div>
   } else if (post && !edit) {
-    modalInner = (
-      <PostContainer className="" post={postObject} commentsLimit={0} compose={compose} />
-    )
+    modalInner = <PostContainer post={postObject} commentsLimit={0} compose={compose} />
   } else if (compose || edit) {
     modalInner = <ComposeContainer className="p-4" originalPost={postObject} />
   }

@@ -43,7 +43,6 @@ export default function PostContainer({
 
   return (
     <Post
-      className="border rounded bg-white"
       post={postLive}
       hideAttachment={hideAttachment}
       isComment={isComment}
