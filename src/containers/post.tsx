@@ -50,75 +50,80 @@ export default function PostContainer({
       isPostPage={isPostPage}
       {...restProps}
     >
-      <div
-        className={`flex justify-between items-center p-3 sm:p-3 lg:p-4 ${
-          isComment ? 'pb-0 sm:border-b' : 'border-b'
-        }`}
-      >
-        <UserProfile className="flex items-center min-w-0" user={postLive?.ownerDetails || {}}>
-          <UserProfile.Avatar
-            className={`flex-shrink-0 mr-3 lg:mr-4 ${isComment ? 'w-8 sm:w-12' : 'w-12'}`}
-            linkClassName="hover:opacity-70"
-          />
-          <div className="flex flex-col overflow-hidden break-words">
-            <div className="leading-none">
-              <UserProfile.Username
-                className={`font-bold ${isComment ? 'text-sm sm:text-base' : 'text-base'}`}
-                linkClassName="hover:underline"
-                deletedTextContent="[Deleted]"
-              />
-              <Post.DateCreated
-                className={`text-gray-500 ${isComment ? 'text-xs sm:text-sm' : 'text-sm'}`}
-                linkClassName="hover:underline"
+      <div className="overflow-hidden">
+        <div
+          className={`flex justify-between items-center p-3 sm:p-3 lg:p-4 ${
+            isComment ? 'pb-0 sm:border-b' : 'border-b'
+          }`}
+        >
+          <UserProfile className="flex items-center min-w-0" user={postLive?.ownerDetails || {}}>
+            <UserProfile.Avatar
+              className={`flex-shrink-0 mr-3 lg:mr-4 ${isComment ? 'w-8 sm:w-12' : 'w-12'}`}
+              linkClassName="hover:opacity-70"
+            />
+            <div className="flex flex-col overflow-hidden break-words">
+              <div className="leading-none">
+                <UserProfile.Username
+                  className={`font-bold ${isComment ? 'text-sm sm:text-base' : 'text-base'}`}
+                  linkClassName="hover:underline"
+                  deletedTextContent="[Deleted]"
+                />
+                <Post.DateCreated
+                  className={`text-gray-500 ${isComment ? 'text-xs sm:text-sm' : 'text-sm'}`}
+                  linkClassName="hover:underline"
+                />
+              </div>
+              <UserProfile.FollowButton
+                className={`w-min text-sm text-gray-500 hover:underline ${
+                  isComment ? 'hidden sm:block' : ''
+                }`}
               />
             </div>
-            <UserProfile.FollowButton
-              className={`w-min text-sm text-gray-500 hover:underline ${
-                isComment ? 'hidden sm:block' : ''
-              }`}
+          </UserProfile>
+          {postLive ? (
+            <MenuContainer
+              className="flex-shrink-0 pr-1 sm:pr-4"
+              horizontalDotsClassName="hidden sm:block"
+              verticalDotsClassName="block sm:hidden"
+              post={postLive}
             />
-          </div>
-        </UserProfile>
-        {postLive ? (
-          <MenuContainer
-            className="flex-shrink-0 pr-1 sm:pr-4"
-            horizontalDotsClassName="hidden sm:block"
-            verticalDotsClassName="block sm:hidden"
-            post={postLive}
-          />
-        ) : null}
-      </div>
-      <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
-      <div className="flex flex-col p-3 lg:p-4 lg:pb-3">
-        <Post.ReplyingTo className="self-start text-sm text-gray-500 hover:underline" />
-        <Post.ViewAttachment className="self-start text-sm text-gray-500 hover:underline" />
-        <Post.Message
-          className="mt-1 whitespace-pre-wrap"
-          readMoreClassName="text-sm text-gray-500 hover:underline"
-          readMoreTextContent="Read more"
-          deletedTextContent="[Deleted]"
-          lineClamp={isComment ? 4 : Infinity}
-          fadeLines={2}
-        />
-        <div className="flex items-center mt-2 text-gray-500">
-          <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
-          <Post.RepliesCount className="mr-3 text-sm" linkClassName="hover:underline" />
-          <Post.LikeButton className="mr-2 w-6 hover:opacity-70" likedClassName="text-red-600" />
-          <Post.LikesCount className="text-sm" />
+          ) : null}
         </div>
-        {compose && postLive ? (
-          <ComposeContainer className="mt-2" replyTo={{ id: postLive.id, owner: postLive.owner }} />
-        ) : null}
-        {postLive ? (
-          <Comments
-            className="-mr-3 -ml-1 sm:mr-0 sm:ml-0"
-            post={postLive}
-            limit={commentsLimit}
-            maxDepth={maxDepth}
-            currentDepth={currentDepth + 1}
-            isPostPage={isPostPage}
+        <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
+        <div className="flex flex-col p-3 lg:p-4 lg:pb-3">
+          <Post.ReplyingTo className="self-start text-sm text-gray-500 hover:underline" />
+          <Post.ViewAttachment className="self-start text-sm text-gray-500 hover:underline" />
+          <Post.Message
+            className="mt-1 whitespace-pre-wrap"
+            readMoreClassName="text-sm text-gray-500 hover:underline"
+            readMoreTextContent="Read more"
+            deletedTextContent="[Deleted]"
+            lineClamp={isComment ? 4 : Infinity}
+            fadeLines={2}
           />
-        ) : null}
+          <div className="flex items-center mt-2 text-gray-500">
+            <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
+            <Post.RepliesCount className="mr-3 text-sm" linkClassName="hover:underline" />
+            <Post.LikeButton className="mr-2 w-6 hover:opacity-70" likedClassName="text-red-600" />
+            <Post.LikesCount className="text-sm" />
+          </div>
+          {compose && postLive ? (
+            <ComposeContainer
+              className="mt-2"
+              replyTo={{ id: postLive.id, owner: postLive.owner }}
+            />
+          ) : null}
+          {postLive ? (
+            <Comments
+              className="-mr-3 -ml-1 sm:mr-0 sm:ml-0"
+              post={postLive}
+              limit={commentsLimit}
+              maxDepth={maxDepth}
+              currentDepth={currentDepth + 1}
+              isPostPage={isPostPage}
+            />
+          ) : null}
+        </div>
       </div>
     </Post>
   )
@@ -208,7 +213,7 @@ Comments = function CommentsContainer({
       {repliesShown.length ? <div className="mt-3" /> : null}
       {repliesShown.map(reply => (
         <PostContainer
-          className="mt-1 border-t border-b border-l rounded-l bg-white sm:mt-3 sm:border sm:rounded"
+          className="mt-1 border-t border-b border-l rounded-l bg-white shadow sm:mt-3 sm:border sm:rounded"
           key={reply}
           post={reply}
           commentsLimit={limit}

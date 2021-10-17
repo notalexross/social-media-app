@@ -91,7 +91,7 @@ export default function ModalContainer({
 
   return (
     <Modal
-      className="relative mx-auto max-w-2xl rounded outline-none"
+      className="relative mx-auto max-w-2xl rounded outline-none md:shadow-md"
       overlayClassName="fixed inset-0 bg-white z-40 md:bg-opacity-75"
       style={{ content: { top: `${offsetTop * 100}%` } }}
       contentLabel="Current Post Modal"

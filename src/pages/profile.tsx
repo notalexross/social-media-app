@@ -57,7 +57,7 @@ export default function ProfilePage(): JSX.Element {
     <main className="mx-4 lg:mx-4">
       <div className="mx-auto max-w-screen-lg">
         <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
-          <div className="col-span-3 flex justify-center mb-2 border rounded bg-white sm:justify-start lg:mb-8">
+          <div className="col-span-3 flex justify-center mb-2 border rounded bg-white shadow sm:justify-start lg:mb-8">
             <UserProfile
               className="flex flex-col items-center p-4 text-center sm:flex-row lg:p-8 sm:text-left"
               user={isCurrentUser ? currentUser : user}
@@ -115,7 +115,7 @@ export default function ProfilePage(): JSX.Element {
             </UserProfile>
           </div>
           <div className="col-span-3 lg:col-span-2">
-            <div className="overflow-hidden mb-2 p-3 bg-white border rounded font-bold lg:mb-8 lg:p-4">
+            <div className="overflow-hidden mb-2 p-3 bg-white border rounded font-bold shadow lg:mb-8 lg:p-4">
               <ul
                 className="flex flex-wrap justify-center -mt-1 -ml-4 sm:justify-start"
                 style={{ width: 'calc(100% + 1rem)' }}

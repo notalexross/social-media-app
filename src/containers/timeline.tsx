@@ -41,7 +41,7 @@ export default function TimelineContainer({
       <>
         {posts.map(post => (
           <PostContainer
-            className="mb-2 border rounded bg-white lg:mb-8"
+            className="mb-2 border rounded bg-white shadow lg:mb-8"
             key={typeof post === 'string' ? post : post.id}
             post={post}
             commentsLimit={1}

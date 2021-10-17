@@ -14,7 +14,7 @@ export default function SidebarContainer(
 
   return (
     <div {...props}>
-      <div className="border rounded bg-white">
+      <div className="border rounded bg-white shadow">
         <div className="flex flex-col" style={{ maxHeight: `calc(${windowHeight}px - 2 * 1rem)` }}>
           {uid ? (
             <UserProfile className="flex items-center p-4" user={user}>

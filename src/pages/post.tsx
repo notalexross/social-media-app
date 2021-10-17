@@ -20,7 +20,7 @@ export default function PostPage({ compose = false }: PostPageProps): JSX.Elemen
       <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
         <div className="col-span-3 lg:col-span-2">
           <PostContainer
-            className="mb-2 border rounded bg-white lg:mb-8"
+            className="mb-2 border rounded bg-white shadow lg:mb-8"
             post={postId}
             commentsLimit={3}
             maxDepth={1}

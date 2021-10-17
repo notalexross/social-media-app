@@ -113,7 +113,7 @@ export default function MenuContainer({
           <DotsHorizontalIcon className={horizontalDotsClassName} />
           <DotsVerticalIcon className={verticalDotsClassName} />
         </Menu.Open>
-        <Menu.Items className="mb-4 w-96 p-0.5 border rounded bg-white overflow-hidden break-words">
+        <Menu.Items className="mb-4 w-96 p-0.5 border rounded bg-white shadow-md overflow-hidden break-words">
           {!isOwner && !ownerDeleted ? (
             <Menu.Item className={itemClassName} type="button" onClick={toggleFollow}>
               <UserAddIcon className={iconClassName} />

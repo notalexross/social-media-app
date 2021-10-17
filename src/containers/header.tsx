@@ -15,7 +15,7 @@ export default function HeaderContainer(): JSX.Element {
   return (
     <Dropdown closeAfterClick>
       <Dropdown.Overlay />
-      <header className="relative mb-2 py-4 border-b bg-white z-10 lg:mb-8">
+      <header className="relative mb-2 py-4 border-b bg-white z-10 shadow lg:mb-8">
         <div className="mx-4">
           <div className="flex items-center justify-between mx-auto max-w-screen-lg">
             <h1 className="flex-shrink-0 mt-1">
