@@ -370,8 +370,8 @@ Compose.EmojiSelect = function ComposeEmojiSelect(
   }, [])
 
   return showEmojiSelect ? (
-    <FocusTrap onRequestClose={onRequestClose} noAutoFocus ignoreNav>
-      <EmojiPicker {...props} native onEmojiClick={handleClick} />
+    <FocusTrap onRequestClose={onRequestClose} ignoreNav>
+      <EmojiPicker {...props} native disableAutoFocus onEmojiClick={handleClick} />
     </FocusTrap>
   ) : null
 }
