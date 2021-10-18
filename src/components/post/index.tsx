@@ -178,10 +178,10 @@ Post.Message = function PostMessage({
     fade = (
       <div className="absolute bottom-0 left-0 right-0">
         <div
-          className="bg-gradient-to-t from-white pointer-events-none"
+          className="bg-gradient-to-t from-clr-secondary pointer-events-none"
           style={{ height: fadeHeight }}
         />
-        <div className="bg-white">
+        <div className="bg-clr-secondary">
           <StatefulLink
             className={readMoreClassName}
             to={`${ROUTES.POSTS}/${post.id}`}
@@ -249,10 +249,16 @@ Post.ViewAttachment = function PostAttachment(
 }
 
 type PostLikeButtonProps = {
-  likedClassName: string
+  likedClassName?: string
+  likedFill?: string
 } & Omit<React.ComponentPropsWithoutRef<'button'>, 'children'>
 
-Post.LikeButton = function PostLikeButton({ likedClassName, ...restProps }: PostLikeButtonProps) {
+Post.LikeButton = function PostLikeButton({
+  className,
+  likedClassName,
+  likedFill,
+  ...restProps
+}: PostLikeButtonProps) {
   const { likePost, unlikePost } = useProtectedFunctions()
   const { likedPosts } = useContext(UserContext)
   const { post } = useContext(PostContext)
@@ -277,10 +283,13 @@ Post.LikeButton = function PostLikeButton({ likedClassName, ...restProps }: Post
   }
 
   return (
-    <button type="button" onClick={toggleLike} {...restProps}>
-      <span className={isLiked ? likedClassName : ''}>
-        <HeartIcon className={`${isLiked ? 'fill-current' : ''}`} />
-      </span>
+    <button
+      className={isLiked ? likedClassName : className}
+      type="button"
+      onClick={toggleLike}
+      {...restProps}
+    >
+      <HeartIcon fill={`${isLiked && likedFill ? likedFill : 'none'}`} />
     </button>
   )
 }

@@ -38,7 +38,7 @@ export default function MenuContainer({
   const isLiked = likedPosts?.includes(id)
   const isFollowing = following?.includes(owner)
   const itemClassName =
-    'flex items-center px-5 py-4 w-full text-left hover:bg-gray-100 hover:opacity-70'
+    'flex items-center px-5 py-4 w-full text-left hover:bg-clr-accent hover:text-clr-secondary focus:bg-clr-accent focus:text-clr-secondary'
   const iconClassName = 'flex-shrink-0 w-6 mr-2'
   const itemTextClassName = 'min-w-0'
 
@@ -109,11 +109,11 @@ export default function MenuContainer({
         requestCloseOnItemClick
         {...restProps}
       >
-        <Menu.Open className="block w-5 text-gray-500 sm:w-6 hover:opacity-70">
+        <Menu.Open className="block w-5 text-clr-primary text-opacity-75 sm:w-6 hover:text-clr-link-hover focus:text-clr-link-hover">
           <DotsHorizontalIcon className={horizontalDotsClassName} />
           <DotsVerticalIcon className={verticalDotsClassName} />
         </Menu.Open>
-        <Menu.Items className="mb-4 w-96 p-0.5 border rounded bg-white shadow-md overflow-hidden break-words">
+        <Menu.Items className="mb-4 w-96 p-0.5 border rounded bg-clr-secondary shadow-md overflow-hidden break-words">
           {!isOwner && !ownerDeleted ? (
             <Menu.Item className={itemClassName} type="button" onClick={toggleFollow}>
               <UserAddIcon className={iconClassName} />
@@ -170,7 +170,7 @@ export default function MenuContainer({
               <TrashIcon className={iconClassName} />
               <span className={itemTextClassName}>Delete</span>
               {confirmDeletion ? (
-                <span className="text-red-500">&nbsp;Confirm Deletion?</span>
+                <span className="text-clr-error">&nbsp;Confirm Deletion?</span>
               ) : null}
             </Menu.Item>
           ) : null}

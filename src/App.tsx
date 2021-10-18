@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Switch, Route, useLocation, Redirect } from 'react-router-dom'
+import { SkeletonTheme } from 'react-loading-skeleton'
 import type { Location } from 'history'
 import type { LocationState } from './types'
 import { UserContextProvider } from './context/user'
@@ -118,5 +119,14 @@ export default function App(): JSX.Element {
   const location = useLocation<LocationState>()
   const tree = buildDOMTree(location)
 
-  return <UserContextProvider>{tree}</UserContextProvider>
+  return (
+    <UserContextProvider>
+      <SkeletonTheme
+        color="rgb(var(--clr-skeleton))"
+        highlightColor="rgb(var(--clr-skeleton-highlight))"
+      >
+        {tree}
+      </SkeletonTheme>
+    </UserContextProvider>
+  )
 }

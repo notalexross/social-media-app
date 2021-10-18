@@ -31,9 +31,9 @@ export default function ComposeContainer({
         softCharacterLimit={2000}
         hardCharacterLimit={3000}
       >
-        <div className="w-full bg-gray-50">
+        <div className="w-full bg-clr-background">
           <Compose.AttachmentPreview
-            className="mx-auto w-2/3 bg-gray-200 border"
+            className="mx-auto w-2/3 bg-clr-attachment-background border"
             aspectRatio={16 / 9}
           />
         </div>
@@ -41,29 +41,29 @@ export default function ComposeContainer({
           <Compose.MessageInput
             className="p-4"
             containerClassName="relative whitespace-pre-wrap min-h-28"
-            overLimitClassName="text-white bg-pink-500"
+            overLimitClassName="text-clr-highlight-foreground bg-clr-highlight-background"
             placeholder={replyToPost ? 'Enter your reply...' : 'Enter your message...'}
             aria-label="Reply to post"
             autoComplete="off"
           />
-          <Compose.ErrorMessage className="px-4 py-2 border-t text-sm text-white bg-red-500" />
+          <Compose.ErrorMessage className="px-4 py-2 border-t text-sm text-clr-secondary bg-clr-error" />
           <div className="flex justify-between items-center py-2 px-4 border-t">
-            <div className="flex items-center text-gray-500">
-              <Compose.AttachButton className="mr-2 w-6 hover:opacity-70">
+            <div className="flex items-center">
+              <Compose.AttachButton className="mr-2 w-6 text-clr-primary text-opacity-75 hover:text-clr-link-hover focus:text-clr-link-hover">
                 <PaperClipIcon />
               </Compose.AttachButton>
               <div ref={popperRelativeRef}>
-                <Compose.EmojiButton className="block w-6 hover:opacity-70">
+                <Compose.EmojiButton className="block w-6 text-clr-primary text-opacity-75 hover:text-clr-link-hover focus:text-clr-link-hover">
                   <EmojiHappyIcon />
                 </Compose.EmojiButton>
               </div>
             </div>
             <div className="flex items-center ml-2">
               <Compose.ProgressBar
-                className="mr-4 text-blue-500 text-sm font-bold"
-                nearLimitClassName="text-yellow-500"
-                overLimitClassName="text-red-500"
-                backgroundClassName="text-gray-200"
+                className="mr-4 text-clr-accent text-sm font-bold"
+                nearLimitClassName="text-clr-warning"
+                overLimitClassName="text-clr-error"
+                backgroundClassName="text-clr-primary text-opacity-10"
                 widthRem={1.75}
                 thicknessRem={0.25}
                 nearLimitFraction={0.75}
@@ -71,7 +71,7 @@ export default function ComposeContainer({
                 showCircleAboveValue={-9}
               />
               <Compose.SubmitButton
-                className="py-1 px-5 bg-blue-500 font-bold text-sm text-white border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-70"
+                className="py-1 px-5 bg-clr-accent font-bold text-sm text-clr-secondary border rounded hover:bg-clr-accent-hover focus:bg-clr-accent-hover disabled:bg-clr-accent disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Send message"
               >
                 {submitButtonContent}
@@ -81,7 +81,7 @@ export default function ComposeContainer({
         </div>
         <div className="z-10" ref={popperRef}>
           <Compose.EmojiSelect
-            className="w-80 h-96 bg-white text-gray-500 border rounded shadow-md"
+            className="w-80 h-96 bg-clr-secondary border rounded shadow-md"
             style={{
               margin: '0.5rem',
               maxWidth: `calc(${windowWidth}px - 2 * 0.5rem)`,

@@ -31,13 +31,13 @@ export default function SignInPage(): JSX.Element {
   return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="w-full max-w-xs">
-        <div className="mb-4 p-4 border rounded bg-white">
+        <div className="mb-4 p-4 border rounded bg-clr-secondary">
           <h1 className="mt-2 mb-4">
             <img className="mx-auto w-36" src={logo} alt="Logo" />
           </h1>
           {error && (
             <p
-              className="mb-4 text-center text-xs text-red-500"
+              className="mb-4 text-center text-xs text-clr-error"
               role="alert"
               aria-label="error message"
             >
@@ -46,7 +46,7 @@ export default function SignInPage(): JSX.Element {
           )}
           <form className="flex flex-col" onSubmit={handleSignIn}>
             <input
-              className="mb-2 px-4 py-2.5 border rounded bg-gray-50 text-sm"
+              className="mb-2 px-4 py-2.5 border rounded bg-clr-input text-sm"
               type="text"
               placeholder="Email address"
               aria-label="enter your email address"
@@ -54,7 +54,7 @@ export default function SignInPage(): JSX.Element {
               onChange={({ target }) => setEmail(target.value)}
             />
             <input
-              className="mb-2 px-4 py-2.5 border rounded bg-gray-50 text-sm"
+              className="mb-2 px-4 py-2.5 border rounded bg-clr-input text-sm"
               type="password"
               placeholder="Password"
               aria-label="enter your password"
@@ -62,7 +62,7 @@ export default function SignInPage(): JSX.Element {
               onChange={({ target }) => setPassword(target.value)}
             />
             <button
-              className="p-1 rounded bg-blue-500 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1 rounded bg-clr-accent font-bold text-clr-secondary hover:bg-clr-accent-hover focus:bg-clr-accent-hover disabled:bg-clr-accent disabled:opacity-50 disabled:cursor-not-allowed"
               type="submit"
               aria-label="sign in"
               disabled={!isValidInputs}
@@ -71,10 +71,14 @@ export default function SignInPage(): JSX.Element {
             </button>
           </form>
         </div>
-        <div className="p-4 border rounded bg-white text-center text-sm">
+        <div className="p-4 border rounded bg-clr-secondary text-center text-sm">
           <p>
             {"Don't have an account? "}
-            <Link className="font-bold text-blue-500" to={ROUTES.SIGN_UP} aria-label="sign up">
+            <Link
+              className="font-bold text-clr-accent hover:text-clr-accent-hover focus:text-clr-accent-hover"
+              to={ROUTES.SIGN_UP}
+              aria-label="sign up"
+            >
               Sign up
             </Link>
           </p>

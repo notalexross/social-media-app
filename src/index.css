@@ -3,8 +3,24 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    @apply text-gray-800
+  :root {
+    --clr-primary: 31, 41, 55; /* gray-800 */
+    --clr-secondary: 255, 255, 255; /* white */
+    --clr-background: 249, 250, 251; /* gray-50 */
+    --clr-border: 229, 231, 235; /* gray-200 */
+    --clr-attachment-background: 229, 231, 235; /* gray-200  */
+    --clr-accent: 59, 130, 246; /* blue-500 */
+    --clr-accent-hover: 37, 99, 235; /* blue-600 */
+    --clr-link-hover: 37, 99, 235; /* blue-600 */
+    --clr-input: 249, 250, 251; /* gray-50 */
+    --clr-heart: 220, 38, 38; /* red-600 */
+    --clr-highlight-background: 236, 72, 153; /* pink-500 */
+    --clr-highlight-foreground: 255, 255, 255; /* white */
+    --clr-success: 16, 185, 129; /* green-500 */
+    --clr-warning: 245, 158, 11; /* yellow-500 */
+    --clr-error: 239, 68, 68; /* red-500 */
+    --clr-skeleton: 238, 238, 238; /* skeleton default */
+    --clr-skeleton-highlight: 245, 245, 245; /* skeleton default */
   }
 
   button {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
+import { SkeletonTheme } from 'react-loading-skeleton'
 import Modal from 'react-modal'
 import { XIcon } from '@heroicons/react/outline'
 import type { LocationState } from '../types'
@@ -90,7 +91,7 @@ export default function ModalContainer({
   return (
     <Modal
       className="relative mx-auto max-w-2xl rounded outline-none md:shadow-md"
-      overlayClassName="fixed inset-0 bg-white z-40 md:bg-opacity-75"
+      overlayClassName="fixed inset-0 bg-clr-secondary z-40 md:bg-opacity-70"
       style={{ content: { top: `${offsetTop * 100}%` } }}
       contentLabel="Current Post Modal"
       onRequestClose={exit}
@@ -99,9 +100,9 @@ export default function ModalContainer({
       isOpen
       {...restProps}
     >
-      <div className="px-4 py-3 border rounded-t bg-white" ref={measuredHeaderRef}>
+      <div className="px-4 py-3 border rounded-t bg-clr-secondary" ref={measuredHeaderRef}>
         <button
-          className="block ml-auto hover:opacity-70"
+          className="block ml-auto text-clr-primary hover:text-clr-link-hover focus:text-clr-link-hover"
           type="button"
           onClick={exit}
           aria-label="close"
@@ -110,10 +111,15 @@ export default function ModalContainer({
         </button>
       </div>
       <div
-        className="border-l border-r border-b rounded-b bg-white overflow-y-auto"
+        className="border-l border-r border-b rounded-b bg-clr-secondary overflow-y-auto"
         style={{ maxHeight }}
       >
-        {modalInner}
+        <SkeletonTheme
+          color="rgb(var(--clr-skeleton))"
+          highlightColor="rgb(var(--clr-skeleton-highlight))"
+        >
+          {modalInner}
+        </SkeletonTheme>
       </div>
     </Modal>
   )

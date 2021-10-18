@@ -64,16 +64,18 @@ export default function PostContainer({
               <div className="leading-none">
                 <UserProfile.Username
                   className={`font-bold ${isComment ? 'text-sm sm:text-base' : 'text-base'}`}
-                  linkClassName="hover:underline"
+                  linkClassName="hover:underline focus:underline"
                   deletedTextContent="[Deleted]"
                 />
                 <Post.DateCreated
-                  className={`text-gray-500 ${isComment ? 'text-xs sm:text-sm' : 'text-sm'}`}
-                  linkClassName="hover:underline"
+                  className={`text-clr-primary text-opacity-75 ${
+                    isComment ? 'text-xs sm:text-sm' : 'text-sm'
+                  }`}
+                  linkClassName="hover:underline focus:underline"
                 />
               </div>
               <UserProfile.FollowButton
-                className={`w-min text-sm text-gray-500 hover:underline ${
+                className={`w-min text-sm text-clr-primary text-opacity-75 hover:underline focus:underline ${
                   isComment ? 'hidden sm:block' : ''
                 }`}
               />
@@ -88,23 +90,30 @@ export default function PostContainer({
             />
           ) : null}
         </div>
-        <Post.Attachment className="border-b bg-gray-200" aspectRatio={16 / 9} />
+        <Post.Attachment className="border-b bg-clr-attachment-background" aspectRatio={16 / 9} />
         <div className="flex flex-col p-3 lg:p-4 lg:pb-3">
-          <Post.ReplyingTo className="self-start text-sm text-gray-500 hover:underline" />
-          <Post.ViewAttachment className="self-start text-sm text-gray-500 hover:underline" />
+          <Post.ReplyingTo className="self-start text-sm text-clr-primary text-opacity-75 hover:underline focus:underline" />
+          <Post.ViewAttachment className="self-start text-sm text-clr-primary text-opacity-75 hover:underline focus:underline" />
           <Post.Message
             className="mt-1 whitespace-pre-wrap"
-            readMoreClassName="text-sm text-gray-500 hover:underline"
+            readMoreClassName="text-sm text-clr-primary text-opacity-75 hover:underline focus:underline"
             readMoreTextContent="Read more"
             deletedTextContent="[Deleted]"
             lineClamp={isComment ? 4 : Infinity}
             fadeLines={2}
           />
-          <div className="flex items-center mt-2 text-gray-500">
-            <Post.ReplyButton className="mr-2 w-6 hover:opacity-70" />
-            <Post.RepliesCount className="mr-3 text-sm" linkClassName="hover:underline" />
-            <Post.LikeButton className="mr-2 w-6 hover:opacity-70" likedClassName="text-red-600" />
-            <Post.LikesCount className="text-sm" />
+          <div className="flex items-center mt-2">
+            <Post.ReplyButton className="mr-2 w-6 text-clr-primary text-opacity-75 hover:text-opacity-100 hover:text-clr-link-hover focus:text-opacity-100 focus:text-clr-link-hover" />
+            <Post.RepliesCount
+              className="mr-3 text-sm text-clr-primary text-opacity-75"
+              linkClassName="hover:underline focus:underline"
+            />
+            <Post.LikeButton
+              className="mr-2 w-6 text-clr-primary text-opacity-75 hover:text-opacity-100 hover:text-clr-link-hover focus:text-opacity-100 focus:text-clr-link-hover"
+              likedClassName="mr-2 w-6 text-clr-heart hover:text-clr-link-hover focus:text-clr-link-hover"
+              likedFill="rgb(var(--clr-heart))"
+            />
+            <Post.LikesCount className="text-sm text-clr-primary text-opacity-75" />
           </div>
           {compose && postLive ? (
             <ComposeContainer
@@ -205,14 +214,14 @@ Comments = function CommentsContainer({
   return (
     <div {...restProps}>
       {before && (
-        <div className="mt-2 ml-2 sm:ml-0 text-sm text-gray-500 w-max hover:underline">
+        <div className="mt-2 ml-2 sm:ml-0 text-sm text-clr-primary text-opacity-75 w-max hover:underline">
           {before}
         </div>
       )}
       {repliesShown.length ? <div className="mt-3" /> : null}
       {repliesShown.map(reply => (
         <PostContainer
-          className="mt-1 border-t border-b border-l rounded-l bg-white shadow sm:mt-3 sm:border sm:rounded"
+          className="mt-1 border-t border-b border-l rounded-l bg-clr-secondary shadow sm:mt-3 sm:border sm:rounded"
           key={reply}
           post={reply}
           commentsLimit={limit}
@@ -224,7 +233,9 @@ Comments = function CommentsContainer({
         />
       ))}
       {after ? (
-        <div className="mt-2 ml-2 sm:ml-0 text-sm text-gray-500 w-max hover:underline">{after}</div>
+        <div className="mt-2 ml-2 sm:ml-0 text-sm text-clr-primary text-opacity-75 w-max hover:underline">
+          {after}
+        </div>
       ) : (
         <div className="-mb-1 sm:mb-0" />
       )}

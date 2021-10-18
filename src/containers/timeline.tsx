@@ -33,7 +33,7 @@ export default function TimelineContainer({
 
   let timelineInner: JSX.Element
   if (!posts) {
-    timelineInner = <PostContainer className="mb-2 border rounded bg-white lg:mb-8" />
+    timelineInner = <PostContainer className="mb-2 border rounded bg-clr-secondary lg:mb-8" />
   } else if (!posts.length) {
     timelineInner = <p className="text-2xl text-center">There are no posts to show here.</p>
   } else {
@@ -41,7 +41,7 @@ export default function TimelineContainer({
       <>
         {posts.map(post => (
           <PostContainer
-            className="mb-2 border rounded bg-white shadow lg:mb-8"
+            className="mb-2 border rounded bg-clr-secondary shadow lg:mb-8"
             key={typeof post === 'string' ? post : post.id}
             post={post}
             commentsLimit={1}

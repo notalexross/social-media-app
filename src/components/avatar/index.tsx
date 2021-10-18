@@ -80,7 +80,7 @@ export default function Avatar({
     <div {...restProps}>
       <div className="relative pt-1/1">
         <AvatarImageWrapper
-          className="absolute inset-0 w-full h-full rounded-full bg-gray-200 overflow-hidden"
+          className="absolute inset-0 w-full h-full rounded-full bg-clr-primary bg-opacity-10 overflow-hidden"
           uid={uid}
           updatable={updatable}
         >

@@ -27,8 +27,9 @@ export default function ProfilePage(): JSX.Element {
     errorCallback: handleError
   })
   const { uid, likedPosts } = user || {}
-
   const currentUsername = user?.username || username
+  const linkClassName =
+    'text-clr-primary hover:underline hover:text-clr-link-hover focus:text-clr-link-hover'
 
   if (!uid) {
     return <></>
@@ -57,7 +58,7 @@ export default function ProfilePage(): JSX.Element {
     <main className="mx-4 lg:mx-4">
       <div className="mx-auto max-w-screen-lg">
         <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
-          <div className="col-span-3 flex justify-center mb-2 border rounded bg-white shadow sm:justify-start lg:mb-8">
+          <div className="col-span-3 flex justify-center mb-2 border rounded bg-clr-secondary shadow sm:justify-start lg:mb-8">
             <UserProfile
               className="flex flex-col items-center p-4 text-center sm:flex-row lg:p-8 sm:text-left"
               user={isCurrentUser ? currentUser : user}
@@ -67,7 +68,7 @@ export default function ProfilePage(): JSX.Element {
               <div>
                 <div className="flex flex-col mb-2">
                   <UserProfile.Username className="font-bold text-lg sm:text-xl lg:text-2xl" />
-                  <div className="w-max mx-auto text-gray-500 sm:mx-0">
+                  <div className="w-max mx-auto text-clr-primary text-opacity-75 sm:mx-0">
                     {isCurrentUser ? (
                       <UserProfile.FullName
                         className="hover:underline"
@@ -104,7 +105,7 @@ export default function ProfilePage(): JSX.Element {
                 </div>
                 {isCurrentUser ? (
                   <StatefulLink
-                    className="block mt-2 mx-auto w-max py-1 px-5 rounded bg-blue-500 font-bold text-sm text-white sm:mx-0 hover:opacity-70"
+                    className="block mt-2 mx-auto w-max py-1 px-5 rounded bg-clr-accent font-bold text-sm text-clr-secondary sm:mx-0 hover:bg-clr-accent-hover focus:bg-clr-accent-hover"
                     to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_EDIT}`}
                     modal
                   >
@@ -115,14 +116,14 @@ export default function ProfilePage(): JSX.Element {
             </UserProfile>
           </div>
           <div className="col-span-3 lg:col-span-2">
-            <div className="overflow-hidden mb-2 p-3 bg-white border rounded font-bold shadow lg:mb-8 lg:p-4">
+            <div className="overflow-hidden mb-2 p-3 bg-clr-secondary border rounded font-bold shadow lg:mb-8 lg:p-4">
               <ul
                 className="flex flex-wrap justify-center -mt-1 -ml-4 sm:justify-start"
                 style={{ width: 'calc(100% + 1rem)' }}
               >
                 <li className="mt-1 ml-4">
                   <Link
-                    className="hover:underline hover:opacity-70"
+                    className={linkClassName}
                     to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_POSTS}`}
                   >
                     <span className={isPostsPath ? 'underline' : ''}>Posts</span>
@@ -130,7 +131,7 @@ export default function ProfilePage(): JSX.Element {
                 </li>
                 <li className="mt-1 ml-4">
                   <Link
-                    className="hover:underline hover:opacity-70"
+                    className={linkClassName}
                     to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_LIKES}`}
                   >
                     <span className={isLikesPath ? 'underline' : ''}>Likes</span>
@@ -139,7 +140,7 @@ export default function ProfilePage(): JSX.Element {
                 {isCurrentUser ? (
                   <li className="mt-1 ml-4">
                     <Link
-                      className="hover:underline hover:opacity-70"
+                      className={linkClassName}
                       to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_FOLLOWING}`}
                     >
                       <span className={isFollowingPath ? 'underline' : ''}>Following</span>
@@ -149,7 +150,7 @@ export default function ProfilePage(): JSX.Element {
                 {isCurrentUser ? (
                   <li className="mt-1 ml-4">
                     <Link
-                      className="hover:underline hover:opacity-70"
+                      className={linkClassName}
                       to={`${ROUTES.PROFILES}/${currentUsername}${ROUTES.PROFILE_RECOMMENDATIONS}`}
                     >
                       <span className={isRecomPath ? 'underline' : ''}>Recommendations</span>
@@ -161,11 +162,11 @@ export default function ProfilePage(): JSX.Element {
             {isPostsPath && <UserPostsTimelineContainer uid={uid} postsPerPage={2} />}
             {isLikesPath && <PaginatedPostsTimelineContainer postIds={likes} postsPerPage={2} />}
             {isFollowingPath && (
-              <FollowingContainer className="mb-2 pb-3 border rounded bg-white lg:mb-8 lg:pb-4" />
+              <FollowingContainer className="mb-2 pb-3 border rounded bg-clr-secondary lg:mb-8 lg:pb-4" />
             )}
             {isRecomPath && (
               <RecommendationsContainer
-                className="mb-2 pb-3 border rounded bg-white lg:mb-8 lg:pb-4"
+                className="mb-2 pb-3 border rounded bg-clr-secondary lg:mb-8 lg:pb-4"
                 emptyText="You don't currently have any recommendations."
                 max={20}
                 infiniteScroll

@@ -160,7 +160,7 @@ Compose.MessageInput = function ComposeMessageInput({
             resize: 'none',
             color: 'transparent',
             backgroundColor: 'transparent',
-            caretColor: 'black',
+            caretColor: 'rgb(var(--clr-primary))',
             overflow: 'hidden'
           }}
           {...restProps}
@@ -286,7 +286,7 @@ Compose.AttachmentPreview = function ComposeAttachmentPreview({
           alt="attached file preview"
         />
         <button
-          className="absolute inset-0 w-full h-full flex items-center justify-center bg-white font-bold text-gray-600 text-4xl opacity-0 bg-opacity-75 hover:opacity-100 focus:opacity-100"
+          className="absolute inset-0 w-full h-full flex items-center justify-center bg-clr-secondary font-bold text-gray-600 text-4xl opacity-0 bg-opacity-70 hover:opacity-100 focus:opacity-100"
           type="button"
           onClick={removeAttachment}
         >

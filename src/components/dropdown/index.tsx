@@ -46,7 +46,7 @@ Dropdown.Overlay = function DropdownOverlay(
 
   return (
     <div
-      className="fixed inset-x-0 top-0 -bottom-20 z-10 bg-black opacity-30"
+      className="fixed inset-x-0 top-0 -bottom-20 z-10 bg-clr-secondary opacity-70"
       role="presentation"
       onMouseDown={close}
       {...props}

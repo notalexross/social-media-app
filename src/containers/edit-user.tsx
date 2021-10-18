@@ -9,17 +9,17 @@ export default function EditUserContainer(
   const user = useUser(username, { by: 'username', includePrivate: true, subscribe: true })
 
   const labelClassName = 'block mb-4 w-full leading-5'
-  const inputClassName = 'px-4 py-2.5 w-full border rounded bg-gray-50 text-sm'
+  const inputClassName = 'px-4 py-2.5 w-full border rounded bg-clr-input text-sm'
   const labelSpanClassName = 'inline-block mb-2'
   const showPasswordSpanClassName = 'inline-block ml-2'
 
   const submit = (
     <div className="mt-4">
-      <EditUser.Error className="mb-4 text-red-500 leading-none" />
-      <EditUser.Success className="mb-4 text-green-500 leading-none">
+      <EditUser.Error className="mb-4 text-clr-error leading-none" />
+      <EditUser.Success className="mb-4 text-clr-success leading-none">
         Updated Successfully
       </EditUser.Success>
-      <EditUser.Submit className="block px-6 py-2 w-full rounded bg-blue-500 font-bold text-white hover:opacity-70 disabled:opacity-50 disabled:cursor-not-allowed">
+      <EditUser.Submit className="block px-6 py-2 w-full rounded bg-clr-accent font-bold text-clr-secondary hover:bg-clr-accent-hover focus:bg-clr-accent-hover disabled:bg-clr-accent disabled:opacity-50 disabled:cursor-not-allowed">
         Save
       </EditUser.Submit>
     </div>

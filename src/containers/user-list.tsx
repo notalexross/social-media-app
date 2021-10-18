@@ -20,10 +20,10 @@ function UserListItem({ user, maxAge = 0, ...restProps }: UserListItemProps) {
           <UserProfile.Avatar className="flex-shrink-0 w-8 mr-3" linkClassName="hover:opacity-70" />
           <UserProfile.Username
             className="overflow-hidden break-words"
-            linkClassName="hover:underline"
+            linkClassName="hover:underline focus:underline"
           />
         </div>
-        <UserProfile.FollowButton className="ml-4 text-gray-500 hover:underline" />
+        <UserProfile.FollowButton className="ml-4 text-clr-primary text-opacity-75 hover:underline focus:underline" />
       </UserProfile>
     </li>
   )

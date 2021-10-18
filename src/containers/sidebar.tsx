@@ -14,30 +14,39 @@ export default function SidebarContainer(
 
   return (
     <div {...props}>
-      <div className="border rounded bg-white shadow">
+      <div className="border rounded bg-clr-secondary shadow">
         <div className="flex flex-col" style={{ maxHeight: `calc(${windowHeight}px - 2 * 1rem)` }}>
           {uid ? (
             <UserProfile className="flex items-center p-4" user={user}>
               <UserProfile.Avatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
               <div className="flex flex-col">
-                <UserProfile.Username className="font-bold" linkClassName="hover:underline" />
+                <UserProfile.Username
+                  className="font-bold"
+                  linkClassName="hover:underline focus:underline"
+                />
                 <UserProfile.FullName className="text-sm" />
               </div>
             </UserProfile>
           ) : (
             <div className="flex items-center p-4">
               <StatefulLink
-                className="mr-4 w-12 hover:opacity-70"
+                className="mr-4 w-12 hover:opacity-70 focus:opacity-70"
                 to={ROUTES.SIGN_IN}
                 aria-label="Sign in"
               >
                 <Avatar src={null} alt="Anonymous user avatar" />
               </StatefulLink>
               <div className="flex flex-col items-start">
-                <StatefulLink className="font-bold hover:underline" to={ROUTES.SIGN_IN}>
+                <StatefulLink
+                  className="font-bold hover:underline focus:underline"
+                  to={ROUTES.SIGN_IN}
+                >
                   Anonymous User
                 </StatefulLink>
-                <StatefulLink className="text-sm hover:underline" to={ROUTES.SIGN_IN}>
+                <StatefulLink
+                  className="text-sm hover:underline focus:underline"
+                  to={ROUTES.SIGN_IN}
+                >
                   Sign in
                 </StatefulLink>
               </div>
