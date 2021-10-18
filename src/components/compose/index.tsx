@@ -7,6 +7,7 @@ import EmojiPicker from '../emoji-picker'
 import FocusTrap from '../focus-trap'
 import { disableForm, enableElements, stringifyError } from '../../utils'
 import { useProtectedFunctions } from '../../hooks'
+import * as ROUTES from '../../constants/routes'
 
 type ComposeContextValue = {
   error: string
@@ -47,25 +48,34 @@ export default function Compose({
   const [showEmojiSelect, setShowEmojiSelect] = useState(false)
   const [hasChanges, setHasChanges] = useState(!originalPost)
   const history = useHistory<LocationState>()
-  const { pathname, state } = history.location
-  const truncatedPath = pathname.substring(0, pathname.lastIndexOf('/'))
+  const { location } = history
+  const { state } = location
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async event => {
     event.preventDefault()
     const disabledElements = disableForm(event.currentTarget)
 
     try {
+      let post = originalPost?.id
       if (originalPost) {
         await editPost(originalPost, { message, attachment })
       } else {
-        await addPost({ message, replyTo, attachment })
+        post = await addPost({ message, replyTo, attachment })
       }
 
-      const isModal = !!state?.modal
-      if (isModal) {
-        history.replace(truncatedPath, state)
-      } else {
-        history.push(truncatedPath, state)
+      if (post) {
+        const newPath = `${ROUTES.POSTS}/${post}`
+        const newState = {
+          post,
+          modal: true,
+          back: (state?.modal && state?.back) || location
+        }
+
+        if (state?.modal) {
+          history.replace(newPath, newState)
+        } else {
+          history.push(newPath, newState)
+        }
       }
     } catch (err) {
       setError(stringifyError(err))
