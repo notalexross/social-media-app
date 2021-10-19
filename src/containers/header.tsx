@@ -5,10 +5,12 @@ import { signOut } from '../services/firebase'
 import { UserContext } from '../context/user'
 import * as ROUTES from '../constants/routes'
 import logo from '../images/logo.png'
-import { Dropdown, StatefulLink, UserProfile } from '../components'
+import { Dropdown, StatefulLink, ThemeSwitcher, UserProfile } from '../components'
+import { ThemeContext } from '../context/theme'
 
 export default function HeaderContainer(): JSX.Element {
   const { pathname } = useLocation()
+  const { theme, setTheme } = useContext(ThemeContext)
   const currentUser = useContext(UserContext)
   const { user, username } = currentUser
   const dropdownItemClassName =
@@ -26,7 +28,7 @@ export default function HeaderContainer(): JSX.Element {
               </Link>
             </h1>
             <div className="flex items-center justify-between w-full">
-              <nav className="hidden ml-8 font-bold sm:block">
+              <nav className="hidden ml-8 font-bold md:block">
                 <ul className="flex">
                   <li>
                     <Link
@@ -57,10 +59,11 @@ export default function HeaderContainer(): JSX.Element {
               >
                 New Post
               </StatefulLink>
-              <div className="hidden items-center text-sm sm:flex">
+              <div className="hidden items-center text-sm md:flex">
+                <ThemeSwitcher className="text-base" />
                 {user.uid !== undefined && (
                   <Link
-                    className="h-8 w-8 hover:text-clr-link-hover focus:text-clr-link-hover"
+                    className="ml-3 h-8 w-8 hover:text-clr-link-hover focus:text-clr-link-hover"
                     to={ROUTES.DASHBOARD}
                     aria-label="home"
                   >
@@ -84,7 +87,7 @@ export default function HeaderContainer(): JSX.Element {
                 )}
                 {user.uid === undefined && (
                   <Link
-                    className="ml-3 px-5 py-1 rounded bg-clr-accent font-bold text-clr-secondary hover:bg-clr-accent-hover focus:bg-clr-accent-hover"
+                    className="ml-6 px-5 py-1 rounded bg-clr-accent font-bold text-clr-secondary hover:bg-clr-accent-hover focus:bg-clr-accent-hover"
                     to={ROUTES.SIGN_IN}
                     aria-label="sign in"
                   >
@@ -103,7 +106,7 @@ export default function HeaderContainer(): JSX.Element {
               </div>
             </div>
             <Dropdown.Toggle
-              className="sm:hidden hover:text-clr-link-hover focus:text-clr-link-hover"
+              className="md:hidden hover:text-clr-link-hover focus:text-clr-link-hover"
               aria-label="menu"
             >
               <MenuIcon className="w-8" />
@@ -111,7 +114,7 @@ export default function HeaderContainer(): JSX.Element {
           </div>
         </div>
       </header>
-      <nav className="absolute z-30 inset-x-0 -mt-2 text-lg text-center sm:hidden">
+      <nav className="absolute z-30 inset-x-0 -mt-2 text-lg text-center md:hidden">
         <Dropdown.Items
           className="py-2 border-b bg-clr-secondary shadow-xl outline-none"
           role="menu"
@@ -122,10 +125,10 @@ export default function HeaderContainer(): JSX.Element {
           <Dropdown.Item className={dropdownItemClassName} to={ROUTES.DASHBOARD}>
             Home
           </Dropdown.Item>
-          <Dropdown.Item className={dropdownItemClassName} type="link" to={ROUTES.DASHBOARD}>
+          <Dropdown.Item className={dropdownItemClassName} to={ROUTES.DASHBOARD}>
             Following
           </Dropdown.Item>
-          <Dropdown.Item className={dropdownItemClassName} type="link" to={ROUTES.EXPLORE}>
+          <Dropdown.Item className={dropdownItemClassName} to={ROUTES.EXPLORE}>
             Explore
           </Dropdown.Item>
           {username !== undefined ? (
@@ -139,15 +142,22 @@ export default function HeaderContainer(): JSX.Element {
             </Dropdown.Item>
           )}
           {user.uid === undefined && (
-            <Dropdown.Item className={dropdownItemClassName} type="link" to={ROUTES.SIGN_IN}>
+            <Dropdown.Item className={dropdownItemClassName} to={ROUTES.SIGN_IN}>
               Log In
             </Dropdown.Item>
           )}
           {user.uid === undefined && (
-            <Dropdown.Item className={dropdownItemClassName} type="link" to={ROUTES.SIGN_UP}>
+            <Dropdown.Item className={dropdownItemClassName} to={ROUTES.SIGN_UP}>
               Sign Up
             </Dropdown.Item>
           )}
+          <Dropdown.Item
+            className={dropdownItemClassName}
+            onClick={() => setTheme(state => (state === 'dark' ? 'light' : 'dark'))}
+            closeAfterClickOverride={false}
+          >
+            {`${theme === 'dark' ? 'Disable' : 'Enable'} Dark Mode`}
+          </Dropdown.Item>
         </Dropdown.Items>
       </nav>
     </Dropdown>

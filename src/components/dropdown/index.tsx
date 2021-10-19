@@ -91,27 +91,34 @@ Dropdown.Items = function DropdownItems({
   )
 }
 
-Dropdown.Item = function DropdownItem(
-  props: Parameters<typeof StatefulLink>[0] | React.ComponentPropsWithoutRef<'button'>
-): JSX.Element {
+type DropdownItemProps = {
+  closeAfterClickOverride?: boolean
+} & (Parameters<typeof StatefulLink>[0] | React.ComponentPropsWithoutRef<'button'>)
+
+Dropdown.Item = function DropdownItem({
+  closeAfterClickOverride,
+  onClick,
+  ...restProps
+}: DropdownItemProps): JSX.Element {
   const { closeAfterClick, close } = useContext(DropdownContext)
 
   const handleClick = (
     event: React.MouseEvent<HTMLButtonElement & HTMLAnchorElement, MouseEvent>
   ) => {
-    props.onClick?.(event)
+    onClick?.(event)
 
-    if (closeAfterClick) {
+    if (
+      closeAfterClickOverride === true ||
+      (closeAfterClick && closeAfterClickOverride !== false)
+    ) {
       close()
     }
   }
 
   let inner = <></>
-  if ('to' in props) {
-    const { type, onClick, ...restProps } = props
+  if ('to' in restProps) {
     inner = <StatefulLink tabIndex={0} onClick={handleClick} {...restProps} />
   } else {
-    const { type, onClick, ...restProps } = props
     inner = <button type="button" onClick={handleClick} {...restProps} />
   }
 

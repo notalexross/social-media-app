@@ -23,6 +23,26 @@
     --clr-skeleton-highlight: 245, 245, 245; /* skeleton default */
   }
 
+  [data-theme='dark'] {
+    --clr-primary: 249, 250, 251; /* gray-50 */
+    --clr-secondary: 31, 41, 55; /* gray-800 */
+    --clr-background: 17, 24, 39; /* gray-900 */
+    --clr-border: 75, 85, 99; /* gray-600 */
+    --clr-attachment-background: 55, 65, 81; /* gray-700  */
+    --clr-accent: 147, 197, 253; /* blue-300 */
+    --clr-accent-hover: 96, 165, 250; /* blue-400 */
+    --clr-link-hover: 147, 197, 253; /* blue-300 */
+    --clr-input: 17, 24, 39; /* gray-900 */
+    --clr-heart: 220, 38, 38; /* red-600 */
+    --clr-highlight-background: 236, 72, 153; /* pink-500 */
+    --clr-highlight-foreground: 255, 255, 255; /* white */
+    --clr-success: 16, 185, 129; /* green-500 */
+    --clr-warning: 245, 158, 11; /* yellow-500 */
+    --clr-error: 239, 68, 68; /* red-500 */
+    --clr-skeleton: 55, 65, 81; /* gray-700  */
+    --clr-skeleton-highlight: 75, 85, 99; /* gray-600  */
+  }
+
   button {
     text-decoration: inherit;
   }
