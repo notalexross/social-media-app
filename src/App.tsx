@@ -4,6 +4,7 @@ import { SkeletonTheme } from 'react-loading-skeleton'
 import type { Location } from 'history'
 import type { LocationState } from './types'
 import { UserContextProvider } from './context/user'
+import { ThemeContextProvider } from './context/theme'
 import * as ROUTES from './constants/routes'
 
 const HeaderContainer = lazy(() => import('./containers/header'))
@@ -121,12 +122,14 @@ export default function App(): JSX.Element {
 
   return (
     <UserContextProvider>
-      <SkeletonTheme
-        color="rgb(var(--clr-skeleton))"
-        highlightColor="rgb(var(--clr-skeleton-highlight))"
-      >
-        {tree}
-      </SkeletonTheme>
+      <ThemeContextProvider>
+        <SkeletonTheme
+          color="rgb(var(--clr-skeleton))"
+          highlightColor="rgb(var(--clr-skeleton-highlight))"
+        >
+          {tree}
+        </SkeletonTheme>
+      </ThemeContextProvider>
     </UserContextProvider>
   )
 }
