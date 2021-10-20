@@ -57,10 +57,10 @@ export default function PostContainer({
         >
           <UserProfile className="flex items-center min-w-0" user={postLive?.ownerDetails || {}}>
             <UserProfile.Avatar
-              className={`flex-shrink-0 mr-3 lg:mr-4 ${isComment ? 'w-8 sm:w-12' : 'w-12'}`}
+              className={`flex-shrink-0 mr-2 lg:mr-3 ${isComment ? 'w-8 sm:w-12' : 'w-12'}`}
               linkClassName="hover:opacity-70"
             />
-            <div className="flex flex-col overflow-hidden break-words">
+            <div className="flex flex-col p-1 overflow-hidden break-words">
               <div className="leading-none">
                 <UserProfile.Username
                   className={`font-bold ${isComment ? 'text-sm sm:text-base' : 'text-base'}`}

@@ -13,17 +13,20 @@ function UserListItem({ user, maxAge = 0, ...restProps }: UserListItemProps) {
   return (
     <li {...restProps}>
       <UserProfile
-        className="flex justify-between items-center mt-3 px-3 text-sm lg:mt-4 lg:px-4"
+        className="flex justify-between items-center pl-2 pr-3 text-sm lg:pl-3 lg:pr-4"
         user={userLive}
       >
         <div className="flex items-center overflow-hidden">
-          <UserProfile.Avatar className="flex-shrink-0 w-8 mr-3" linkClassName="hover:opacity-70" />
+          <UserProfile.Avatar
+            className="flex-shrink-0 w-8 m-1 mr-2"
+            linkClassName="hover:opacity-70"
+          />
           <UserProfile.Username
-            className="overflow-hidden break-words"
+            className="p-1 overflow-hidden break-words"
             linkClassName="hover:underline focus:underline"
           />
         </div>
-        <UserProfile.FollowButton className="ml-4 text-clr-primary text-opacity-75 hover:underline focus:underline" />
+        <UserProfile.FollowButton className="ml-2 text-clr-primary text-opacity-75 hover:underline focus:underline" />
       </UserProfile>
     </li>
   )
@@ -36,8 +39,12 @@ type UserListProps = {
 export default function UserListContainer({ users, ...restProps }: UserListProps): JSX.Element {
   return (
     <ul {...restProps}>
-      {users.map(user => (
-        <UserListItem key={typeof user === 'string' ? user : user.uid} user={user} />
+      {users.map((user, idx) => (
+        <UserListItem
+          className={idx === 0 ? '' : 'mt-1 lg:mt-3'}
+          key={typeof user === 'string' ? user : user.uid}
+          user={user}
+        />
       ))}
     </ul>
   )

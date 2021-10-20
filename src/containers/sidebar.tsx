@@ -59,7 +59,7 @@ export default function SidebarContainer(
             className="py-3 border-t flex-grow-1 overflow-auto lg:py-4"
             max={10}
           >
-            <h3 className="px-3 lg:px-4">Recommendations</h3>
+            <h3 className="mb-3 px-3 lg:px-4">Recommendations</h3>
           </RecommendationsContainer>
         </div>
       </div>

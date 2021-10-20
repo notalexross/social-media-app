@@ -116,7 +116,7 @@ export default function HeaderContainer(): JSX.Element {
       </header>
       <nav className="absolute z-30 inset-x-0 -mt-2 text-lg text-center md:hidden">
         <Dropdown.Items
-          className="py-2 border-b bg-clr-secondary shadow-xl outline-none"
+          className="p-1 border-b bg-clr-secondary shadow-xl outline-none"
           role="menu"
         >
           <Dropdown.Item className={dropdownItemClassName} modal to={ROUTES.COMPOSE}>

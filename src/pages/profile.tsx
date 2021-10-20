@@ -165,11 +165,11 @@ export default function ProfilePage(): JSX.Element {
               <PaginatedPostsTimelineContainer key={uid} postIds={likes} postsPerPage={2} />
             )}
             {isFollowingPath && (
-              <FollowingContainer className="mb-2 pb-3 border rounded bg-clr-secondary lg:mb-8 lg:pb-4" />
+              <FollowingContainer className="mb-2 py-2 border rounded bg-clr-secondary lg:mb-8 lg:pb-4" />
             )}
             {isRecomPath && (
               <RecommendationsContainer
-                className="mb-2 pb-3 border rounded bg-clr-secondary lg:mb-8 lg:pb-4"
+                className="mb-2 py-2 border rounded bg-clr-secondary lg:mb-8 lg:py-3"
                 emptyText="You don't currently have any recommendations."
                 max={20}
                 infiniteScroll
