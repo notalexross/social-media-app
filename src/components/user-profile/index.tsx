@@ -79,7 +79,7 @@ UserProfile.Avatar = function UserProfileAvatar({
         inner
       ) : (
         <StatefulLink
-          to={`${ROUTES.PROFILES}/${username}`}
+          to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
           aria-label={isSelf ? 'Your profile' : `${username}'s profile`}
         >
           {inner}

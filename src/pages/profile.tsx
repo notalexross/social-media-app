@@ -41,13 +41,14 @@ export default function ProfilePage(): JSX.Element {
   const isCurrentUser = uid === currentUser.uid
   const likes = likedPosts?.slice().reverse()
 
+  const isMainPath = pathname === `${ROUTES.PROFILES}/${username}`
   const isPostsPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`
   const isLikesPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_LIKES}`
   const isFollowingPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_FOLLOWING}`
   const isRecomPath = pathname === `${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_RECOMMENDATIONS}`
 
   const isCurrentUserOnlyPath = isFollowingPath || isRecomPath
-  const existsPath = isPostsPath || isLikesPath || isFollowingPath || isRecomPath
+  const existsPath = isMainPath || isPostsPath || isLikesPath || isFollowingPath || isRecomPath
   const isValidPath = existsPath && (isCurrentUser || !isCurrentUserOnlyPath)
 
   if (!isValidPath) {
