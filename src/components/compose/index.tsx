@@ -136,7 +136,7 @@ Compose.MessageInput = function ComposeMessageInput({
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    inputRef.current?.focus()
+    inputRef.current?.focus({ preventScroll: true })
   }, [])
 
   return (
