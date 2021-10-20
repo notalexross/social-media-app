@@ -18,33 +18,36 @@ export default function SidebarContainer(
         <div className="flex flex-col" style={{ maxHeight: `calc(${windowHeight}px - 2 * 1rem)` }}>
           {uid ? (
             <UserProfile className="flex items-center p-4" user={user}>
-              <UserProfile.Avatar className="mr-4 w-12" linkClassName="hover:opacity-70" />
-              <div className="flex flex-col">
+              <UserProfile.Avatar
+                className="flex-shrink-0 mr-3 w-12"
+                linkClassName="hover:opacity-70"
+              />
+              <div className="flex flex-col items-start p-1 overflow-hidden break-words">
                 <UserProfile.Username
-                  className="font-bold"
+                  className="max-w-full font-bold"
                   linkClassName="hover:underline focus:underline"
                 />
-                <UserProfile.FullName className="text-sm" />
+                <UserProfile.FullName className="max-w-full text-sm" />
               </div>
             </UserProfile>
           ) : (
             <div className="flex items-center p-4">
               <StatefulLink
-                className="mr-4 w-12 hover:opacity-70 focus:opacity-70"
+                className="flex-shrink-0 mr-3 w-12 hover:opacity-70 focus:opacity-70"
                 to={ROUTES.SIGN_IN}
                 aria-label="Sign in"
               >
                 <Avatar src={null} alt="Anonymous user avatar" />
               </StatefulLink>
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start p-1 overflow-hidden break-words">
                 <StatefulLink
-                  className="font-bold hover:underline focus:underline"
+                  className="max-w-full font-bold hover:underline focus:underline"
                   to={ROUTES.SIGN_IN}
                 >
                   Anonymous User
                 </StatefulLink>
                 <StatefulLink
-                  className="text-sm hover:underline focus:underline"
+                  className="max-w-full text-sm hover:underline focus:underline"
                   to={ROUTES.SIGN_IN}
                 >
                   Sign in
