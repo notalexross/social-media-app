@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useState } from 'react'
 import FocusTrap from '../focus-trap'
 import StatefulLink from '../stateful-link'
 
@@ -68,24 +68,12 @@ Dropdown.Items = function DropdownItems({
 }: React.ComponentPropsWithoutRef<'div'>): JSX.Element {
   const { isOpen, close } = useContext(DropdownContext)
 
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        close()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyPress)
-
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [close])
-
   if (!isOpen) {
     return <></>
   }
 
   return (
-    <FocusTrap overlayClassName="hidden" role="menu" {...restProps}>
+    <FocusTrap overlayClassName="hidden" role="menu" onRequestClose={close} {...restProps}>
       <ul className="flex flex-col">{children}</ul>
     </FocusTrap>
   )

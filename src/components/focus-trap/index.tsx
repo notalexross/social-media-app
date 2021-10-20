@@ -15,7 +15,7 @@ export default function FocusTrap({
   overlayClassName = '',
   previousKey = 'ArrowUp',
   nextKey = 'ArrowDown',
-  onRequestClose = () => {},
+  onRequestClose,
   noAutoFocus = false,
   ignoreNav = false,
   ...restProps
@@ -52,7 +52,7 @@ export default function FocusTrap({
         } else if (event.key === 'Tab' || event.key === nextKey) {
           event.preventDefault()
           moveFocusBy(1)
-        } else if (event.key === 'Escape') {
+        } else if (event.key === 'Escape' && onRequestClose) {
           onRequestClose()
         }
       }
@@ -74,7 +74,7 @@ export default function FocusTrap({
 
       const handleKeyPress = (event: KeyboardEvent) => {
         shiftTabLastPressedKey = event.shiftKey && event.key === 'Tab'
-        if (event.key === 'Escape') {
+        if (event.key === 'Escape' && onRequestClose) {
           onRequestClose()
         }
       }
