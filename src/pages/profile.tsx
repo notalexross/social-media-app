@@ -159,8 +159,10 @@ export default function ProfilePage(): JSX.Element {
                 ) : null}
               </ul>
             </div>
-            {isPostsPath && <UserPostsTimelineContainer uid={uid} postsPerPage={2} />}
-            {isLikesPath && <PaginatedPostsTimelineContainer postIds={likes} postsPerPage={2} />}
+            {isPostsPath && <UserPostsTimelineContainer key={uid} uid={uid} postsPerPage={2} />}
+            {isLikesPath && (
+              <PaginatedPostsTimelineContainer key={uid} postIds={likes} postsPerPage={2} />
+            )}
             {isFollowingPath && (
               <FollowingContainer className="mb-2 pb-3 border rounded bg-clr-secondary lg:mb-8 lg:pb-4" />
             )}
