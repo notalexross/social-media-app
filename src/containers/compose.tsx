@@ -46,7 +46,10 @@ export default function ComposeContainer({
             aria-label="Reply to post"
             autoComplete="off"
           />
-          <Compose.ErrorMessage className="px-4 py-2 border-t text-sm text-clr-secondary bg-clr-error" />
+          <Compose.ErrorMessage className="px-4 py-2 border-t font-bold text-sm text-clr-secondary bg-clr-error" />
+          <Compose.Success className="px-4 py-2 border-t font-bold text-sm text-clr-secondary bg-clr-success">
+            {`Post ${originalPost ? 'Updated' : 'Created'} Successfully`}
+          </Compose.Success>
           <div className="flex justify-between items-center py-2 px-4 border-t">
             <div className="flex items-center">
               <Compose.AttachButton className="mr-2 w-6 text-clr-primary text-opacity-75 hover:text-clr-link-hover focus:text-clr-link-hover">

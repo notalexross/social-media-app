@@ -11,6 +11,7 @@ import * as ROUTES from '../../constants/routes'
 
 type ComposeContextValue = {
   error: string
+  didSend: boolean
   message: string
   setMessage: React.Dispatch<React.SetStateAction<string>>
   attachment: File | string | undefined
@@ -47,11 +48,13 @@ export default function Compose({
   const [attachment, setAttachment] = useState<File | string | undefined>(previewSrc)
   const [showEmojiSelect, setShowEmojiSelect] = useState(false)
   const [hasChanges, setHasChanges] = useState(!originalPost)
+  const [didSend, setDidSend] = useState(false)
   const history = useHistory<LocationState>()
   const { location } = history
   const { state } = location
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async event => {
+    setDidSend(false)
     event.preventDefault()
     const disabledElements = disableForm(event.currentTarget)
 
@@ -71,6 +74,9 @@ export default function Compose({
           back: (state?.modal && state?.back) || location
         }
 
+        setDidSend(true)
+        enableElements(disabledElements)
+
         if (state?.modal) {
           history.replace(newPath, newState)
         } else {
@@ -79,7 +85,6 @@ export default function Compose({
       }
     } catch (err) {
       setError(stringifyError(err))
-    } finally {
       enableElements(disabledElements)
     }
   }
@@ -98,10 +103,20 @@ export default function Compose({
     }
   }, [hardCharacterLimit, message])
 
+  useEffect(() => {
+    if (didSend) {
+      setError('')
+      setMessage('')
+      setAttachment(undefined)
+      setPreviewSrc(undefined)
+    }
+  }, [didSend])
+
   return (
     <ComposeContext.Provider
       value={{
         error,
+        didSend,
         message,
         setMessage,
         attachment,
@@ -260,6 +275,12 @@ Compose.ErrorMessage = function ComposeErrorMessage(
   const { error } = useContext(ComposeContext)
 
   return error ? <div {...props}>{error}</div> : null
+}
+
+Compose.Success = function ComposeUserSuccess(props: React.ComponentPropsWithoutRef<'p'>) {
+  const { didSend } = useContext(ComposeContext)
+
+  return didSend ? <p {...props} /> : <></>
 }
 
 type ComposeAttachmentPreviewProps = {
