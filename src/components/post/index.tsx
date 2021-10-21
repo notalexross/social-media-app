@@ -1,5 +1,6 @@
 import type firebase from 'firebase'
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
 import type { PostWithUserDetails } from '../../services/firebase'
@@ -7,6 +8,7 @@ import { UserContext } from '../../context/user'
 import { useLineHeight, useProtectedFunctions, useTimeAgo } from '../../hooks'
 import StatefulLink from '../stateful-link'
 import * as ROUTES from '../../constants/routes'
+import { LocationState } from '../../types'
 
 type PostContextValue = {
   post: PostWithUserDetails | undefined
@@ -298,6 +300,7 @@ Post.ReplyButton = function PostReplyButton(
   props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
 ) {
   const { post, isPostPage, isComment } = useContext(PostContext)
+  const { pathname, state } = useLocation<LocationState>()
 
   if (!post) {
     return (
@@ -309,7 +312,10 @@ Post.ReplyButton = function PostReplyButton(
 
   return (
     <StatefulLink
-      to={`${ROUTES.POSTS}/${post.id}${ROUTES.COMPOSE}`}
+      to={`${ROUTES.POSTS}/${post.id}${
+        pathname.endsWith(`${post.id}${ROUTES.COMPOSE}`) ? '' : ROUTES.COMPOSE
+      }`}
+      replace={!!state?.modal || (isPostPage && !isComment)}
       post={post}
       modal={!isPostPage || isComment}
       {...props}
