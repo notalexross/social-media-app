@@ -1,6 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import type { LocationState } from '../../types'
 import type { PostWithUserDetails, ReplyTo } from '../../services/firebase'
 import type { IEmojiData } from '../emoji-picker'
 import EmojiPicker from '../emoji-picker'
@@ -8,10 +6,12 @@ import FocusTrap from '../focus-trap'
 import { disableForm, enableElements, stringifyError } from '../../utils'
 import { useProtectedFunctions } from '../../hooks'
 import * as ROUTES from '../../constants/routes'
+import StatefulLink from '../stateful-link'
 
 type ComposeContextValue = {
   error: string
   didSend: boolean
+  postId: string | undefined
   message: string
   setMessage: React.Dispatch<React.SetStateAction<string>>
   attachment: File | string | undefined
@@ -49,9 +49,7 @@ export default function Compose({
   const [showEmojiSelect, setShowEmojiSelect] = useState(false)
   const [hasChanges, setHasChanges] = useState(!originalPost)
   const [didSend, setDidSend] = useState(false)
-  const history = useHistory<LocationState>()
-  const { location } = history
-  const { state } = location
+  const [postId, setPostId] = useState<string | undefined>(originalPost?.id)
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async event => {
     setDidSend(false)
@@ -59,30 +57,15 @@ export default function Compose({
     const disabledElements = disableForm(event.currentTarget)
 
     try {
-      let post = originalPost?.id
       if (originalPost) {
         await editPost(originalPost, { message, attachment })
       } else {
-        post = await addPost({ message, replyTo, attachment })
+        setPostId(undefined)
+        setPostId(await addPost({ message, replyTo, attachment }))
       }
 
-      if (post) {
-        const newPath = `${ROUTES.POSTS}/${post}`
-        const newState = {
-          post,
-          modal: true,
-          back: (state?.modal && state?.back) || location
-        }
-
-        setDidSend(true)
-        enableElements(disabledElements)
-
-        if (state?.modal) {
-          history.replace(newPath, newState)
-        } else {
-          history.push(newPath, newState)
-        }
-      }
+      setDidSend(true)
+      enableElements(disabledElements)
     } catch (err) {
       setError(stringifyError(err))
       enableElements(disabledElements)
@@ -117,6 +100,7 @@ export default function Compose({
       value={{
         error,
         didSend,
+        postId,
         message,
         setMessage,
         attachment,
@@ -281,6 +265,16 @@ Compose.Success = function ComposeUserSuccess(props: React.ComponentPropsWithout
   const { didSend } = useContext(ComposeContext)
 
   return didSend ? <p {...props} /> : <></>
+}
+
+Compose.PostLink = function ComposeUserPostLink(
+  props: Omit<Parameters<typeof StatefulLink>[0], 'to'>
+) {
+  const { postId } = useContext(ComposeContext)
+
+  return postId ? (
+    <StatefulLink to={`${ROUTES.POSTS}/${postId}`} post={postId} modal {...props} />
+  ) : null
 }
 
 type ComposeAttachmentPreviewProps = {
