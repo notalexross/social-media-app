@@ -159,29 +159,38 @@ Comments = function CommentsContainer({
   const [repliesPool, setRepliesPool] = useState(replies.slice().reverse())
   const [maxReplies, setMaxReplies] = useState(currentDepth > maxDepth ? 0 : limit)
   const repliesShown = repliesPool.slice(0, maxReplies)
-  const totalReplies = replies.length
-  const totalShowableReplies = repliesPool.length
-  const totalRepliesShown = repliesShown.length
-  const numNewReplies = totalReplies - totalShowableReplies
-  const hasMoreReplies = totalReplies > totalRepliesShown
+  const numNewReplies = replies.length - repliesPool.length
+  const hasMoreReplies = replies.length > repliesShown.length
 
   const updateRepliesPool = () => setRepliesPool(replies.slice().reverse())
 
-  const loadNewRepliesbutton = (
+  const showLatestRepliesbutton = (
     <button type="button" onClick={updateRepliesPool}>
-      {`Load ${numNewReplies} new repl${numNewReplies === 1 ? 'y' : 'ies'}`}
+      {`Show latest repl${maxReplies > 1 || isPostPage ? 'ies' : 'y'}`}
     </button>
   )
 
   const viewSomeRepliesButton = (
-    <button type="button" onClick={() => setMaxReplies(state => state + limit)}>
-      {maxReplies === 0 ? 'View replies' : 'View more replies'}
+    <button
+      type="button"
+      onClick={() => {
+        if (numNewReplies > 0 && repliesShown.length === 0) {
+          updateRepliesPool()
+          if (maxReplies === 0) {
+            setMaxReplies(state => state + limit)
+          }
+        } else {
+          setMaxReplies(state => state + limit)
+        }
+      }}
+    >
+      {repliesShown.length === 0 ? 'View replies' : 'View more replies'}
     </button>
   )
 
   const viewAllRepliesButton = (
     <StatefulLink to={`${ROUTES.POSTS}/${post.id}`}>
-      {`View all ${totalReplies} replies`}
+      {`View all ${replies.length} replies`}
     </StatefulLink>
   )
 
@@ -189,21 +198,23 @@ Comments = function CommentsContainer({
   let before: JSX.Element | null = null
 
   if (hasMoreReplies) {
-    if (!isPostPage) {
-      if (numNewReplies > 0 && maxReplies > 0) {
-        before = loadNewRepliesbutton
+    if (isPostPage) {
+      if (numNewReplies > 0 && repliesShown.length > 0) {
+        before = showLatestRepliesbutton
       }
 
-      if (!(numNewReplies > 0 && maxReplies > 0) || totalRepliesShown > 0) {
-        after = viewAllRepliesButton
+      if (numNewReplies > 0 && repliesShown.length === 0) {
+        before = viewSomeRepliesButton
+      } else if (numNewReplies === 0 || repliesPool.length > repliesShown.length) {
+        after = viewSomeRepliesButton
       }
     } else {
-      if (numNewReplies > 0) {
-        before = loadNewRepliesbutton
+      if (numNewReplies > 0 && maxReplies > 0) {
+        before = showLatestRepliesbutton
       }
 
-      if (!(numNewReplies > 0) || totalRepliesShown > 0) {
-        after = viewSomeRepliesButton
+      if (numNewReplies === 0 || maxReplies === 0 || repliesShown.length > 0) {
+        after = viewAllRepliesButton
       }
     }
   }
