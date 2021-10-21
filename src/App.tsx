@@ -6,6 +6,7 @@ import type { LocationState } from './types'
 import { UserContextProvider } from './context/user'
 import { ThemeContextProvider } from './context/theme'
 import * as ROUTES from './constants/routes'
+import { useKeyboardOutlineOnly } from './hooks'
 
 const HeaderContainer = lazy(() => import('./containers/header'))
 const SignUpPage = lazy(() => import('./pages/sign-up'))
@@ -117,6 +118,7 @@ const buildDOMTree = (location: Location<LocationState>) => {
 }
 
 export default function App(): JSX.Element {
+  useKeyboardOutlineOnly('button', 'a')
   const location = useLocation<LocationState>()
   const tree = buildDOMTree(location)
 
