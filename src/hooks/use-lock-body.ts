@@ -4,6 +4,7 @@ export default function useLockBody(): void {
   useEffect(() => {
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
     const initialOverflow = document.body.style.overflow
+    const initialMarginRight = document.body.style.marginRight
     const bodyMarginRight = parseFloat(window.getComputedStyle(document.body).marginRight)
 
     document.body.style.overflow = 'hidden'
@@ -11,7 +12,7 @@ export default function useLockBody(): void {
 
     return () => {
       document.body.style.overflow = initialOverflow
-      document.body.style.marginRight = ''
+      document.body.style.marginRight = initialMarginRight
     }
   }, [])
 }
