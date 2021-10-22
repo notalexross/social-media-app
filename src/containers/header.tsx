@@ -7,8 +7,10 @@ import * as ROUTES from '../constants/routes'
 import logo from '../images/logo.png'
 import { Dropdown, StatefulLink, ThemeSwitcher, UserProfile } from '../components'
 import { ThemeContext } from '../context/theme'
+import { useNonShiftingScrollbar } from '../hooks'
 
 export default function HeaderContainer(): JSX.Element {
+  const scrollbarWidth = useNonShiftingScrollbar()
   const { pathname } = useLocation()
   const { theme, setTheme } = useContext(ThemeContext)
   const currentUser = useContext(UserContext)
@@ -19,7 +21,13 @@ export default function HeaderContainer(): JSX.Element {
   return (
     <Dropdown closeAfterClick>
       <Dropdown.Overlay />
-      <header className="relative mb-2 py-4 border-b bg-clr-secondary z-10 shadow lg:mb-8">
+      <header
+        className="relative mb-2 py-4 border-b bg-clr-secondary z-10 shadow lg:mb-8"
+        style={{
+          paddingRight: `${scrollbarWidth}px`,
+          marginRight: `-${scrollbarWidth}px`
+        }}
+      >
         <div className="mx-4">
           <div className="flex items-center justify-between mx-auto max-w-screen-lg">
             <h1 className="flex-shrink-0 mt-1">
