@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type {
   PostPublicWithId,
   PostContentWithId,
@@ -155,12 +155,17 @@ Comments = function CommentsContainer({
   isPostPage = false,
   ...restProps
 }: CommentsProps) {
-  const { replies } = post
+  const { replies: repliesUnfiltered, deletedReplies } = post
+  const replies = useMemo(
+    () => repliesUnfiltered.filter(reply => !deletedReplies.includes(reply)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [repliesUnfiltered.length]
+  )
   const [repliesPool, setRepliesPool] = useState(replies.slice().reverse())
   const [maxReplies, setMaxReplies] = useState(currentDepth > maxDepth ? 0 : limit)
   const repliesShown = repliesPool.slice(0, maxReplies)
-  const numNewReplies = replies.length - repliesPool.length
-  const hasMoreReplies = replies.length > repliesShown.length
+  const numNewReplies = replies.filter(reply => !repliesPool.includes(reply)).length
+  const hasMoreReplies = replies.filter(reply => !repliesShown.includes(reply)).length > 0
 
   const updateRepliesPool = () => setRepliesPool(replies.slice().reverse())
 

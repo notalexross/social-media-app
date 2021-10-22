@@ -65,6 +65,7 @@ const posts = {
     attachment: '',
     createdAt: { seconds: 1, nanoseconds: 0 },
     deleted: false,
+    deletedReplies: [],
     message: 'mock message',
     owner: 'user1',
     replies: ['post2'],
@@ -75,6 +76,7 @@ const posts = {
     attachment: '',
     createdAt: { seconds: 2, nanoseconds: 0 },
     deleted: false,
+    deletedReplies: [],
     message: 'mock message',
     owner: 'user2',
     replies: [],
@@ -204,6 +206,7 @@ const firebaseEventTarget = new FirebaseEventTarget()
 
 const updateProfile = jest.fn(() => Promise.resolve())
 
+// prettier-ignore
 const createUserWithEmailAndPassword = jest.fn(email => Promise.resolve({
   user: {
     uid: 'mock user id',
@@ -212,6 +215,7 @@ const createUserWithEmailAndPassword = jest.fn(email => Promise.resolve({
   }
 }))
 
+// prettier-ignore
 const signInWithEmailAndPassword = jest.fn(
   (email, password) => new Promise((resolve, reject) => {
     if (email !== userCredentials.email) {
@@ -445,7 +449,25 @@ const batch = jest.fn(() => ({
   }
 }))
 
-const firestore = jest.fn(() => ({ _collections: database, collection, batch }))
+// prettier-ignore
+const runTransaction = jest.fn(updateFunction => (
+  updateFunction({
+    get(documentRef) {
+      return documentRef.get()
+    },
+    set(documentRef, data) {
+      return documentRef.set(data)
+    },
+    update(documentRef, data) {
+      return documentRef.update(data)
+    },
+    delete(documentRef) {
+      return documentRef.delete()
+    }
+  })
+))
+
+const firestore = jest.fn(() => ({ _collections: database, collection, batch, runTransaction }))
 
 const serverTimestamp = jest.fn(() => 'mock server timestamp')
 const arrayUnion = jest.fn()

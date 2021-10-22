@@ -736,6 +736,7 @@ describe(`${getMultiUserPosts.name}`, () => {
         {
           createdAt: { seconds: 2, nanoseconds: 0 },
           deleted: false,
+          deletedReplies: [],
           id: 'post2',
           likesCount: 1,
           owner: 'user2',
@@ -748,6 +749,7 @@ describe(`${getMultiUserPosts.name}`, () => {
         {
           createdAt: { seconds: 1, nanoseconds: 0 },
           deleted: false,
+          deletedReplies: [],
           id: 'post1',
           likesCount: 2,
           owner: 'user1',
@@ -780,6 +782,7 @@ describe(`${getMultiUserPosts.name}`, () => {
         {
           createdAt: { seconds: 2, nanoseconds: 0 },
           deleted: false,
+          deletedReplies: [],
           id: 'post2',
           likesCount: 1,
           owner: 'user2',

@@ -45,6 +45,7 @@ export type ReplyTo = {
 type PostPublic = {
   createdAt: firebase.firestore.Timestamp
   deleted: boolean
+  deletedReplies: string[]
   likesCount: number
   owner: string
   replyTo: ReplyTo
@@ -60,7 +61,10 @@ type PostContent = {
 type Post = PostPublic & PostContent
 
 type PostUpdatable = Partial<
-  Omit<Post, 'createdAt' | 'likesCount' | 'owner' | 'replyTo' | 'replies' | 'updatedAt'>
+  Omit<
+    Post,
+    'createdAt' | 'deletedReplies' | 'likesCount' | 'owner' | 'replyTo' | 'replies' | 'updatedAt'
+  >
 >
 
 export type PostPublicWithId = PostPublic & { id: string }
@@ -692,6 +696,7 @@ function createPostInDB(
     batch.set(post, {
       createdAt: FieldValue.serverTimestamp(),
       deleted: false,
+      deletedReplies: [],
       likesCount: 0,
       owner: uid,
       replyTo,
@@ -746,19 +751,41 @@ function updatePostInDB(
   const updatedProperties = [...Object.keys(postPublicUpdates), ...Object.keys(postContentUpdates)]
 
   if (updatedProperties.length) {
-    const batch = firebase.firestore().batch()
+    return firestore.runTransaction(async transaction => {
+      const postPublicDoc = await transaction.get(postPublicRef)
 
-    if (updatedProperties.length === 1 && updatedProperties[0] === 'deleted') {
-      batch.update(postPublicRef, postPublicUpdates)
-    } else {
-      batch.update(postPublicRef, {
-        ...postPublicUpdates,
-        updatedAt: FieldValue.serverTimestamp()
-      })
-      batch.update(postContentRef, postContentUpdates)
-    }
+      if (!postPublicDoc.exists) {
+        throw new Error('Unable to update post as it does not exist.')
+      }
 
-    return batch.commit()
+      const { replyTo } = postPublicDoc.data() as PostPublic
+
+      if ('deleted' in postPublicUpdates && replyTo) {
+        if (replyTo) {
+          const { postPublicRef: replyToPostPublicRef } = getPostQueries(replyTo.id)
+
+          if (postPublicUpdates.deleted) {
+            transaction.update(replyToPostPublicRef, {
+              deletedReplies: FieldValue.arrayUnion(post.id)
+            })
+          } else {
+            transaction.update(replyToPostPublicRef, {
+              deletedReplies: FieldValue.arrayRemove(post.id)
+            })
+          }
+        }
+      }
+
+      if (updatedProperties.length === 1 && 'deleted' in postPublicUpdates) {
+        transaction.update(postPublicRef, postPublicUpdates)
+      } else {
+        transaction.update(postPublicRef, {
+          ...postPublicUpdates,
+          updatedAt: FieldValue.serverTimestamp()
+        })
+        transaction.update(postContentRef, postContentUpdates)
+      }
+    })
   }
 
   return Promise.reject(new Error(`No valid updates were supplied for post with id "${post.id}".`))

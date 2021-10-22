@@ -1,5 +1,5 @@
 import type firebase from 'firebase'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
@@ -352,17 +352,21 @@ Post.RepliesCount = function PostRepliesCount({
   ...restProps
 }: PostRepliesCountProps) {
   const { post, isComment, isPostPage } = useContext(PostContext)
+  const { replies: repliesUnfiltered, deletedReplies, id } = post || {}
+  const replies = useMemo(
+    () => repliesUnfiltered?.filter(reply => !deletedReplies?.includes(reply)) || [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [repliesUnfiltered?.length]
+  )
+  const repliesCount = replies.length
 
-  if (!post) {
+  if (!id) {
     return (
       <div {...restProps}>
         <Skeleton width="9ch" />
       </div>
     )
   }
-
-  const { replies, id } = post
-  const repliesCount = replies.length
 
   return (
     <div {...restProps}>
