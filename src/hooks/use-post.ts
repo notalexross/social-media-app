@@ -41,7 +41,7 @@ function usePost(
 
   useEffect(() => {
     setPost(postState)
-  }, [postOrId, postState])
+  }, [postId, postState])
 
   useEffect(() => {
     let isCurrent = true
@@ -83,7 +83,7 @@ function usePost(
     }
   }, [post, ownerDetails, replyToOwnerDetails, postWithUsersState])
 
-  return postWithUsers
+  return postWithUsers && postWithUsers.id === postId ? postWithUsers : postWithUsersState
 }
 
 export default usePost
