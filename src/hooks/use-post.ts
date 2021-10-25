@@ -5,7 +5,7 @@ import type {
   PostWithId,
   PostWithUserDetails
 } from '../services/firebase'
-import { getPosts, onPostsUpdated } from '../services/firebase'
+import { getPost, onPostsUpdated } from '../services/firebase'
 import { stringifyError } from '../utils'
 import useUser from './use-user'
 
@@ -61,8 +61,8 @@ function usePost(
         )
       }
 
-      getPosts([postId])
-        .then(data => isCurrent && setPost(data[0]))
+      getPost(postId)
+        .then(data => isCurrent && setPost(data))
         .catch(handleError)
     }
 

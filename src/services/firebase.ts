@@ -602,42 +602,32 @@ function listenPostDetails<T extends 'public' | 'content'>(
   )
 }
 
-export function getPosts(postIds: string[], maxRetries = 1): Promise<(PostWithId | undefined)[]> {
-  const promises = postIds.map(async postId => {
-    if (!postId) {
-      return undefined
+export async function getPost(postId: string, maxRetries = 1): Promise<PostWithId | undefined> {
+  const { postPublicRef, postContentRef } = getPostQueries(postId)
+
+  return firestore.runTransaction(async transaction => {
+    // Retries necessary when grabbing a new post, by current user, with pending writes. Transactions use server data only, no local cache. As such, this transaction is racing against said pending writes.
+    for (let i = 0; i <= maxRetries; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      const postPublicDoc = await transaction.get(postPublicRef)
+
+      if (postPublicDoc.exists) {
+        const postPublic = postPublicDoc.data() as PostPublic
+
+        let post: Post = { ...postPublic, attachment: '', message: '' }
+        if (!postPublic.deleted) {
+          // eslint-disable-next-line no-await-in-loop
+          const postContentDoc = await transaction.get(postContentRef)
+          const postContent = postContentDoc.data() as PostContent
+          post = { ...post, ...postContent }
+        }
+
+        return { ...post, id: postId }
+      }
     }
 
-    const { postPublicRef, postContentRef } = getPostQueries(postId)
-
-    const postWithId = await firestore.runTransaction(async transaction => {
-      // Retries necessary when grabbing a new post, by current user, with pending writes. Transactions use server data only, no local cache. As such, this transaction is racing against said pending writes.
-      for (let i = 0; i <= maxRetries; i++) {
-        // eslint-disable-next-line no-await-in-loop
-        const postPublicDoc = await transaction.get(postPublicRef)
-
-        if (postPublicDoc.exists) {
-          const postPublic = postPublicDoc.data() as PostPublic
-
-          let post: Post = { ...postPublic, attachment: '', message: '' }
-          if (!postPublic.deleted) {
-            // eslint-disable-next-line no-await-in-loop
-            const postContentDoc = await transaction.get(postContentRef)
-            const postContent = postContentDoc.data() as PostContent
-            post = { ...post, ...postContent }
-          }
-
-          return { ...post, id: postId }
-        }
-      }
-
-      return undefined
-    })
-
-    return postWithId
+    throw new Error(`Failed to get post in ${maxRetries} attempts.`)
   })
-
-  return Promise.all(promises)
 }
 
 export function onPostsUpdated(
