@@ -58,18 +58,18 @@ type PostContent = {
   message: string
 }
 
-type Post = PostPublic & PostContent
-
 type PostUpdatable = Partial<
   Omit<
-    Post,
+    PostPublic & PostContent,
     'createdAt' | 'deletedReplies' | 'likesCount' | 'owner' | 'replyTo' | 'replies' | 'updatedAt'
   >
 >
 
+type Post = (PostPublic | (PostPublic & PostContent)) & { id: string }
+
 export type PostPublicWithId = PostPublic & { id: string }
 export type PostContentWithId = PostContent & { id: string }
-export type PostWithId = Post & { id: string }
+export type PostWithId = PostPublic & PostContent & { id: string }
 export type PostWithUserDetails = PostWithId & {
   ownerDetails: User
 } & {
@@ -602,7 +602,10 @@ function listenPostDetails<T extends 'public' | 'content'>(
   )
 }
 
-export async function getPost(postId: string, maxRetries = 1): Promise<PostWithId> {
+export async function getPost(
+  postId: string,
+  { maxRetries = 1, includeContent = false } = {}
+): Promise<Post> {
   const { postPublicRef, postContentRef } = getPostQueries(postId)
 
   return firestore.runTransaction(async transaction => {
@@ -614,15 +617,15 @@ export async function getPost(postId: string, maxRetries = 1): Promise<PostWithI
       if (postPublicDoc.exists) {
         const postPublic = postPublicDoc.data() as PostPublic
 
-        let post: Post = { ...postPublic, attachment: '', message: '' }
-        if (!postPublic.deleted) {
+        let post: Post = { ...postPublic, id: postId }
+        if (includeContent && !postPublic.deleted) {
           // eslint-disable-next-line no-await-in-loop
           const postContentDoc = await transaction.get(postContentRef)
           const postContent = postContentDoc.data() as PostContent
           post = { ...post, ...postContent }
         }
 
-        return { ...post, id: postId }
+        return post
       }
     }
 

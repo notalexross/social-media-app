@@ -3,7 +3,8 @@ import type {
   PostPublicWithId,
   PostContentWithId,
   PostWithId,
-  PostWithUserDetails
+  PostWithUserDetails,
+  User
 } from '../services/firebase'
 import { getPost, onPostUpdated } from '../services/firebase'
 import { stringifyError } from '../utils'
@@ -29,13 +30,27 @@ function usePost(
   const postState = hasDetails && hasContent ? postOrId : undefined
   const postWithUsersState =
     hasDetails && hasContent && hasUser && hasReplyUser ? postOrId : undefined
-  const [post, setPost] = useState<PostWithId | undefined>(postState)
+  const [post, setPost] = useState<PostWithId | PostPublicWithId | PostContentWithId | undefined>(
+    postState
+  )
   const [postWithUsers, setPostWithUsers] = useState<PostWithUserDetails | undefined>(
     postWithUsersState
   )
 
-  const userState = hasUser ? postOrId.ownerDetails : post?.owner
-  const replyUserState = hasReplyUser ? postOrId.replyToOwnerDetails : post?.replyTo?.owner
+  let userState: string | User | undefined
+  if (hasUser) {
+    userState = postOrId.ownerDetails
+  } else if (post && 'owner' in post) {
+    userState = post.owner
+  }
+
+  let replyUserState: string | User | undefined
+  if (hasReplyUser) {
+    replyUserState = postOrId.replyToOwnerDetails
+  } else if (post && 'replyTo' in post) {
+    replyUserState = post.replyTo?.owner
+  }
+
   const ownerDetails = useUser(userState, { passthrough: hasUser, maxAge: 10000 })
   const replyToOwnerDetails = useUser(replyUserState, { passthrough: hasReplyUser, maxAge: 10000 })
 
@@ -61,8 +76,12 @@ function usePost(
         )
       }
 
-      getPost(postId)
-        .then(data => isCurrent && setPost(data))
+      getPost(postId, { includeContent: true })
+        .then(data => {
+          if (isCurrent) {
+            setPost(state => ({ ...state, ...data }))
+          }
+        })
         .catch(handleError)
     }
 
@@ -72,7 +91,7 @@ function usePost(
   }, [errorCallback, postId, shouldUpdatePost, subscribe])
 
   useEffect(() => {
-    if (post && ownerDetails) {
+    if (post && ownerDetails && 'createdAt' in post && 'message' in post) {
       if (replyToOwnerDetails) {
         setPostWithUsers({ ...post, ownerDetails, replyToOwnerDetails })
       } else {
