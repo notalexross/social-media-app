@@ -71,8 +71,16 @@ function usePost(
       if (subscribe) {
         return onPostUpdated(
           postId,
-          changes => setPost(state => ({ ...state, ...changes })),
-          handleError
+          changes => {
+            if (isCurrent) {
+              setPost(state => ({ ...state, ...changes }))
+            }
+          },
+          {
+            includePublic: true,
+            includeContent: true,
+            errorCallback: handleError
+          }
         )
       }
 

@@ -633,33 +633,33 @@ export async function getPost(
   })
 }
 
+type OnPostUpdatedOptions = {
+  includePublic?: boolean
+  includeContent?: boolean
+  errorCallback?: (error: unknown) => void
+}
+
 export function onPostUpdated(
   postId: string,
-  callback: (updatedPost: PostWithId) => void,
-  errorCallback?: (error: unknown) => void
+  callback: (updatedPost: PostPublicWithId | PostContentWithId) => void,
+  { includePublic = false, includeContent = false, errorCallback }: OnPostUpdatedOptions = {}
 ): () => void {
-  let post: (PostPublic & PostContent) | PostPublic | PostContent | Record<string, never> = {}
-
   const handleResponse = (response: PostPublic | PostContent) => {
-    post = { ...post, ...response }
-
-    if ('owner' in post) {
-      if ('message' in post) {
-        callback({ ...post, id: postId })
-      } else {
-        callback({ ...post, message: '', attachment: '', id: postId })
-      }
-    }
+    callback({ ...response, id: postId })
   }
 
   const handleContentError = () => {
     console.error('Unable to get post content, post possibly deleted.')
   }
 
-  const listeners = [
-    listenPostDetails(postId, 'public', handleResponse, errorCallback),
-    listenPostDetails(postId, 'content', handleResponse, handleContentError)
-  ]
+  const listeners: (() => void)[] = []
+  if (includePublic) {
+    listeners.push(listenPostDetails(postId, 'public', handleResponse, errorCallback))
+  }
+
+  if (includeContent) {
+    listeners.push(listenPostDetails(postId, 'content', handleResponse, handleContentError))
+  }
 
   return () => listeners.forEach(listener => listener())
 }
