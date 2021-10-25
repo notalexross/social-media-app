@@ -602,7 +602,7 @@ function listenPostDetails<T extends 'public' | 'content'>(
   )
 }
 
-export async function getPost(postId: string, maxRetries = 1): Promise<PostWithId | undefined> {
+export async function getPost(postId: string, maxRetries = 1): Promise<PostWithId> {
   const { postPublicRef, postContentRef } = getPostQueries(postId)
 
   return firestore.runTransaction(async transaction => {
@@ -630,41 +630,33 @@ export async function getPost(postId: string, maxRetries = 1): Promise<PostWithI
   })
 }
 
-export function onPostsUpdated(
-  postIds: string[],
+export function onPostUpdated(
+  postId: string,
   callback: (updatedPost: PostWithId) => void,
   errorCallback?: (error: unknown) => void
 ): () => void {
-  const listeners = postIds.reduce<(() => void)[]>((acc, postId) => {
-    if (!postId) {
-      return acc
-    }
+  let post: (PostPublic & PostContent) | PostPublic | PostContent | Record<string, never> = {}
 
-    let post: Post | PostPublic | PostContent | Record<string, never> = {}
+  const handleResponse = (response: PostPublic | PostContent) => {
+    post = { ...post, ...response }
 
-    const handleResponse = (response: PostPublic | PostContent) => {
-      post = { ...post, ...response }
-
-      if ('owner' in post) {
-        if ('message' in post) {
-          callback({ ...post, id: postId })
-        } else {
-          callback({ ...post, message: '', attachment: '', id: postId })
-        }
+    if ('owner' in post) {
+      if ('message' in post) {
+        callback({ ...post, id: postId })
+      } else {
+        callback({ ...post, message: '', attachment: '', id: postId })
       }
     }
+  }
 
-    const handleContentError = () => {
-      console.error('Unable to get post content, post possibly deleted.')
-    }
+  const handleContentError = () => {
+    console.error('Unable to get post content, post possibly deleted.')
+  }
 
-    acc.push(
-      listenPostDetails(postId, 'public', handleResponse, errorCallback),
-      listenPostDetails(postId, 'content', handleResponse, handleContentError)
-    )
-
-    return acc
-  }, [])
+  const listeners = [
+    listenPostDetails(postId, 'public', handleResponse, errorCallback),
+    listenPostDetails(postId, 'content', handleResponse, handleContentError)
+  ]
 
   return () => listeners.forEach(listener => listener())
 }

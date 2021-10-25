@@ -5,7 +5,7 @@ import type {
   PostWithId,
   PostWithUserDetails
 } from '../services/firebase'
-import { getPost, onPostsUpdated } from '../services/firebase'
+import { getPost, onPostUpdated } from '../services/firebase'
 import { stringifyError } from '../utils'
 import useUser from './use-user'
 
@@ -54,8 +54,8 @@ function usePost(
       }
 
       if (subscribe) {
-        return onPostsUpdated(
-          [postId],
+        return onPostUpdated(
+          postId,
           changes => setPost(state => ({ ...state, ...changes })),
           handleError
         )
