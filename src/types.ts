@@ -1,10 +1,10 @@
 import type { Location } from 'history'
-import type { PostWithUserDetails } from './services/firebase'
+import type { PostWithReplyTo, PostWithUserDetails } from './services/firebase'
 
 // prettier-ignore
 export type LocationState = {
   back?: Location<LocationState>
   modal?: boolean | 'signInPrompt'
   props?: Record<string, unknown>
-  post?: PostWithUserDetails | string
+  post?: PostWithReplyTo | PostWithUserDetails | string
 } | undefined

@@ -1,11 +1,11 @@
 import { EmojiHappyIcon, PaperClipIcon } from '@heroicons/react/outline'
-import type { PostWithUserDetails, ReplyTo } from '../services/firebase'
+import type { PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import { Compose } from '../components'
 import { useResponsivePopper, useWindowDimensions } from '../hooks'
 
 type ComposeContainerProps = {
-  replyTo?: ReplyTo
-  originalPost?: PostWithUserDetails
+  replyTo?: string | null
+  originalPost?: PostWithReplyTo | PostWithUserDetails
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 export default function ComposeContainer({

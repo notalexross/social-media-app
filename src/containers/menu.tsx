@@ -10,14 +10,14 @@ import {
   TrashIcon,
   UserAddIcon
 } from '@heroicons/react/outline'
-import type { PostWithUserDetails } from '../services/firebase'
+import type { PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import { UserContext } from '../context/user'
 import { Menu } from '../components'
 import * as ROUTES from '../constants/routes'
 import { useProtectedFunctions } from '../hooks'
 
 type MenuContainerProps = {
-  post: PostWithUserDetails
+  post: PostWithReplyTo | PostWithUserDetails
   horizontalDotsClassName?: string
   verticalDotsClassName?: string
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
@@ -33,7 +33,7 @@ export default function MenuContainer({
   const [confirmDeletion, setConfirmDeletion] = useState(false)
   const { following, likedPosts, uid } = useContext(UserContext)
   const { deleted, id, owner, ownerDetails } = post
-  const { username, deleted: ownerDeleted } = ownerDetails
+  const { username, deleted: ownerDeleted } = ownerDetails || {}
   const isOwner = uid && owner === uid
   const isLiked = likedPosts?.includes(id)
   const isFollowing = following?.includes(owner)

@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type {
-  PostPublicWithId,
-  PostContentWithId,
-  PostWithId,
-  PostWithUserDetails
-} from '../services/firebase'
+import type { PostOrPostId, PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import MenuContainer from './menu'
 import { Post, StatefulLink, UserProfile } from '../components'
@@ -14,7 +9,7 @@ import * as ROUTES from '../constants/routes'
 let Comments: (props: CommentsProps) => JSX.Element = () => <></>
 
 type PostContainerProps = {
-  post?: string | PostPublicWithId | PostContentWithId | PostWithId | PostWithUserDetails
+  post?: PostOrPostId
   commentsLimit?: number
   maxDepth?: number
   currentDepth?: number
@@ -39,11 +34,17 @@ export default function PostContainer({
   errorHandler,
   ...restProps
 }: PostContainerProps): JSX.Element {
-  const postLive = usePost(post, { subscribe, errorCallback: errorHandler })
+  const postWithReplyTo = usePost(post, {
+    includeContent: true,
+    subscribePublic: subscribe,
+    subscribeContent: subscribe,
+    includeReplyTo: !isComment,
+    errorCallback: errorHandler
+  })
 
   return (
     <Post
-      post={postLive}
+      post={postWithReplyTo}
       hideAttachment={hideAttachment}
       isComment={isComment}
       isPostPage={isPostPage}
@@ -55,7 +56,10 @@ export default function PostContainer({
             isComment ? 'pb-0 sm:border-b' : 'border-b'
           }`}
         >
-          <UserProfile className="flex items-center min-w-0" user={postLive?.ownerDetails || {}}>
+          <UserProfile
+            className="flex items-center min-w-0"
+            user={postWithReplyTo?.ownerDetails || {}}
+          >
             <UserProfile.Avatar
               className={`flex-shrink-0 mr-2 lg:mr-3 ${isComment ? 'w-8 sm:w-12' : 'w-12'}`}
               linkClassName="hover:opacity-70"
@@ -81,12 +85,12 @@ export default function PostContainer({
               />
             </div>
           </UserProfile>
-          {postLive ? (
+          {postWithReplyTo ? (
             <MenuContainer
               className="flex-shrink-0 pr-1 sm:pr-4"
               horizontalDotsClassName="hidden sm:block"
               verticalDotsClassName="block sm:hidden"
-              post={postLive}
+              post={postWithReplyTo}
             />
           ) : null}
         </div>
@@ -115,16 +119,13 @@ export default function PostContainer({
             />
             <Post.LikesCount className="text-sm text-clr-primary text-opacity-75" />
           </div>
-          {compose && postLive ? (
-            <ComposeContainer
-              className="mt-2"
-              replyTo={{ id: postLive.id, owner: postLive.owner }}
-            />
+          {compose && postWithReplyTo ? (
+            <ComposeContainer className="mt-2" replyTo={postWithReplyTo.id} />
           ) : null}
-          {postLive ? (
+          {postWithReplyTo ? (
             <Comments
               className="-mr-3 -ml-1 sm:mr-0 sm:ml-0"
-              post={postLive}
+              post={postWithReplyTo}
               limit={commentsLimit}
               maxDepth={maxDepth}
               currentDepth={currentDepth + 1}
@@ -138,7 +139,7 @@ export default function PostContainer({
 }
 
 type CommentsProps = {
-  post: PostWithUserDetails
+  post: PostWithReplyTo | PostWithUserDetails
   limit?: number
   maxDepth?: number
   currentDepth?: number

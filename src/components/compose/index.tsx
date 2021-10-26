@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import type { PostWithUserDetails, ReplyTo } from '../../services/firebase'
+import type { PostWithReplyTo, PostWithUserDetails } from '../../services/firebase'
 import type { IEmojiData } from '../emoji-picker'
 import EmojiPicker from '../emoji-picker'
 import FocusTrap from '../focus-trap'
@@ -27,8 +27,8 @@ type ComposeContextValue = {
 const ComposeContext = createContext({} as ComposeContextValue)
 
 type ComposeProps = {
-  replyTo?: ReplyTo
-  originalPost?: PostWithUserDetails
+  replyTo?: string | null
+  originalPost?: PostWithReplyTo | PostWithUserDetails
   softCharacterLimit?: number
   hardCharacterLimit?: number
 } & React.ComponentPropsWithoutRef<'form'>
@@ -42,12 +42,17 @@ export default function Compose({
   ...restProps
 }: ComposeProps): JSX.Element {
   const { addPost, editPost } = useProtectedFunctions()
+
+  const hasContent = originalPost && 'message' in originalPost
+  const initialMessage = hasContent ? originalPost.message : ''
+  const initialAttachment = hasContent ? originalPost.attachment : undefined
+
   const [error, setError] = useState('')
-  const [message, setMessage] = useState(originalPost?.message || '')
-  const [previewSrc, setPreviewSrc] = useState<string | undefined>(originalPost?.attachment)
-  const [attachment, setAttachment] = useState<File | string | undefined>(previewSrc)
+  const [message, setMessage] = useState(initialMessage)
+  const [previewSrc, setPreviewSrc] = useState<string | undefined>(initialAttachment)
+  const [attachment, setAttachment] = useState<File | string | undefined>(initialAttachment)
   const [showEmojiSelect, setShowEmojiSelect] = useState(false)
-  const [hasChanges, setHasChanges] = useState(!originalPost)
+  const [hasChanges, setHasChanges] = useState(false)
   const [didSend, setDidSend] = useState(false)
   const [postId, setPostId] = useState<string | undefined>(originalPost?.id)
 
@@ -73,12 +78,10 @@ export default function Compose({
   }
 
   useEffect(() => {
-    if (originalPost) {
-      const isSameMessage = message === originalPost.message
-      const isSameAttachment = attachment === originalPost.attachment
-      setHasChanges(!isSameMessage || !isSameAttachment)
-    }
-  }, [attachment, message, originalPost])
+    const isSameMessage = message === initialMessage
+    const isSameAttachment = attachment === initialAttachment
+    setHasChanges(!isSameMessage || !isSameAttachment)
+  }, [attachment, message, initialAttachment, initialMessage])
 
   useEffect(() => {
     if (message.length > hardCharacterLimit) {

@@ -531,7 +531,7 @@ describe(`${addPost.name}`, () => {
   })
 
   test('given post has content and is a reply, resolves and calls firebase methods', async () => {
-    const result = addPost({ message: 'message', replyTo: { id: 'post1', owner: 'user1' } })
+    const result = addPost({ message: 'message', replyTo: 'post1' })
 
     await expect(result).resolves.toBe('mockId')
     expect(mockFunctions.set).toBeCalledTimes(2)
@@ -741,10 +741,7 @@ describe(`${getMultiUserPosts.name}`, () => {
           likesCount: 1,
           owner: 'user2',
           replies: [],
-          replyTo: {
-            id: 'post1',
-            owner: 'user1'
-          }
+          replyTo: 'post1'
         },
         {
           createdAt: { seconds: 1, nanoseconds: 0 },
@@ -787,10 +784,7 @@ describe(`${getMultiUserPosts.name}`, () => {
           likesCount: 1,
           owner: 'user2',
           replies: [],
-          replyTo: {
-            id: 'post1',
-            owner: 'user1'
-          }
+          replyTo: 'post1'
         }
       ],
       isComplete: false,

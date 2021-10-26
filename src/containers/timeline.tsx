@@ -1,14 +1,9 @@
-import type {
-  PostPublicWithId,
-  PostContentWithId,
-  PostWithId,
-  PostWithUserDetails
-} from '../services/firebase'
+import type { PostOrPostId } from '../services/firebase'
 import PostContainer from './post'
 import { useInfiniteScrolling } from '../hooks'
 
 type TimelineContainerProps = {
-  posts: (string | PostPublicWithId | PostContentWithId | PostWithId | PostWithUserDetails)[] | null
+  posts: PostOrPostId[] | null
   loadNextPage: () => Promise<void>
   isComplete: boolean
   isLoadingPosts?: boolean

@@ -1,11 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
 import type { Location } from 'history'
 import type { LocationState } from '../../types'
-import type { PostWithUserDetails } from '../../services/firebase'
+import type { PostWithReplyTo, PostWithUserDetails } from '../../services/firebase'
 
 type StatefulLinkProps = {
   to: string
-  post?: PostWithUserDetails | string
+  post?: PostWithReplyTo | PostWithUserDetails | string
   modal?: boolean
   nestModal?: boolean
 } & Parameters<Link>[0]

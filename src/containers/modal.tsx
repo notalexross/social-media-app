@@ -4,7 +4,7 @@ import { SkeletonTheme } from 'react-loading-skeleton'
 import Modal from 'react-modal'
 import { XIcon } from '@heroicons/react/outline'
 import type { LocationState } from '../types'
-import type { PostWithUserDetails } from '../services/firebase'
+import type { PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import PostContainer from './post'
 import { useLockBody, usePost, useWindowDimensions } from '../hooks'
@@ -16,7 +16,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 type ModalContainerProps = {
   children?: React.ReactNode
-  post?: PostWithUserDetails | string
+  post?: PostWithReplyTo | PostWithUserDetails | string
   offsetTopSm?: number
   offsetTopMd?: number
   compose?: boolean

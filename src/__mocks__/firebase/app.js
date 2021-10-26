@@ -80,10 +80,7 @@ const posts = {
     message: 'mock message',
     owner: 'user2',
     replies: [],
-    replyTo: {
-      id: 'post1',
-      owner: 'user1'
-    },
+    replyTo: 'post1',
     likes: ['user1']
   }
 }

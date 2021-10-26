@@ -37,18 +37,13 @@ export type User = Partial<UserPublic & UserPrivate & UserFollowing & UserLikedP
   uid: string
 }
 
-export type ReplyTo = {
-  id: string
-  owner: string
-} | null
-
 type PostPublic = {
   createdAt: firebase.firestore.Timestamp
   deleted: boolean
   deletedReplies: string[]
   likesCount: number
   owner: string
-  replyTo: ReplyTo
+  replyTo: string | null
   replies: string[]
   updatedAt?: firebase.firestore.Timestamp | null
 }
@@ -70,11 +65,14 @@ type Post = (PostPublic | (PostPublic & PostContent)) & { id: string }
 export type PostPublicWithId = PostPublic & { id: string }
 export type PostContentWithId = PostContent & { id: string }
 export type PostWithId = PostPublic & PostContent & { id: string }
-export type PostWithUserDetails = PostWithId & {
-  ownerDetails: User
-} & {
-  replyToOwnerDetails?: User
+export type PostWithUserDetails = Post & {
+  ownerDetails: User | undefined
 }
+export type PostWithReplyTo = PostWithUserDetails & {
+  replyToPost: PostWithUserDetails | undefined
+}
+export type PostOrPostId = string | Post | PostWithUserDetails | PostWithReplyTo
+export type PostPiece = PostPublic | PostContent
 
 export type PostsStatus = {
   posts: PostPublicWithId[] | null
@@ -667,7 +665,7 @@ export function onPostUpdated(
 type CreatePostInDBOptions = {
   attachment?: string
   message?: string
-  replyTo?: ReplyTo
+  replyTo?: string | null
 } & ({ message: string } | { attachment: string })
 
 function createPostInDB(
@@ -694,7 +692,7 @@ function createPostInDB(
     })
 
     if (replyTo) {
-      batch.update(getPostQueries(replyTo.id).postPublicRef, {
+      batch.update(getPostQueries(replyTo).postPublicRef, {
         replies: FieldValue.arrayUnion(post.id)
       })
     }
@@ -747,7 +745,7 @@ function updatePostInDB(
 
       if ('deleted' in postPublicUpdates && replyTo) {
         if (replyTo) {
-          const { postPublicRef: replyToPostPublicRef } = getPostQueries(replyTo.id)
+          const { postPublicRef: replyToPostPublicRef } = getPostQueries(replyTo)
 
           if (postPublicUpdates.deleted) {
             transaction.update(replyToPostPublicRef, {
@@ -1027,7 +1025,7 @@ async function getAttachmentUrl(directory: string, attachment?: File | string | 
 type AddPostOptions = {
   attachment?: File | string | null
   message?: string
-  replyTo?: ReplyTo
+  replyTo?: string | null
 }
 
 export async function addPost({

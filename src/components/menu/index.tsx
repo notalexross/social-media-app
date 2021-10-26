@@ -1,6 +1,5 @@
 import { createPortal } from 'react-dom'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import type { PostWithUserDetails } from '../../services/firebase'
 import FocusTrap from '../focus-trap'
 import StatefulLink from '../stateful-link'
 
@@ -149,11 +148,8 @@ type MenuItemButtonProps = {
 
 type MenuItemLinkProps = {
   type: 'link'
-  to: string
-  post?: PostWithUserDetails | string
-  modal?: boolean
   ignoreRequestCloseOnItemClick?: boolean
-} & React.ComponentPropsWithoutRef<'a'>
+} & Parameters<typeof StatefulLink>[0]
 
 type MenuItemProps = MenuItemButtonProps | MenuItemLinkProps
 

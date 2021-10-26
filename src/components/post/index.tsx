@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useLocation } from 'react-router-dom'
 import Skeleton from 'react-loading-skeleton'
 import { HeartIcon, ChatAlt2Icon } from '@heroicons/react/outline'
-import type { PostWithUserDetails } from '../../services/firebase'
+import type { PostWithReplyTo, PostWithUserDetails } from '../../services/firebase'
 import { UserContext } from '../../context/user'
 import { useLineHeight, useProtectedFunctions, useTimeAgo } from '../../hooks'
 import StatefulLink from '../stateful-link'
@@ -11,7 +11,8 @@ import * as ROUTES from '../../constants/routes'
 import { LocationState } from '../../types'
 
 type PostContextValue = {
-  post: PostWithUserDetails | undefined
+  post: PostWithReplyTo | PostWithUserDetails | undefined
+  replyToPost: PostWithUserDetails | undefined
   hideAttachment: boolean
   isComment: boolean
   isPostPage: boolean
@@ -20,7 +21,7 @@ type PostContextValue = {
 const PostContext = createContext<PostContextValue>({} as PostContextValue)
 
 type PostProps = {
-  post?: PostWithUserDetails
+  post?: PostWithReplyTo | PostWithUserDetails
   hideAttachment?: boolean
   isComment?: boolean
   isPostPage?: boolean
@@ -34,8 +35,10 @@ export default function Post({
   isPostPage = false,
   ...restProps
 }: PostProps): JSX.Element {
+  const replyToPost = post && 'replyToPost' in post ? post.replyToPost : undefined
+
   return (
-    <PostContext.Provider value={{ post, hideAttachment, isComment, isPostPage }}>
+    <PostContext.Provider value={{ post, replyToPost, hideAttachment, isComment, isPostPage }}>
       <div {...restProps}>{children}</div>
     </PostContext.Provider>
   )
@@ -101,23 +104,21 @@ Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: Pos
 Post.ReplyingTo = function PostReplyingTo(
   props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
 ) {
-  const { post, isComment } = useContext(PostContext)
-  const { replyTo, replyToOwnerDetails } = post || {}
+  const { post, replyToPost, isComment } = useContext(PostContext)
 
-  if (
-    !post ||
-    !replyTo ||
-    !replyTo?.id ||
-    !replyToOwnerDetails?.username ||
-    isComment ||
-    post.deleted
-  ) {
+  if (isComment || !post || !post.replyTo) {
     return null
   }
 
   return (
-    <StatefulLink to={`${ROUTES.POSTS}/${replyTo?.id}`} post={replyTo.id} modal {...props}>
-      {`Replying to ${replyToOwnerDetails?.username}`}
+    <StatefulLink
+      to={`${ROUTES.POSTS}/${post.replyTo}`}
+      post={replyToPost || post.replyTo}
+      modal
+      {...props}
+    >
+      Replying to&nbsp;
+      {replyToPost?.ownerDetails?.username || <Skeleton width="15ch" {...props} />}
     </StatefulLink>
   )
 }
@@ -142,6 +143,7 @@ Post.Message = function PostMessage({
   const [isOverflowing, setIsOverflowing] = useState(false)
   const [lineHeight, LineHeightComponent] = useLineHeight()
   const overflowRef = useRef<HTMLDivElement | null>(null)
+  const hasContent = !!post && 'message' in post
   const maxHeight = lineClamp === Infinity ? 'auto' : lineClamp * (lineHeight || 0)
   const fadeHeight = fadeLines === Infinity ? 0 : fadeLines * (lineHeight || 0)
 
@@ -173,6 +175,10 @@ Post.Message = function PostMessage({
         <Skeleton count={3} />
       </div>
     )
+  }
+
+  if (!hasContent) {
+    return null
   }
 
   let fade: JSX.Element | null = null
@@ -214,21 +220,24 @@ type PostAttachmentProps = {
 
 Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAttachmentProps) {
   const { post, hideAttachment } = useContext(PostContext)
+  const hasContent = !!post && 'message' in post
+  const imgClassName = 'absolute inset-0 w-full h-full w-full object-contain'
 
-  if (hideAttachment || (post && !post.attachment) || post?.deleted) {
+  if (hideAttachment || (post && (!hasContent || !post.attachment || post.deleted))) {
     return null
   }
 
-  const imgClassName = 'absolute inset-0 w-full h-full w-full object-contain'
+  let inner: JSX.Element
+  if (!post) {
+    inner = <Skeleton className={imgClassName} />
+  } else {
+    inner = <img className={imgClassName} src={post.attachment} alt="" />
+  }
 
   return (
     <div {...restProps}>
       <div className="relative" style={{ paddingTop: `${100 / aspectRatio}%` }}>
-        {post ? (
-          <img className={imgClassName} src={post.attachment} alt="" />
-        ) : (
-          <Skeleton className={imgClassName} />
-        )}
+        {inner}
       </div>
     </div>
   )
@@ -238,8 +247,9 @@ Post.ViewAttachment = function PostAttachment(
   props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
 ) {
   const { post, hideAttachment } = useContext(PostContext)
+  const hasContent = !!post && 'message' in post
 
-  if (!post || !hideAttachment || !post.attachment || post.deleted) {
+  if (!hideAttachment || !hasContent || !post.attachment || post.deleted) {
     return null
   }
 
