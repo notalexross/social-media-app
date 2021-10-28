@@ -1052,11 +1052,17 @@ type EditPostOptions = {
 
 export async function editPost(
   post: PostUpdatable & { id: string; owner: string },
-  { attachment, ...restUpdates }: EditPostOptions = {}
+  updates: EditPostOptions = {}
 ): Promise<void> {
-  const url = await getAttachmentUrl(post.owner, attachment)
+  const { attachment, ...restUpdates } = updates
 
-  return updatePostInDB(post, { attachment: url, ...restUpdates })
+  if ('attachment' in updates) {
+    const url = await getAttachmentUrl(post.owner, attachment)
+
+    return updatePostInDB(post, { attachment: url, ...restUpdates })
+  }
+
+  return updatePostInDB(post, restUpdates)
 }
 
 export async function followUser(uid: string): Promise<void> {
