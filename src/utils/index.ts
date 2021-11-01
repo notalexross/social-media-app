@@ -231,3 +231,21 @@ export function disableForm(form: HTMLFormElement): Element[] {
 
   return elements
 }
+
+export function deepCloneObject<T extends unknown>(obj: T): T {
+  if (!(obj instanceof Object)) {
+    return obj
+  }
+
+  if (obj instanceof Array) {
+    return obj.map((el: unknown) => deepCloneObject(el)) as T
+  }
+
+  const newObj = {} as typeof obj
+  const keys = Object.keys(obj) as (keyof T)[]
+  keys.forEach(key => {
+    newObj[key] = deepCloneObject(obj[key])
+  })
+
+  return newObj
+}

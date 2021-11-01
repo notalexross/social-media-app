@@ -13,7 +13,8 @@ import {
   paginateArray,
   disableElements,
   enableElements,
-  disableForm
+  disableForm,
+  deepCloneObject
 } from '.'
 
 describe(`${isValidSignUpInputs.name}`, () => {
@@ -538,5 +539,61 @@ describe(`${disableForm.name}`, () => {
     result.forEach(element => {
       expect(element).toHaveAttribute('disabled')
     })
+  })
+})
+
+describe(`${deepCloneObject.name}`, () => {
+  test('creates a deep clone of an object', () => {
+    const initialSymbol = Symbol('foo')
+    const input = {
+      object: { number: 0 },
+      array: ['', 0, undefined, null],
+      string: '',
+      number: 0,
+      bigint: BigInt('0xffffffffffffff'),
+      boolean: true,
+      symbol: initialSymbol,
+      undefined: undefined as undefined | string,
+      null: null as null | string
+    }
+    const expectedOutput = {
+      object: { number: 0 },
+      array: ['', 0, undefined, null],
+      string: '',
+      number: 0,
+      bigint: BigInt('0xffffffffffffff'),
+      boolean: true,
+      symbol: initialSymbol,
+      undefined: undefined as undefined | string,
+      null: null as null | string
+    }
+
+    const result = deepCloneObject(input)
+    input.object.number = 3
+    input.array[0] = 'hello'
+    input.string = 'hi'
+    input.number = 42
+    input.bigint = BigInt(0)
+    input.boolean = false
+    input.symbol = Symbol('bar')
+    input.undefined = 'defined'
+    input.null = 'not null'
+
+    expect(result).not.toBe(input)
+    expect(result).toMatchObject(expectedOutput)
+  })
+
+  test('creates a deep clone of an array', () => {
+    const input = ['', 0, undefined, null]
+    const expectedOutput = ['', 0, undefined, null]
+
+    const result = deepCloneObject(input)
+    input[0] = 'hello'
+    input[1] = 42
+    input[2] = 'defined'
+    input[3] = 'not null'
+
+    expect(result).not.toBe(input)
+    expect(result).toMatchObject(expectedOutput)
   })
 })
