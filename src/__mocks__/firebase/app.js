@@ -82,6 +82,28 @@ const posts = {
     replies: [],
     replyTo: 'post1',
     likes: ['user1']
+  },
+  post3: {
+    attachment: '',
+    createdAt: { seconds: 3, nanoseconds: 0 },
+    deleted: true,
+    deletedReplies: ['post4'],
+    message: 'mock message',
+    owner: 'user3',
+    replies: ['post4'],
+    replyTo: null,
+    likes: []
+  },
+  post4: {
+    attachment: '',
+    createdAt: { seconds: 4, nanoseconds: 0 },
+    deleted: true,
+    deletedReplies: [],
+    message: 'mock message',
+    owner: 'user1',
+    replies: [],
+    replyTo: 'post3',
+    likes: []
   }
 }
 
@@ -149,7 +171,7 @@ const database = {
   posts: {
     _docs: new Map(
       Object.keys(posts).map(postId => {
-        const { likes, attachment, message, ...post } = posts[postId]
+        const { likes, attachment, message, owner, ...post } = posts[postId]
 
         return [
           postId,
@@ -165,7 +187,8 @@ const database = {
                     {
                       _fields: {
                         attachment,
-                        message
+                        message,
+                        owner
                       }
                     }
                   ]
@@ -174,6 +197,7 @@ const database = {
             },
             _fields: {
               ...post,
+              owner: post.deleted ? null : owner,
               likesCount: likes.length
             }
           }
@@ -296,7 +320,7 @@ function sortByField(docs, field, direction) {
   return sortedDocs
 }
 
-const get = jest.fn(function () {
+function getNonMocked() {
   const metadata = { fromCache: false }
 
   let response
@@ -325,7 +349,7 @@ const get = jest.fn(function () {
       id: this._id,
       data: () => this._fields,
       metadata,
-      exists: true,
+      exists: !!this._fields,
       _collections: this._collections
     }
   } else if ('_id' in this) {
@@ -340,12 +364,14 @@ const get = jest.fn(function () {
   }
 
   return Promise.resolve(response)
-})
+}
+
+const get = jest.fn(getNonMocked)
 
 const onSnapshotCleanupFunction = jest.fn()
 
 const onSnapshot = jest.fn(function (callback) {
-  this.get().then(callback)
+  this.getNonMocked().then(callback)
 
   return onSnapshotCleanupFunction
 })
@@ -395,6 +421,7 @@ const doc = jest.fn(function (id) {
     _collections: this._docs.get(id)?._collections || {},
     id: id || 'mockId',
     get,
+    getNonMocked,
     onSnapshot,
     set,
     update,
@@ -426,6 +453,7 @@ collection = jest.fn(function (path) {
     add,
     doc,
     get,
+    getNonMocked,
     onSnapshot
   }
 })

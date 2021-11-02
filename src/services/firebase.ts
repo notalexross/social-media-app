@@ -1,10 +1,12 @@
 import firebase from 'firebase/app'
+import { CombinationOf } from '../types'
 import {
   isValidEmail,
   isValidSignUpInputs,
   isValidSignInInputs,
   sortByTimestamp,
-  chunkArray
+  chunkArray,
+  deepCloneObject
 } from '../utils'
 import { SelfUpdatingCache } from '../classes'
 
@@ -72,7 +74,16 @@ export type PostWithReplyTo = PostWithUserDetails & {
   replyToPost: PostWithUserDetails | undefined
 }
 export type PostOrPostId = string | Post | PostWithUserDetails | PostWithReplyTo
-export type PostPiece = PostPublic | PostContent
+
+type ReplyToPost = PostPublicWithId | (PostPublicWithId & { ownerDetails: User | null })
+
+export type PostPiece = CombinationOf<
+  { id: string },
+  PostPublicWithId,
+  PostPublicWithId & { ownerDetails: User | null },
+  PostPublicWithId & { replyToPost: ReplyToPost | null },
+  PostContentWithId
+>
 
 export type PostsStatus = {
   posts: PostPublicWithId[] | null
@@ -660,6 +671,243 @@ export function onPostUpdated(
   }
 
   return () => listeners.forEach(listener => listener())
+}
+
+export type FetchPostOptions = {
+  existingPost?: PostPiece
+  fetchPublic?: 'get' | 'subscribe' | 'none'
+  fetchContent?: 'get' | 'subscribe' | 'subscribeIfOwner' | 'none'
+  fetchReplyTo?: 'get' | 'none'
+  errorCallback?: (error: unknown) => void
+  onRequestMade?: () => void
+}
+
+export function fetchPost(
+  postId: string,
+  callback: (updatedPost: PostPiece) => void,
+  {
+    existingPost = { id: postId },
+    fetchPublic = 'get',
+    fetchContent = 'none',
+    fetchReplyTo = 'none',
+    errorCallback,
+    onRequestMade = () => {}
+  }: FetchPostOptions = {}
+): () => void {
+  let post: PostPiece = deepCloneObject(existingPost)
+  let publicListener: (() => void) | undefined
+  let contentListener: (() => void) | undefined
+  let isGettingOwnerDetails = false
+  let isGettingReplyToPost = false
+  let isGettingReplyToPostOwnerDetails = false
+  let didUpdatePublic = false
+  let didUpdateContent = false
+  let contentError = false
+  let contentHasErrored = false
+  let isCurrent = true
+
+  // Note: TypeScript control flow analysis of aliased conditions requires an object to be readonly.
+  const assemblePost = (immutablePost: Readonly<PostPiece>) => {
+    const hasPublic = 'createdAt' in immutablePost
+    const hasNonNullOwnerId = hasPublic && immutablePost.owner !== null
+    const hasOwnerDetails =
+      'ownerDetails' in immutablePost && (immutablePost.ownerDetails !== null || !hasNonNullOwnerId)
+    const hasReplyToPost = 'replyToPost' in immutablePost
+    const hasNonNullReplyToPost = hasReplyToPost && immutablePost.replyToPost !== null
+    const hasReplyToPostOwnerDetails =
+      hasNonNullReplyToPost && 'ownerDetails' in immutablePost.replyToPost
+    const hasContent = 'message' in immutablePost
+    const isOwner = hasNonNullOwnerId && immutablePost.owner === auth.currentUser?.uid
+    const isDeleted = hasPublic && immutablePost.deleted
+    // Note: isAllowedContent always returns true until fetching content has been attempted at least once, even if the post is deleted. If the post is deleted then cannot know for sure that content isn't allowed until it is fetched, since the owner ID is only stored in the content for deleted posts.
+    const isAllowedContent = (!isDeleted || !contentHasErrored) && !contentError
+    const needOwnerId = fetchContent === 'subscribeIfOwner' && !hasPublic
+    const needOwnerDetails = fetchPublic !== 'none' && hasPublic
+    const needReplyToPost = fetchReplyTo !== 'none'
+    const needReplyToPostOwnerDetails = needReplyToPost && hasNonNullReplyToPost
+    const needPublic =
+      fetchPublic !== 'none' ||
+      needOwnerId ||
+      needOwnerDetails ||
+      needReplyToPost ||
+      needReplyToPostOwnerDetails
+    const needSubscribePublic = fetchPublic === 'subscribe'
+    const needRemovePublicListener =
+      publicListener !== undefined && hasPublic && !needSubscribePublic
+
+    // Note: Given fetchContent is "get"; needContent returns false if content has errored once already, to prevent content being fetched again on post undeletion and to allow callback to be called with no content.
+    // Note: Given fetchContent is "subscribeIfOwner"; needContent will always initially return true, so that content is fetched at least once even if the current user is not the owner. This also allows addition of owner in the case of a deleted post, as the owner ID only exists on the content in that case (null in public).
+    const needContent =
+      (fetchContent === 'get' && !contentHasErrored) ||
+      (fetchContent === 'subscribe' && isAllowedContent) ||
+      (fetchContent === 'subscribeIfOwner' && isAllowedContent && !contentHasErrored)
+    const needSubscribeContent =
+      (fetchContent === 'subscribe' && isAllowedContent) ||
+      (fetchContent === 'subscribeIfOwner' && (!hasPublic || isOwner) && isAllowedContent)
+    const needRemoveContentListener =
+      contentListener !== undefined &&
+      hasContent &&
+      fetchContent !== 'subscribe' &&
+      (fetchContent !== 'subscribeIfOwner' || (hasPublic && !isOwner))
+
+    const shouldNextUpdatePublic =
+      ((!hasPublic && needPublic) || needSubscribePublic) && !publicListener
+    const shouldNextUpdateContent =
+      ((!hasContent && needContent) || needSubscribeContent) && !contentListener
+    const shouldNextUpdateReplyToPost =
+      !hasReplyToPost && needReplyToPost && !isGettingReplyToPost && hasPublic
+    const shouldNextUpdateOwnerDetails =
+      !hasOwnerDetails && needOwnerDetails && !isGettingOwnerDetails
+    const shouldNextUpdateReplyToPostOwnerDetails =
+      !hasReplyToPostOwnerDetails &&
+      needReplyToPostOwnerDetails &&
+      !isGettingReplyToPostOwnerDetails
+    const shouldCallCallback =
+      (hasPublic || !needPublic) &&
+      (hasOwnerDetails || !needOwnerDetails) &&
+      (hasReplyToPost || !needReplyToPost) &&
+      (hasReplyToPostOwnerDetails || !needReplyToPostOwnerDetails) &&
+      (hasContent || !needContent) &&
+      (didUpdatePublic || !needSubscribePublic) &&
+      (didUpdateContent || !needSubscribeContent)
+
+    if (shouldNextUpdatePublic) {
+      onRequestMade()
+
+      publicListener = listenPostDetails(
+        postId,
+        'public',
+        response => {
+          if (isCurrent) {
+            if ('owner' in post && post.owner !== null) {
+              post = { ...post, ...response, owner: post.owner }
+            } else {
+              post = { ...post, ...response }
+            }
+
+            didUpdatePublic = true
+            contentError = false
+            assemblePost(post)
+          }
+        },
+        errorCallback
+      )
+    } else if (shouldNextUpdateContent) {
+      const handleContentError = () => {
+        console.error('Unable to get post content, post possibly deleted.')
+
+        if (contentListener) {
+          contentListener()
+          contentListener = undefined
+        }
+
+        contentError = true
+        contentHasErrored = true
+        assemblePost(post)
+      }
+
+      onRequestMade()
+
+      contentListener = listenPostDetails(
+        postId,
+        'content',
+        response => {
+          if (isCurrent) {
+            post = { ...post, ...response }
+            didUpdateContent = true
+            contentError = false
+            assemblePost(post)
+          }
+        },
+        handleContentError
+      )
+    } else if (shouldNextUpdateReplyToPost) {
+      isGettingReplyToPost = true
+      if (immutablePost.replyTo) {
+        onRequestMade()
+
+        const { replyTo } = immutablePost
+        const { postPublicRef } = getPostQueries(immutablePost.replyTo)
+        postPublicRef
+          .get()
+          .then(doc => {
+            if (isCurrent) {
+              post = { ...post, replyToPost: { ...(doc.data() as PostPublic), id: replyTo } }
+              assemblePost(post)
+            }
+          })
+          .catch(errorCallback)
+      } else {
+        post = { ...post, replyToPost: null }
+        assemblePost(post)
+      }
+    } else if (shouldNextUpdateOwnerDetails) {
+      isGettingOwnerDetails = true
+      if (hasNonNullOwnerId) {
+        onRequestMade()
+
+        getCachedUserById(immutablePost.owner, 10 * 1000)
+          .then(ownerDetails => {
+            if (isCurrent) {
+              post = { ...post, ownerDetails }
+              assemblePost(post)
+            }
+          })
+          .catch(errorCallback)
+      } else {
+        post = { ...post, ownerDetails: null }
+        assemblePost(post)
+      }
+    } else if (shouldNextUpdateReplyToPostOwnerDetails) {
+      isGettingReplyToPostOwnerDetails = true
+      if (immutablePost.replyToPost.owner) {
+        onRequestMade()
+
+        getCachedUserById(immutablePost.replyToPost.owner, 10 * 1000)
+          .then(ownerDetails => {
+            if (isCurrent) {
+              if ('replyToPost' in post && post.replyToPost !== null) {
+                post = { ...post, replyToPost: { ...post.replyToPost, ownerDetails } }
+              }
+
+              assemblePost(post)
+            }
+          })
+          .catch(errorCallback)
+      } else if ('replyToPost' in post && post.replyToPost !== null) {
+        post = { ...post, replyToPost: { ...post.replyToPost, ownerDetails: null } }
+        assemblePost(post)
+      }
+    }
+
+    if (publicListener && needRemovePublicListener) {
+      publicListener()
+      publicListener = undefined
+    }
+
+    if (contentListener && needRemoveContentListener) {
+      contentListener()
+      contentListener = undefined
+    }
+
+    if (shouldCallCallback) {
+      callback(post)
+    }
+  }
+
+  assemblePost(post)
+
+  return () => {
+    isCurrent = false
+
+    if (publicListener) {
+      publicListener()
+    }
+
+    if (contentListener) {
+      contentListener()
+    }
+  }
 }
 
 type CreatePostInDBOptions = {

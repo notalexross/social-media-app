@@ -2,6 +2,7 @@ import firebase from 'firebase'
 import { waitFor } from '@testing-library/react'
 // eslint-disable-next-line jest/no-mocks-import
 import { mockFunctions } from '../__mocks__/firebase/app'
+import type { FetchPostOptions } from './firebase'
 import {
   getCachedUserById,
   getCachedUserByUsername,
@@ -26,7 +27,8 @@ import {
   getCachedLatestPosters,
   getSuggestedUsers,
   changeEmail,
-  changePassword
+  changePassword,
+  fetchPost
 } from './firebase'
 
 const user = {
@@ -171,7 +173,7 @@ describe(`${onUserByIdUpdated.name}`, () => {
     onUserByIdUpdated(user.uid, callback)
     await waitFor(() => expect(callback).toHaveBeenCalled())
 
-    expect(callback).toBeCalledTimes(1)
+    expect(callback).toHaveBeenCalledTimes(1)
     expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.public })
   })
 
@@ -201,7 +203,7 @@ describe(`${onUserByIdUpdated.name}`, () => {
       onUserByIdUpdated(user.uid, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(1)
+      expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
         ...user.public,
@@ -226,7 +228,7 @@ describe(`${onUserByIdUpdated.name}`, () => {
       onUserByIdUpdated(user.uid, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(1)
+      expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
         ...user.public,
@@ -251,7 +253,7 @@ describe(`${onUserByUsernameUpdated.name}`, () => {
     onUserByUsernameUpdated(user.public.username, callback)
     await waitFor(() => expect(callback).toHaveBeenCalled())
 
-    expect(callback).toBeCalledTimes(1)
+    expect(callback).toHaveBeenCalledTimes(1)
     expect(callback).toHaveBeenCalledWith({ uid: user.uid, ...user.public })
   })
 
@@ -282,7 +284,7 @@ describe(`${onUserByUsernameUpdated.name}`, () => {
       onUserByUsernameUpdated(user.public.username, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(1)
+      expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
         ...user.public,
@@ -307,7 +309,7 @@ describe(`${onUserByUsernameUpdated.name}`, () => {
       onUserByUsernameUpdated(user.public.username, callback, options)
       await waitFor(() => expect(callback).toHaveBeenCalled())
 
-      expect(callback).toBeCalledTimes(1)
+      expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith({
         uid: user.uid,
         ...user.public,
@@ -328,8 +330,8 @@ describe(`${isUsernameAvailable.name}`, () => {
   test('given valid arguments, calls firebase methods', async () => {
     await isUsernameAvailable('username')
 
-    expect(mockFunctions.where).toBeCalledTimes(2)
-    expect(mockFunctions.get).toBeCalledTimes(1)
+    expect(mockFunctions.where).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.get).toHaveBeenCalledTimes(1)
   })
 
   test('given username is not taken, returns true', async () => {
@@ -402,11 +404,11 @@ describe(`${signUp.name}`, () => {
     test('calls firebase methods', async () => {
       await signUp(options)
 
-      expect(mockFunctions.where).toBeCalledTimes(2)
-      expect(mockFunctions.get).toBeCalledTimes(1)
-      expect(mockFunctions.createUserWithEmailAndPassword).toBeCalledTimes(1)
-      expect(mockFunctions.set).toBeCalledTimes(4)
-      expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+      expect(mockFunctions.where).toHaveBeenCalledTimes(2)
+      expect(mockFunctions.get).toHaveBeenCalledTimes(1)
+      expect(mockFunctions.createUserWithEmailAndPassword).toHaveBeenCalledTimes(1)
+      expect(mockFunctions.set).toHaveBeenCalledTimes(4)
+      expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
     })
   })
 })
@@ -464,7 +466,7 @@ describe(`${signIn.name}`, () => {
     test('calls firebase methods', async () => {
       await signIn(options)
 
-      expect(mockFunctions.signInWithEmailAndPassword).toBeCalledTimes(1)
+      expect(mockFunctions.signInWithEmailAndPassword).toHaveBeenCalledTimes(1)
     })
   })
 })
@@ -487,22 +489,22 @@ describe(`${editUser.name}`, () => {
   test('given public details updated, calls firestore update method once', async () => {
     await editUser({ username: 'NewUsername' })
 
-    expect(mockFunctions.update).toBeCalledTimes(1)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
   })
 
   test('given private details updated, calls firestore update method once', async () => {
     await editUser({ fullName: 'NewForename NewSurname' })
 
-    expect(mockFunctions.update).toBeCalledTimes(1)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
   })
 
   test('given mixed details updated, calls firestore update method twice', async () => {
     await editUser({ username: 'NewUsername', fullName: 'NewForename NewSurname' })
 
-    expect(mockFunctions.update).toBeCalledTimes(2)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -525,19 +527,19 @@ describe(`${addPost.name}`, () => {
     const result = addPost({ message: 'message' })
 
     await expect(result).resolves.toBe('mockId')
-    expect(mockFunctions.set).toBeCalledTimes(2)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
-    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.set).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(1)
   })
 
   test('given post has content and is a reply, resolves and calls firebase methods', async () => {
     const result = addPost({ message: 'message', replyTo: 'post1' })
 
     await expect(result).resolves.toBe('mockId')
-    expect(mockFunctions.set).toBeCalledTimes(2)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(2)
-    expect(mockFunctions.update).toBeCalledTimes(2)
-    expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
+    expect(mockFunctions.set).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.arrayUnion).toHaveBeenCalledTimes(1)
   })
 
   test('given post has an attachment, resolves and calls firebase methods', async () => {
@@ -546,8 +548,8 @@ describe(`${addPost.name}`, () => {
     const result = addPost({ attachment: file })
 
     await expect(result).resolves.toBe('mockId')
-    expect(mockFunctions.put).toBeCalledTimes(1)
-    expect(mockFunctions.getDownloadURL).toBeCalledTimes(1)
+    expect(mockFunctions.put).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.getDownloadURL).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -579,8 +581,8 @@ describe(`${editPost.name}`, () => {
     )
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.update).toBeCalledTimes(2)
-    expect(mockFunctions.serverTimestamp).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -605,12 +607,12 @@ describe(`${followUser.name}`, () => {
     const result = followUser(uid)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.increment).toBeCalledTimes(1)
+    expect(mockFunctions.increment).toHaveBeenCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(1)
-    expect(mockFunctions.update).toBeCalledTimes(2)
-    expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.arrayUnion).toHaveBeenCalledTimes(1)
     expect(mockFunctions.arrayUnion).toBeCalledWith(uid)
-    expect(mockFunctions.set).toBeCalledTimes(1)
+    expect(mockFunctions.set).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -635,12 +637,12 @@ describe(`${unfollowUser.name}`, () => {
     const result = unfollowUser(uid)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.increment).toBeCalledTimes(1)
+    expect(mockFunctions.increment).toHaveBeenCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(-1)
-    expect(mockFunctions.update).toBeCalledTimes(2)
-    expect(mockFunctions.arrayRemove).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.arrayRemove).toHaveBeenCalledTimes(1)
     expect(mockFunctions.arrayRemove).toBeCalledWith(uid)
-    expect(mockFunctions.docDelete).toBeCalledTimes(1)
+    expect(mockFunctions.docDelete).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -665,12 +667,12 @@ describe(`${likePost.name}`, () => {
     const result = likePost(postId)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.increment).toBeCalledTimes(1)
+    expect(mockFunctions.increment).toHaveBeenCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(1)
-    expect(mockFunctions.update).toBeCalledTimes(2)
-    expect(mockFunctions.arrayUnion).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.arrayUnion).toHaveBeenCalledTimes(1)
     expect(mockFunctions.arrayUnion).toBeCalledWith(postId)
-    expect(mockFunctions.set).toBeCalledTimes(1)
+    expect(mockFunctions.set).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -695,12 +697,12 @@ describe(`${unlikePost.name}`, () => {
     const result = unlikePost(postId)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.increment).toBeCalledTimes(1)
+    expect(mockFunctions.increment).toHaveBeenCalledTimes(1)
     expect(mockFunctions.increment).toBeCalledWith(-1)
-    expect(mockFunctions.update).toBeCalledTimes(2)
-    expect(mockFunctions.arrayRemove).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.arrayRemove).toHaveBeenCalledTimes(1)
     expect(mockFunctions.arrayRemove).toBeCalledWith(postId)
-    expect(mockFunctions.docDelete).toBeCalledTimes(1)
+    expect(mockFunctions.docDelete).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -715,9 +717,9 @@ describe(`${getMultiUserPosts.name}`, () => {
 
     await loadNextPage()
 
-    expect(mockFunctions.orderBy).toBeCalledTimes(1)
-    expect(mockFunctions.limit).toBeCalledTimes(1)
-    expect(mockFunctions.get).toBeCalledTimes(1)
+    expect(mockFunctions.orderBy).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.limit).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.get).toHaveBeenCalledTimes(1)
   })
 
   test('calls callbacks with correct data', async () => {
@@ -820,9 +822,9 @@ describe(`${getAllUserPosts.name}`, () => {
 
     await loadNextPage()
 
-    expect(mockFunctions.orderBy).toBeCalledTimes(1)
-    expect(mockFunctions.limit).toBeCalledTimes(1)
-    expect(mockFunctions.get).toBeCalledTimes(1)
+    expect(mockFunctions.orderBy).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.limit).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.get).toHaveBeenCalledTimes(1)
   })
 
   test('calls callbacks with correct data', async () => {
@@ -964,7 +966,7 @@ describe(`${getLatestPosters.name}`, () => {
   test('calls firebase methods', async () => {
     await getLatestPosters({ maxRequests: 1 })
 
-    expect(mockFunctions.get).toBeCalledTimes(1)
+    expect(mockFunctions.get).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -996,7 +998,7 @@ describe(`${getCachedLatestPosters.name}`, () => {
   test('given no cached users, calls firebase methods', async () => {
     await getCachedLatestPosters('user1', { maxAge: 1, num: 1 })
 
-    expect(mockFunctions.get).toBeCalledTimes(1)
+    expect(mockFunctions.get).toHaveBeenCalledTimes(1)
   })
 
   describe('with cached users', () => {
@@ -1021,7 +1023,7 @@ describe(`${getCachedLatestPosters.name}`, () => {
     test('given enough cached users, does not call firebase methods', async () => {
       await getCachedLatestPosters('user1', { maxAge: 1, num: 1 })
 
-      expect(mockFunctions.get).toBeCalledTimes(0)
+      expect(mockFunctions.get).toHaveBeenCalledTimes(0)
     })
 
     test('given enough cached users, returns recently cached users', async () => {
@@ -1032,7 +1034,7 @@ describe(`${getCachedLatestPosters.name}`, () => {
         expect.objectContaining({ uid: 'user6' }),
         expect.objectContaining({ uid: 'user7' })
       ])
-      expect(mockFunctions.get).toBeCalledTimes(0)
+      expect(mockFunctions.get).toHaveBeenCalledTimes(0)
     })
 
     test('given not enough cached users and users not exhausted, gets latest posters from firebase', async () => {
@@ -1077,7 +1079,7 @@ describe(`${changeEmail.name}`, () => {
     const result = changeEmail(newEmail, password)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.updateEmail).toBeCalledTimes(1)
+    expect(mockFunctions.updateEmail).toHaveBeenCalledTimes(1)
     expect(mockFunctions.updateEmail).toBeCalledWith(newEmail)
   })
 
@@ -1087,7 +1089,7 @@ describe(`${changeEmail.name}`, () => {
     const result = changeEmail(newEmail, password)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.update).toBeCalledTimes(1)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(1)
     expect(mockFunctions.update).toBeCalledWith(expect.objectContaining({ email: newEmail }))
   })
 
@@ -1110,7 +1112,7 @@ describe(`${changePassword.name}`, () => {
     const result = changePassword(newPassword, password)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.updatePassword).toBeCalledTimes(1)
+    expect(mockFunctions.updatePassword).toHaveBeenCalledTimes(1)
     expect(mockFunctions.updatePassword).toBeCalledWith(newPassword)
   })
 
@@ -1120,7 +1122,799 @@ describe(`${changePassword.name}`, () => {
     const result = changePassword(newPassword, password)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.signInWithEmailAndPassword).toBeCalledTimes(1)
+    expect(mockFunctions.signInWithEmailAndPassword).toHaveBeenCalledTimes(1)
     expect(mockFunctions.signInWithEmailAndPassword).toBeCalledWith(email, password)
+  })
+})
+
+describe(`${fetchPost.name}`, () => {
+  const user1 = {
+    avatar: '',
+    createdAt: { nanoseconds: 0, seconds: 0 } as firebase.firestore.Timestamp,
+    deleted: false,
+    followersCount: 2,
+    lastPostedAt: { nanoseconds: 0, seconds: 1 } as firebase.firestore.Timestamp,
+    uid: 'user1',
+    username: 'Username',
+    usernameLowerCase: 'username'
+  }
+
+  const user2 = {
+    avatar: '',
+    createdAt: { seconds: 1, nanoseconds: 0 } as firebase.firestore.Timestamp,
+    deleted: false,
+    followersCount: 0,
+    lastPostedAt: { seconds: 3, nanoseconds: 0 } as firebase.firestore.Timestamp,
+    uid: 'user2',
+    username: 'Username2',
+    usernameLowerCase: 'username2'
+  }
+
+  const post = {
+    id: 'post1',
+    public: {
+      createdAt: { seconds: 1, nanoseconds: 0 } as firebase.firestore.Timestamp,
+      deleted: false,
+      deletedReplies: [],
+      likesCount: 2,
+      owner: 'user1',
+      replies: ['post2'],
+      replyTo: null
+    },
+    content: {
+      attachment: '',
+      message: 'mock message',
+      owner: 'user1'
+    },
+    ownerDetails: user1
+  }
+
+  const reply = {
+    id: 'post2',
+    public: {
+      createdAt: { seconds: 2, nanoseconds: 0 } as firebase.firestore.Timestamp,
+      deleted: false,
+      deletedReplies: [],
+      likesCount: 1,
+      owner: 'user2',
+      replies: [],
+      replyTo: 'post1'
+    },
+    content: {
+      attachment: '',
+      message: 'mock message',
+      owner: 'user2'
+    },
+    ownerDetails: user2
+  }
+
+  const nullOwnerPost = {
+    id: 'post3',
+    public: {
+      createdAt: { seconds: 3, nanoseconds: 0 } as firebase.firestore.Timestamp,
+      deleted: true,
+      deletedReplies: ['post4'],
+      likesCount: 0,
+      owner: null,
+      replies: ['post4'],
+      replyTo: null
+    },
+    content: {
+      attachment: '',
+      message: 'mock message',
+      owner: 'user3'
+    }
+  }
+
+  const replyToNullOwnerPost = {
+    id: 'post4',
+    public: {
+      createdAt: { seconds: 4, nanoseconds: 0 } as firebase.firestore.Timestamp,
+      deleted: true,
+      deletedReplies: [],
+      likesCount: 0,
+      owner: null,
+      replies: [],
+      replyTo: 'post3'
+    },
+    content: {
+      attachment: '',
+      message: 'mock message',
+      owner: 'user1'
+    }
+  }
+
+  test('returns a cleanup function', () => {
+    const callback = jest.fn()
+
+    const result = fetchPost(post.id, callback)
+
+    expect(typeof result).toBe('function')
+  })
+
+  test('on error, calls errorCallback', async () => {
+    const callback = jest.fn()
+    const errorCallback = jest.fn()
+    const error = new Error('Post with id "nonExistentId" does not exist')
+    const options: FetchPostOptions = {
+      existingPost: { id: post.id },
+      fetchPublic: 'subscribe',
+      fetchContent: 'none',
+      fetchReplyTo: 'none',
+      errorCallback
+    }
+
+    fetchPost('nonExistentId', callback, options)
+
+    await waitFor(() => expect(errorCallback).toHaveBeenCalledWith(error))
+  })
+
+  describe('with all fetch options "none"', () => {
+    const options: FetchPostOptions = {
+      existingPost: { id: post.id },
+      fetchPublic: 'none',
+      fetchContent: 'none',
+      fetchReplyTo: 'none'
+    }
+
+    test('callback is called with copy of existing post', async () => {
+      const callback = jest.fn()
+
+      fetchPost(post.id, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
+      expect(callback).toHaveBeenNthCalledWith(1, { id: post.id })
+    })
+
+    test('no firebase methods called', async () => {
+      const callback = jest.fn()
+
+      fetchPost(post.id, callback, options)
+      await waitFor(() => expect(callback).toHaveBeenCalled())
+
+      expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(0)
+      expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+      expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('without an existing post', () => {
+    describe('with fetchPublic option: "get"', () => {
+      const options: FetchPostOptions = {
+        fetchPublic: 'get',
+        fetchContent: 'none',
+        fetchReplyTo: 'none'
+      }
+
+      test('callback is called once, with public details only, including owner details', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+        expect(callback).toHaveBeenNthCalledWith(1, {
+          id: post.id,
+          ...post.public,
+          ownerDetails: post.ownerDetails
+        })
+      })
+
+      test('public listener is removed after first response', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+      })
+
+      test('firebase methods called', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.get).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+      })
+
+      describe('given post is deleted and public owner is null', () => {
+        test('callback is called once, with public details only, with owner details null', async () => {
+          const callback = jest.fn()
+
+          fetchPost(nullOwnerPost.id, callback, options)
+
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+          expect(callback).toHaveBeenNthCalledWith(1, {
+            id: nullOwnerPost.id,
+            ...nullOwnerPost.public,
+            ownerDetails: null
+          })
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(nullOwnerPost.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+        })
+      })
+    })
+
+    describe('with fetchPublic option: "subscribe"', () => {
+      const options: FetchPostOptions = {
+        fetchPublic: 'subscribe',
+        fetchContent: 'none',
+        fetchReplyTo: 'none'
+      }
+
+      test('callback is called once initially, with public details only, including owner details', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+        expect(callback).toHaveBeenNthCalledWith(1, {
+          id: post.id,
+          ...post.public,
+          ownerDetails: post.ownerDetails
+        })
+      })
+
+      test('public listener is not removed', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+      })
+
+      test('firebase methods called', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.get).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+      })
+    })
+
+    describe('with fetchContent option: "get"', () => {
+      const options: FetchPostOptions = {
+        fetchPublic: 'none',
+        fetchContent: 'get',
+        fetchReplyTo: 'none'
+      }
+
+      test('callback is called once, with content only', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+        expect(callback).toHaveBeenNthCalledWith(1, {
+          id: post.id,
+          ...post.content
+        })
+      })
+
+      test('content listener is removed after first response', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+      })
+
+      test('firebase methods called', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('with fetchContent option: "subscribe"', () => {
+      const options: FetchPostOptions = {
+        fetchPublic: 'none',
+        fetchContent: 'subscribe',
+        fetchReplyTo: 'none'
+      }
+
+      test('callback is called once initially, with content only', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+        expect(callback).toHaveBeenNthCalledWith(1, {
+          id: post.id,
+          ...post.content
+        })
+      })
+
+      test('content listener is not removed', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+      })
+
+      test('firebase methods called', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+      })
+    })
+
+    describe('with fetchContent option: "subscribeIfOwner"', () => {
+      const options: FetchPostOptions = {
+        fetchPublic: 'none',
+        fetchContent: 'subscribeIfOwner',
+        fetchReplyTo: 'none'
+      }
+
+      test('callback is called once initially, with content, public', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+        expect(callback).toHaveBeenNthCalledWith(1, {
+          id: post.id,
+          ...post.public,
+          ...post.content
+        })
+      })
+
+      test('public listener is removed after first response', async () => {
+        const callback = jest.fn()
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+      })
+
+      describe('given current user is the owner', () => {
+        test('content listener is not removed', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+        })
+      })
+
+      describe('given current user is not the owner', () => {
+        test('content listener is removed after first response', async () => {
+          const callback = jest.fn()
+
+          fetchPost(reply.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(reply.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+        })
+      })
+
+      describe('given post is deleted and public owner is null', () => {
+        describe('given current user is the owner', () => {
+          test('content listener is not removed', async () => {
+            const callback = jest.fn()
+
+            fetchPost(replyToNullOwnerPost.id, callback, options)
+            await waitFor(() => expect(callback).toHaveBeenCalled())
+
+            expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+            expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+          })
+
+          test('firebase methods called', async () => {
+            const callback = jest.fn()
+
+            fetchPost(replyToNullOwnerPost.id, callback, options)
+            await waitFor(() => expect(callback).toHaveBeenCalled())
+
+            expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+            expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+            expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+          })
+        })
+
+        describe('given current user is not the owner', () => {
+          test('content listener is removed after first response', async () => {
+            const callback = jest.fn()
+
+            fetchPost(nullOwnerPost.id, callback, options)
+            await waitFor(() => expect(callback).toHaveBeenCalled())
+
+            expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+            expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+          })
+
+          test('firebase methods called', async () => {
+            const callback = jest.fn()
+
+            fetchPost(nullOwnerPost.id, callback, options)
+            await waitFor(() => expect(callback).toHaveBeenCalled())
+
+            expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+            expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+            expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+          })
+        })
+      })
+    })
+
+    describe('with fetchReplyTo option: "get"', () => {
+      const options: FetchPostOptions = {
+        fetchPublic: 'none',
+        fetchContent: 'none',
+        fetchReplyTo: 'get'
+      }
+
+      test('public listener created and removed after first response', async () => {
+        const callback = jest.fn()
+
+        setTimeout(() => {
+          callback()
+        }, 0)
+
+        fetchPost(post.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+      })
+
+      describe('given post is not a reply', () => {
+        test('callback is called with public details and replyToPost null', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+          expect(callback).toHaveBeenNthCalledWith(1, {
+            id: post.id,
+            ...post.public,
+            replyToPost: null
+          })
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+        })
+      })
+
+      describe('given post is a reply', () => {
+        test('callback is called with public details and reply to post public details, including owner details', async () => {
+          const callback = jest.fn()
+
+          fetchPost(reply.id, callback, options)
+
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+          expect(callback).toHaveBeenNthCalledWith(1, {
+            id: reply.id,
+            ...reply.public,
+            replyToPost: {
+              id: post.id,
+              ...post.public,
+              ownerDetails: post.ownerDetails
+            }
+          })
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(reply.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+        })
+
+        describe('given reply is deleted and public owner is null', () => {
+          test('callback is called with public details and reply to post public details, with owner details null', async () => {
+            const callback = jest.fn()
+
+            fetchPost(replyToNullOwnerPost.id, callback, options)
+
+            await waitFor(() => expect(callback).toHaveBeenCalled())
+            expect(callback).toHaveBeenNthCalledWith(1, {
+              id: replyToNullOwnerPost.id,
+              ...replyToNullOwnerPost.public,
+              replyToPost: {
+                id: nullOwnerPost.id,
+                ...nullOwnerPost.public,
+                ownerDetails: null
+              }
+            })
+          })
+
+          test('firebase methods called', async () => {
+            const callback = jest.fn()
+
+            fetchPost(replyToNullOwnerPost.id, callback, options)
+            await waitFor(() => expect(callback).toHaveBeenCalled())
+
+            expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(1)
+            expect(mockFunctions.get).toHaveBeenCalledTimes(1)
+            expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(1)
+          })
+        })
+      })
+    })
+
+    describe('with all fetch options not "none"', () => {
+      const options: FetchPostOptions = {
+        fetchPublic: 'get',
+        fetchContent: 'get',
+        fetchReplyTo: 'get'
+      }
+
+      describe('given post is not a reply', () => {
+        test('callback is called with completed post', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+          expect(callback).toHaveBeenNthCalledWith(1, {
+            id: post.id,
+            ...post.public,
+            ...post.content,
+            ownerDetails: post.ownerDetails,
+            replyToPost: null
+          })
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(1)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+        })
+      })
+
+      describe('given post is a reply', () => {
+        test('callback is called with completed post', async () => {
+          const callback = jest.fn()
+
+          fetchPost(reply.id, callback, options)
+
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+          expect(callback).toHaveBeenNthCalledWith(1, {
+            id: reply.id,
+            ...reply.public,
+            ...reply.content,
+            ownerDetails: reply.ownerDetails,
+            replyToPost: {
+              id: post.id,
+              ...post.public,
+              ownerDetails: post.ownerDetails
+            }
+          })
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(reply.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(3)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(2)
+        })
+      })
+    })
+  })
+
+  describe('with an existing post', () => {
+    describe('given existing post is complete', () => {
+      const existingPost = {
+        id: post.id,
+        ...post.public,
+        ...post.content,
+        deletedReplies: ['out-of-date deleted reply'],
+        message: 'out-of-date message',
+        ownerDetails: post.ownerDetails,
+        replyToPost: null
+      }
+
+      describe('with "get" fetch options only', () => {
+        const options: FetchPostOptions = {
+          existingPost,
+          fetchPublic: 'get',
+          fetchContent: 'get',
+          fetchReplyTo: 'get'
+        }
+
+        test('callback is called with existing post', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+          expect(callback).toHaveBeenNthCalledWith(1, existingPost)
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalled())
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(0)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+        })
+      })
+
+      describe('with some "subscribe" fetch options', () => {
+        const options: FetchPostOptions = {
+          existingPost,
+          fetchPublic: 'subscribe',
+          fetchContent: 'subscribe',
+          fetchReplyTo: 'get'
+        }
+
+        test('callback is called with existing post initially and then with up-to-date details', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+
+          await waitFor(() => expect(callback).toHaveBeenCalledTimes(1))
+          expect(callback).toHaveBeenNthCalledWith(1, {
+            ...existingPost,
+            ...post.public,
+            ...post.content,
+            ownerDetails: post.ownerDetails
+          })
+        })
+
+        test('firebase methods called', async () => {
+          const callback = jest.fn()
+
+          fetchPost(post.id, callback, options)
+          await waitFor(() => expect(callback).toHaveBeenCalledTimes(1))
+
+          expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(2)
+          expect(mockFunctions.get).toHaveBeenCalledTimes(0)
+          expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+        })
+      })
+    })
+
+    describe('given existing post is not complete', () => {
+      const existingPost = {
+        id: reply.id,
+        ...reply.public,
+        ...reply.content,
+        message: 'out-of-date message'
+      }
+      const options: FetchPostOptions = {
+        existingPost,
+        fetchPublic: 'get',
+        fetchContent: 'get',
+        fetchReplyTo: 'get'
+      }
+
+      test('callback is called once, with existing post plus newly fetched missing data', async () => {
+        const callback = jest.fn()
+
+        fetchPost(reply.id, callback, options)
+
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+        expect(callback).toHaveBeenNthCalledWith(1, {
+          ...existingPost,
+          ownerDetails: reply.ownerDetails,
+          replyToPost: {
+            id: post.id,
+            ...post.public,
+            ownerDetails: post.ownerDetails
+          }
+        })
+      })
+
+      test('firebase methods called', async () => {
+        const callback = jest.fn()
+
+        fetchPost(reply.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(0)
+        expect(mockFunctions.get).toHaveBeenCalledTimes(3)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+      })
+    })
+
+    describe('given fetchContent is "subscribeIfOwner" and existing post has content and owner ID already', () => {
+      const existingPost = {
+        id: reply.id,
+        ...reply.public,
+        ...reply.content
+      }
+      const options: FetchPostOptions = {
+        existingPost,
+        fetchPublic: 'none',
+        fetchContent: 'subscribeIfOwner',
+        fetchReplyTo: 'get'
+      }
+
+      test('callback is called once, with existing post, and no content listener is added/removed', async () => {
+        const callback = jest.fn()
+
+        fetchPost(reply.id, callback, options)
+        await waitFor(() => expect(callback).toHaveBeenCalled())
+
+        expect(mockFunctions.onSnapshot).toHaveBeenCalledTimes(0)
+        expect(mockFunctions.get).toHaveBeenCalledTimes(2)
+        expect(mockFunctions.onSnapshotCleanupFunction).toHaveBeenCalledTimes(0)
+      })
+    })
   })
 })
