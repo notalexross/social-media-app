@@ -68,10 +68,10 @@ export type PostPublicWithId = PostPublic & { id: string }
 export type PostContentWithId = PostContent & { id: string }
 export type PostWithId = PostPublic & PostContent & { id: string }
 export type PostWithUserDetails = Post & {
-  ownerDetails: User | undefined
+  ownerDetails: User | null
 }
 export type PostWithReplyTo = PostWithUserDetails & {
-  replyToPost: PostWithUserDetails | undefined
+  replyToPost: PostWithUserDetails | null
 }
 export type PostOrPostId = string | Post | PostWithUserDetails | PostWithReplyTo
 
@@ -609,68 +609,6 @@ function listenPostDetails<T extends 'public' | 'content'>(
       }
     }
   )
-}
-
-export async function getPost(
-  postId: string,
-  { maxRetries = 1, includeContent = false } = {}
-): Promise<Post> {
-  const { postPublicRef, postContentRef } = getPostQueries(postId)
-
-  return firestore.runTransaction(async transaction => {
-    // Retries necessary when grabbing a new post, by current user, with pending writes. Transactions use server data only, no local cache. As such, this transaction is racing against said pending writes.
-    for (let i = 0; i <= maxRetries; i++) {
-      // eslint-disable-next-line no-await-in-loop
-      const postPublicDoc = await transaction.get(postPublicRef)
-
-      if (postPublicDoc.exists) {
-        const postPublic = postPublicDoc.data() as PostPublic
-
-        let post: Post = { ...postPublic, id: postId }
-        if (includeContent && !postPublic.deleted) {
-          // eslint-disable-next-line no-await-in-loop
-          const postContentDoc = await transaction.get(postContentRef)
-          const postContent = postContentDoc.data() as PostContent
-          post = { ...post, ...postContent }
-        }
-
-        return post
-      }
-    }
-
-    throw new Error(`Failed to get post in ${maxRetries} attempts.`)
-  })
-}
-
-type OnPostUpdatedOptions = {
-  includePublic?: boolean
-  includeContent?: boolean
-  errorCallback?: (error: unknown) => void
-}
-
-export function onPostUpdated(
-  postId: string,
-  callback: (updatedPost: PostPublicWithId | PostContentWithId) => void,
-  { includePublic = false, includeContent = false, errorCallback }: OnPostUpdatedOptions = {}
-): () => void {
-  const handleResponse = (response: PostPublic | PostContent) => {
-    callback({ ...response, id: postId })
-  }
-
-  const handleContentError = () => {
-    console.error('Unable to get post content, post possibly deleted.')
-  }
-
-  const listeners: (() => void)[] = []
-  if (includePublic) {
-    listeners.push(listenPostDetails(postId, 'public', handleResponse, errorCallback))
-  }
-
-  if (includeContent) {
-    listeners.push(listenPostDetails(postId, 'content', handleResponse, handleContentError))
-  }
-
-  return () => listeners.forEach(listener => listener())
 }
 
 export type FetchPostOptions = {

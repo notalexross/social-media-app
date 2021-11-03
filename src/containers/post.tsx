@@ -17,7 +17,6 @@ type PostContainerProps = {
   hideAttachment?: boolean
   isComment?: boolean
   isPostPage?: boolean
-  subscribe?: boolean
   errorHandler?: (error: string) => void
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
@@ -30,15 +29,13 @@ export default function PostContainer({
   hideAttachment = false,
   isComment = false,
   isPostPage = false,
-  subscribe = true,
   errorHandler,
   ...restProps
 }: PostContainerProps): JSX.Element {
   const postWithReplyTo = usePost(post, {
-    includeContent: true,
-    subscribePublic: subscribe,
-    subscribeContent: subscribe,
-    includeReplyTo: !isComment,
+    fetchPublic: 'subscribe',
+    fetchContent: 'subscribeIfOwner',
+    fetchReplyTo: isComment ? 'none' : 'get',
     errorCallback: errorHandler
   })
 

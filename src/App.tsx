@@ -82,6 +82,7 @@ const buildDOMTree = (location: Location<LocationState>) => {
     )
   }
 
+  // Note: Keys added to force remounts between repeated post edits.
   if (isModal || pathname === ROUTES.COMPOSE) {
     elements.push(
       <Suspense key={elements.length} fallback={null}>
@@ -92,10 +93,10 @@ const buildDOMTree = (location: Location<LocationState>) => {
         ) : (
           <Switch location={location}>
             <Route exact path={`${ROUTES.POSTS}/:postId`}>
-              <ModalContainer post={post} />
+              <ModalContainer post={post} key="post-modal" />
             </Route>
             <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.COMPOSE}`}>
-              <ModalContainer post={post} compose />
+              <ModalContainer post={post} compose key="post-modal" />
             </Route>
             <Route exact path={`${ROUTES.POSTS}/:postId${ROUTES.EDIT}`}>
               <ModalContainer post={post} edit />

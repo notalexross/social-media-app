@@ -12,7 +12,7 @@ import { LocationState } from '../../types'
 
 type PostContextValue = {
   post: PostWithReplyTo | PostWithUserDetails | undefined
-  replyToPost: PostWithUserDetails | undefined
+  replyToPost: PostWithUserDetails | null | undefined
   hideAttachment: boolean
   isComment: boolean
   isPostPage: boolean

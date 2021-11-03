@@ -41,7 +41,7 @@ export default function ModalContainer({
   const history = useHistory<LocationState>()
   const { postId } = useParams<{ postId: string | undefined }>()
   const back = history.location.state?.back
-  const postObject = usePost(post || postId)
+  const postObject = usePost(edit ? post || postId : undefined)
   const [, windowHeight] = useWindowDimensions()
   const maxHeight = `${windowHeight * (1 - offsetTop) - headerHeight}px`
 
@@ -66,7 +66,7 @@ export default function ModalContainer({
   if (children) {
     modalInner = <div className="p-4">{children}</div>
   } else if (post && !edit) {
-    modalInner = <PostContainer post={postObject} commentsLimit={0} compose={compose} />
+    modalInner = <PostContainer post={post || postId} commentsLimit={0} compose={compose} />
   } else if (compose || edit) {
     modalInner = <ComposeContainer className="p-4" originalPost={postObject} />
   }

@@ -1,191 +1,98 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type {
   PostOrPostId,
-  PostPublicWithId,
-  PostContentWithId,
+  PostPiece,
   PostWithUserDetails,
-  PostWithReplyTo,
-  User
+  PostWithReplyTo
 } from '../services/firebase'
-import { getPost, onPostUpdated } from '../services/firebase'
+import { fetchPost } from '../services/firebase'
 import { stringifyError } from '../utils'
-import useUser from './use-user'
 
-type UsePostPartialOptions = {
-  includeContent?: boolean
-  subscribePublic?: boolean
-  subscribeContent?: boolean
+type UsePostOptions = {
+  fetchPublic?: 'get' | 'subscribe'
+  fetchContent?: 'get' | 'subscribe' | 'subscribeIfOwner' | 'none'
+  fetchReplyTo?: 'get' | 'none'
   errorCallback?: (error: string) => void
+  onRequestMade?: (...args: unknown[]) => unknown
 }
 
-function usePostPartial(
+export default function usePost(
   postOrId?: PostOrPostId,
   {
-    includeContent = false,
-    subscribePublic = false,
-    subscribeContent = false,
-    errorCallback
-  }: UsePostPartialOptions = {}
-): PostWithUserDetails | undefined {
-  const isPost = postOrId !== undefined && typeof postOrId !== 'string'
-  const postId = isPost ? postOrId.id : postOrId
-  const hasContent = isPost && 'message' in postOrId
-  const hasUser = isPost && 'ownerDetails' in postOrId
-  const shouldGetPublic = !isPost && !subscribePublic
-  const shouldGetContent = includeContent && !hasContent && !subscribeContent
-  const shouldSubscribeContent = includeContent && subscribeContent
+    fetchPublic = 'get',
+    fetchContent = 'none',
+    fetchReplyTo = 'none',
+    errorCallback,
+    onRequestMade
+  }: UsePostOptions = {}
+): PostWithUserDetails | PostWithReplyTo | undefined {
+  const isPostObject = postOrId !== undefined && typeof postOrId !== 'string'
+  const [post, setPost] = useState<PostPiece | undefined>(isPostObject ? postOrId : undefined)
+  const prevPostId = useRef(isPostObject ? postOrId.id : postOrId)
+  const deletedOnLoad = useRef<boolean | null>(null)
 
-  const postState = isPost ? postOrId : undefined
-  const postWithUserState = hasUser && (!includeContent || hasContent) ? postOrId : undefined
+  const isDefined = post !== undefined
+  const hasPublic = isDefined && 'createdAt' in post
+  const hasOwnerDetails = isDefined && 'ownerDetails' in post
+  const hasContent = isDefined && 'message' in post
+  const hasReplyToPost = isDefined && 'replyToPost' in post
+  const needReplyToPost = fetchReplyTo !== 'none'
 
-  const [post, setPost] = useState<PostPublicWithId | PostContentWithId | undefined>(postState)
-  const [postWithUser, setPostWithUser] = useState<PostWithUserDetails | undefined>(
-    postWithUserState
-  )
-
-  let userState: string | User | undefined
-  if (hasUser) {
-    userState = postOrId.ownerDetails
-  } else if (post && 'owner' in post) {
-    userState = post.owner
+  if (deletedOnLoad.current === null && hasPublic) {
+    deletedOnLoad.current = post.deleted
   }
 
-  const ownerDetails = useUser(userState, { passthrough: hasUser, maxAge: 10000 })
+  const needContent =
+    fetchContent !== 'none' && (!hasPublic || (!post.deleted && !deletedOnLoad.current))
+  const postIsComplete =
+    hasPublic &&
+    hasOwnerDetails &&
+    (hasReplyToPost || !needReplyToPost) &&
+    (hasContent || !needContent)
 
   useEffect(() => {
-    setPost(postState)
-  }, [postId, postState])
-
-  useEffect(() => {
-    let isCurrent = true
-    let cleanup = () => {}
-
     const handleError = (error: unknown) => {
-      if (isCurrent && errorCallback) {
+      if (errorCallback) {
         errorCallback(stringifyError(error))
       }
     }
 
-    if (postId) {
-      if (shouldGetPublic || shouldGetContent) {
-        getPost(postId, { includeContent: shouldGetContent })
-          .then(data => {
-            if (isCurrent) {
-              setPost(state => ({ ...state, ...data }))
-            }
-          })
-          .catch(handleError)
+    const isPost = postOrId !== undefined && typeof postOrId !== 'string'
+    const postId = isPost ? postOrId.id : postOrId
+
+    let existingPost: PostPiece | undefined
+    if (prevPostId.current === postId) {
+      if (isPost) {
+        existingPost = { ...post, ...postOrId }
+      } else {
+        existingPost = post
       }
-
-      if (subscribePublic || shouldSubscribeContent) {
-        cleanup = onPostUpdated(
-          postId,
-          changes => {
-            if (isCurrent) {
-              setPost(state => ({ ...state, ...changes }))
-            }
-          },
-          {
-            includePublic: subscribePublic,
-            includeContent: shouldSubscribeContent,
-            errorCallback: handleError
-          }
-        )
-      }
-    }
-
-    return () => {
-      isCurrent = false
-      cleanup()
-    }
-  }, [
-    errorCallback,
-    shouldGetContent,
-    shouldGetPublic,
-    includeContent,
-    postId,
-    subscribePublic,
-    shouldSubscribeContent
-  ])
-
-  useEffect(() => {
-    if (
-      post &&
-      postId &&
-      (ownerDetails || !('owner' in post)) &&
-      'createdAt' in post &&
-      (!(includeContent || subscribeContent) || 'message' in post)
-    ) {
-      setPostWithUser({ ...post, id: postId, ownerDetails })
     } else {
-      setPostWithUser(postWithUserState)
+      if (isPost) {
+        existingPost = postOrId
+      } else {
+        existingPost = undefined
+      }
+
+      setPost(existingPost)
     }
-  }, [post, ownerDetails, postWithUserState, includeContent, subscribeContent, postId])
 
-  return postWithUser && postWithUser.id === postId ? postWithUser : postWithUserState
-}
+    prevPostId.current = postId
 
-type UsePostOptions = {
-  includeContent?: boolean
-  subscribePublic?: boolean
-  subscribeContent?: boolean
-  includeReplyTo?: boolean
-  includeReplyToContent?: boolean
-  errorCallback?: (error: string) => void
-}
-
-export default function usePost(
-  post?: PostOrPostId,
-  {
-    includeContent = false,
-    subscribePublic = false,
-    subscribeContent = false,
-    includeReplyTo = false,
-    includeReplyToContent = false,
-    errorCallback
-  }: UsePostOptions = {}
-): PostWithReplyTo | undefined {
-  const postLive = usePostPartial(post, {
-    includeContent,
-    subscribePublic,
-    subscribeContent,
-    errorCallback
-  })
-
-  const isPost = post !== undefined && typeof post !== 'string'
-  const postId = isPost ? post.id : post
-
-  let postWithUserDetails: PostWithUserDetails | PostWithReplyTo | undefined
-  if (postLive) {
-    postWithUserDetails = postLive
-  } else if (
-    isPost &&
-    'ownerDetails' in post &&
-    (!includeContent || 'message' in post)
-  ) {
-    postWithUserDetails = post
-  }
-
-  let replyToPostOrId: string | PostWithUserDetails | undefined
-  if (isPost && 'replyToPost' in post && post.replyToPost) {
-    replyToPostOrId = post.replyToPost
-  } else if (includeReplyTo) {
-    replyToPostOrId = isPost ? post.replyTo || undefined : postLive?.replyTo || undefined
-  }
-
-  const replyToPost = usePostPartial(replyToPostOrId, {
-    includeContent: includeReplyToContent,
-    errorCallback
-  })
-  const [postWithReplyTo, setPostWithReplyTo] = useState<PostWithReplyTo | undefined>(
-    postWithUserDetails ? { ...postWithUserDetails, replyToPost } : undefined
-  )
-
-  useEffect(() => {
-    if (postLive) {
-      setPostWithReplyTo({ ...postLive, replyToPost })
+    if (postId) {
+      return fetchPost(postId, data => setPost(state => ({ ...state, ...data })), {
+        existingPost,
+        fetchPublic,
+        fetchContent,
+        fetchReplyTo,
+        errorCallback: handleError,
+        onRequestMade
+      })
     }
-  }, [postLive, replyToPost])
 
-  return postId && postWithReplyTo?.id === postId ? postWithReplyTo : undefined
+    return () => {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errorCallback, fetchContent, fetchPublic, fetchReplyTo, postOrId, onRequestMade])
+
+  return postIsComplete ? post : undefined
 }
