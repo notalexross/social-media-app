@@ -34,9 +34,9 @@ export default function MenuContainer({
   const { following, likedPosts, uid } = useContext(UserContext)
   const { deleted, id, owner, ownerDetails } = post
   const { username, deleted: ownerDeleted } = ownerDetails || {}
-  const isOwner = uid && owner === uid
+  const isOwner = uid !== undefined && owner === uid
   const isLiked = likedPosts?.includes(id)
-  const isFollowing = following?.includes(owner)
+  const isFollowing = owner && following?.includes(owner)
   const itemClassName =
     'flex items-center px-5 py-4 w-full text-left hover:bg-clr-accent hover:text-clr-secondary focus:bg-clr-accent focus:text-clr-secondary'
   const iconClassName = 'flex-shrink-0 w-6 mr-2'
@@ -51,10 +51,12 @@ export default function MenuContainer({
   }, [])
 
   const toggleFollow = () => {
-    if (!isFollowing) {
-      followUser(owner).catch(console.error)
-    } else {
-      unfollowUser(owner).catch(console.error)
+    if (owner) {
+      if (!isFollowing) {
+        followUser(owner).catch(console.error)
+      } else {
+        unfollowUser(owner).catch(console.error)
+      }
     }
   }
 
@@ -114,7 +116,7 @@ export default function MenuContainer({
           <DotsVerticalIcon className={verticalDotsClassName} />
         </Menu.Open>
         <Menu.Items className="mb-4 w-96 p-1 border rounded bg-clr-secondary shadow-md overflow-hidden break-words">
-          {!isOwner && !ownerDeleted ? (
+          {!deleted && !isOwner && !ownerDeleted ? (
             <Menu.Item className={itemClassName} type="button" onClick={toggleFollow}>
               <UserAddIcon className={iconClassName} />
               <span className={itemTextClassName}>

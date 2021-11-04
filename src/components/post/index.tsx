@@ -101,13 +101,25 @@ Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: Pos
   )
 }
 
-Post.ReplyingTo = function PostReplyingTo(
-  props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
-) {
+type PostReplyingToProps = {
+  unknownTextContent?: string
+} & Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
+
+Post.ReplyingTo = function PostReplyingTo({
+  unknownTextContent = 'Unknown User',
+  ...restProps
+}: PostReplyingToProps) {
   const { post, replyToPost, isComment } = useContext(PostContext)
 
   if (isComment || !post || !post.replyTo) {
     return null
+  }
+
+  let replyingTo: string | undefined
+  if (replyToPost?.ownerDetails === null) {
+    replyingTo = unknownTextContent
+  } else {
+    replyingTo = replyToPost?.ownerDetails?.username
   }
 
   return (
@@ -115,10 +127,10 @@ Post.ReplyingTo = function PostReplyingTo(
       to={`${ROUTES.POSTS}/${post.replyTo}`}
       post={replyToPost || post.replyTo}
       modal
-      {...props}
+      {...restProps}
     >
       Replying to&nbsp;
-      {replyToPost?.ownerDetails?.username || <Skeleton width="15ch" {...props} />}
+      {replyingTo || <Skeleton width="15ch" {...restProps} />}
     </StatefulLink>
   )
 }
@@ -139,11 +151,12 @@ Post.Message = function PostMessage({
   deletedTextContent = '[Deleted]',
   ...restProps
 }: PostMessageProps) {
+  const { uid } = useContext(UserContext)
   const { post } = useContext(PostContext)
   const [isOverflowing, setIsOverflowing] = useState(false)
   const [lineHeight, LineHeightComponent] = useLineHeight()
   const overflowRef = useRef<HTMLDivElement | null>(null)
-  const hasContent = !!post && 'message' in post
+  const hasContent = post !== undefined && 'message' in post
   const maxHeight = lineClamp === Infinity ? 'auto' : lineClamp * (lineHeight || 0)
   const fadeHeight = fadeLines === Infinity ? 0 : fadeLines * (lineHeight || 0)
 
@@ -177,8 +190,17 @@ Post.Message = function PostMessage({
     )
   }
 
-  if (!hasContent) {
-    return null
+  const isOwner = uid !== undefined && post?.owner === uid
+
+  let inner: string
+  if (hasContent) {
+    if (isOwner && post.deleted) {
+      inner = deletedTextContent
+    } else {
+      inner = post.message
+    }
+  } else {
+    inner = deletedTextContent
   }
 
   let fade: JSX.Element | null = null
@@ -207,7 +229,7 @@ Post.Message = function PostMessage({
     <div {...restProps}>
       <div className="relative overflow-hidden" style={{ maxHeight }} ref={overflowRef}>
         <LineHeightComponent />
-        <p>{post.deleted ? deletedTextContent : post.message}</p>
+        <p>{inner}</p>
         {fade}
       </div>
     </div>
@@ -219,11 +241,16 @@ type PostAttachmentProps = {
 } & Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 
 Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAttachmentProps) {
+  const { uid } = useContext(UserContext)
   const { post, hideAttachment } = useContext(PostContext)
-  const hasContent = !!post && 'message' in post
   const imgClassName = 'absolute inset-0 w-full h-full w-full object-contain'
+  const isOwner = uid !== undefined && post?.owner === uid
+  const hasContent = post !== undefined && 'message' in post
+  const hasNoContent = post && !hasContent
+  const hasNoAttachment = post && hasContent && !post.attachment
+  const isDeletedAndIsOwner = isOwner && post.deleted
 
-  if (hideAttachment || (post && (!hasContent || !post.attachment || post.deleted))) {
+  if (hideAttachment || hasNoContent || hasNoAttachment || isDeletedAndIsOwner) {
     return null
   }
 
@@ -246,10 +273,13 @@ Post.Attachment = function PostAttachment({ aspectRatio, ...restProps }: PostAtt
 Post.ViewAttachment = function PostAttachment(
   props: Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
 ) {
+  const { uid } = useContext(UserContext)
   const { post, hideAttachment } = useContext(PostContext)
-  const hasContent = !!post && 'message' in post
+  const isOwner = uid !== undefined && post?.owner === uid
+  const hasContent = post !== undefined && 'message' in post
+  const isDeletedAndIsOwner = isOwner && post.deleted
 
-  if (!hideAttachment || !hasContent || !post.attachment || post.deleted) {
+  if (!hideAttachment || !hasContent || !post.attachment || isDeletedAndIsOwner) {
     return null
   }
 

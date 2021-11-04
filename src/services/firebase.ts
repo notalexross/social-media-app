@@ -44,7 +44,7 @@ type PostPublic = {
   deleted: boolean
   deletedReplies: string[]
   likesCount: number
-  owner: string
+  owner: string | null
   replyTo: string | null
   replies: string[]
   updatedAt?: firebase.firestore.Timestamp | null
@@ -53,6 +53,7 @@ type PostPublic = {
 type PostContent = {
   attachment: string
   message: string
+  owner: string
 }
 
 type PostUpdatable = Partial<
@@ -874,7 +875,8 @@ function createPostInDB(
 
     batch.set(getPostQueries(post.id).postContentRef, {
       attachment,
-      message
+      message,
+      owner: uid
     })
 
     if (replyTo) {
@@ -900,7 +902,7 @@ function createPostInDB(
 }
 
 function updatePostInDB(
-  post: PostUpdatable & { id: string; owner: string },
+  post: PostUpdatable & { id: string },
   updates: PostUpdatable
 ): Promise<void> {
   const { postPublicRef, postContentRef } = getPostQueries(post.id)
@@ -929,7 +931,15 @@ function updatePostInDB(
 
       const { replyTo } = postPublicDoc.data() as PostPublic
 
-      if ('deleted' in postPublicUpdates && replyTo) {
+      if ('deleted' in postPublicUpdates) {
+        if (postPublicUpdates.deleted) {
+          transaction.update(postPublicRef, { owner: null })
+        } else {
+          const { owner } = (await transaction.get(postContentRef)).data() as PostContent
+
+          transaction.update(postPublicRef, { owner })
+        }
+
         if (replyTo) {
           const { postPublicRef: replyToPostPublicRef } = getPostQueries(replyTo)
 
@@ -1237,13 +1247,13 @@ type EditPostOptions = {
 }
 
 export async function editPost(
-  post: PostUpdatable & { id: string; owner: string },
+  post: PostUpdatable & { id: string; owner: string | null },
   updates: EditPostOptions = {}
 ): Promise<void> {
   const { attachment, ...restUpdates } = updates
 
   if ('attachment' in updates) {
-    const url = await getAttachmentUrl(post.owner, attachment)
+    const url = await getAttachmentUrl(post.owner || 'unknown-user', attachment)
 
     return updatePostInDB(post, { attachment: url, ...restUpdates })
   }

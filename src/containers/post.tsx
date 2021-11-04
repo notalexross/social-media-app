@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import type { PostOrPostId, PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import MenuContainer from './menu'
+import { UserContext } from '../context/user'
 import { Post, StatefulLink, UserProfile } from '../components'
 import { usePost } from '../hooks'
 import * as ROUTES from '../constants/routes'
@@ -32,12 +33,15 @@ export default function PostContainer({
   errorHandler,
   ...restProps
 }: PostContainerProps): JSX.Element {
+  const { uid } = useContext(UserContext)
   const postWithReplyTo = usePost(post, {
     fetchPublic: 'subscribe',
     fetchContent: 'subscribeIfOwner',
     fetchReplyTo: isComment ? 'none' : 'get',
     errorCallback: errorHandler
   })
+
+  const isOwner = uid !== undefined && postWithReplyTo?.owner === uid
 
   return (
     <Post
@@ -55,7 +59,7 @@ export default function PostContainer({
         >
           <UserProfile
             className="flex items-center min-w-0"
-            user={postWithReplyTo?.ownerDetails || {}}
+            user={isOwner && postWithReplyTo?.deleted ? null : postWithReplyTo?.ownerDetails}
           >
             <UserProfile.Avatar
               className={`flex-shrink-0 mr-2 lg:mr-3 ${isComment ? 'w-8 sm:w-12' : 'w-12'}`}
@@ -66,7 +70,6 @@ export default function PostContainer({
                 <UserProfile.Username
                   className={`font-bold ${isComment ? 'text-sm sm:text-base' : 'text-base'}`}
                   linkClassName="hover:underline focus:underline"
-                  deletedTextContent="[Deleted]"
                 />
                 <Post.DateCreated
                   className={`text-clr-primary text-opacity-75 ${
@@ -99,7 +102,6 @@ export default function PostContainer({
             className="mt-1 whitespace-pre-wrap"
             readMoreClassName="text-sm text-clr-primary text-opacity-75 hover:underline focus:underline"
             readMoreTextContent="Read more"
-            deletedTextContent="[Deleted]"
             lineClamp={isComment ? 4 : Infinity}
             fadeLines={2}
           />

@@ -8,14 +8,14 @@ import * as ROUTES from '../../constants/routes'
 import { useProtectedFunctions } from '../../hooks'
 
 type UserProfileContextValue = {
-  user: Partial<User> | undefined
+  user: Partial<User> | null | undefined
   noLinks: boolean
 }
 
 const UserProfileContext = createContext({} as UserProfileContextValue)
 
 type UserProfileProps = {
-  user?: Partial<User>
+  user?: Partial<User> | null
   noLinks?: boolean
 } & React.ComponentPropsWithoutRef<'div'>
 
@@ -45,12 +45,12 @@ UserProfile.Avatar = function UserProfileAvatar({
   const { uid } = useContext(UserContext)
   const { user, noLinks } = useContext(UserProfileContext)
   const { avatar, username } = user || {}
-  const isSelf = uid === user?.uid
+  const isSelf = uid !== undefined && uid === user?.uid
 
-  if (!isSelf && user?.deleted) {
+  if (user === null || (!isSelf && user?.deleted)) {
     return (
       <div {...restProps}>
-        <Avatar src={null} alt="Deleted user avatar" />
+        <Avatar src={null} alt="Default avatar" />
       </div>
     )
   }
@@ -92,20 +92,26 @@ UserProfile.Avatar = function UserProfileAvatar({
 type UserProfileUsernameProps = {
   linkClassName?: string
   deletedTextContent?: string
+  unknownTextContent?: string
 } & Omit<React.ComponentPropsWithoutRef<'a'>, 'children'>
 
 UserProfile.Username = function UserProfileUsername({
   linkClassName,
-  deletedTextContent = '[Deleted]',
+  deletedTextContent = 'Deleted User',
+  unknownTextContent = 'Unknown User',
   ...restProps
 }: UserProfileUsernameProps) {
   const { uid } = useContext(UserContext)
   const { user, noLinks } = useContext(UserProfileContext)
   const { username } = user || {}
-  const isSelf = user?.uid === uid
+  const isSelf = uid !== undefined && uid === user?.uid
 
   if (!isSelf && user?.deleted) {
     return <span {...restProps}>{deletedTextContent}</span>
+  }
+
+  if (user === null) {
+    return <span {...restProps}>{unknownTextContent}</span>
   }
 
   if (!username) {
@@ -125,17 +131,34 @@ UserProfile.Username = function UserProfileUsername({
   )
 }
 
-UserProfile.FullName = function UserProfileFullName(
-  props: Omit<React.ComponentPropsWithoutRef<'span'>, 'children'>
-) {
+type UserProfileFullNameProps = {
+  deletedTextContent?: string
+  unknownTextContent?: string
+} & Omit<React.ComponentPropsWithoutRef<'span'>, 'children'>
+
+UserProfile.FullName = function UserProfileFullName({
+  deletedTextContent = 'Deleted User',
+  unknownTextContent = 'Unknown User',
+  ...restProps
+}: UserProfileFullNameProps) {
+  const { uid } = useContext(UserContext)
   const { user } = useContext(UserProfileContext)
   const { fullName } = user || {}
+  const isSelf = uid !== undefined && uid === user?.uid
 
-  if (!fullName) {
-    return <Skeleton width="15ch" {...props} />
+  if (!isSelf && user?.deleted) {
+    return <span {...restProps}>{deletedTextContent}</span>
   }
 
-  return <span {...props}>{fullName}</span>
+  if (user === null) {
+    return <span {...restProps}>{unknownTextContent}</span>
+  }
+
+  if (!fullName) {
+    return <Skeleton width="15ch" {...restProps} />
+  }
+
+  return <span {...restProps}>{fullName}</span>
 }
 
 UserProfile.FollowButton = function UserProfileFollowButton(
@@ -144,16 +167,18 @@ UserProfile.FollowButton = function UserProfileFollowButton(
   const { followUser, unfollowUser } = useProtectedFunctions()
   const { following, uid } = useContext(UserContext)
   const { user } = useContext(UserProfileContext)
-  const isSelf = user?.uid === uid
-  const isFollowing = !isSelf && user?.uid && following?.includes(user.uid)
 
-  if (!user?.uid) {
+  if (user === undefined) {
     return <Skeleton width="6ch" />
   }
 
-  if (isSelf || user.deleted) {
+  const isSelf = user && uid !== undefined && uid === user.uid
+
+  if (user === null || isSelf || user.deleted || !user.uid) {
     return null
   }
+
+  const isFollowing = following?.includes(user.uid)
 
   const toggleFollow = () => {
     if (user.uid) {
