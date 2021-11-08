@@ -1054,7 +1054,7 @@ async function uploadFile(path: string, file: File): Promise<string> {
   try {
     let fullPath = path
     if (path.endsWith('/')) {
-      const uniqueId = firestore.collection('non-existant').doc().id
+      const uniqueId = firestore.collection('non-existent').doc().id
       fullPath = `${path}${uniqueId}`
     }
 
