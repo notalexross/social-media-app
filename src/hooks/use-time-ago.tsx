@@ -1,33 +1,46 @@
 import type firebase from 'firebase'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatDateTime, onIntervalAfter } from '../utils'
 
+const updateTimes = (timestamp: firebase.firestore.Timestamp | null): [string, string, string] => {
+  if (timestamp) {
+    const millis = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000
+    const date = new Date(millis)
+    const [timeElapsed, dateFull] = formatDateTime(date)
+    const dateISO = date.toISOString()
+
+    return [timeElapsed, dateFull, dateISO]
+  }
+
+  return ['', '', '']
+}
+
 export default function useTimeAgo(
-  timestamp: firebase.firestore.Timestamp | null
+  timestamp: firebase.firestore.Timestamp | null,
+  intervalMillis = 60 * 1000
 ): [string, string, string] {
-  const [timeElapsed, setTimeElapsed] = useState('')
-  const [dateFull, setDateFull] = useState('')
-  const [dateISO, setDateISO] = useState('')
+  const [timeAgo, setTimeAgo] = useState<[string, string, string]>(updateTimes(timestamp))
+  const prevTimestamp = useRef(timestamp)
 
   useEffect(() => {
     if (timestamp) {
-      const millis = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000
+      const startTimeMillis = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000
+      const isUnchanged =
+        prevTimestamp.current?.seconds !== timestamp.seconds &&
+        prevTimestamp.current?.nanoseconds !== timestamp.nanoseconds
 
-      const updateTimes = () => {
-        const date = new Date(millis)
-        const formattedDateTime = formatDateTime(date)
-        setTimeElapsed(formattedDateTime[0])
-        setDateFull(formattedDateTime[1])
-        setDateISO(date.toISOString())
+      if (isUnchanged) {
+        setTimeAgo(updateTimes(timestamp))
+        prevTimestamp.current = timestamp
       }
 
-      updateTimes()
-
-      return onIntervalAfter(millis, 60 * 1000, updateTimes)
+      return onIntervalAfter(startTimeMillis, intervalMillis, () => {
+        setTimeAgo(updateTimes(timestamp))
+      })
     }
 
     return () => {}
-  }, [timestamp])
+  }, [intervalMillis, timestamp])
 
-  return [timeElapsed, dateFull, dateISO]
+  return timeAgo
 }
