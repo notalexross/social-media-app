@@ -56,7 +56,6 @@ export default function ModalContainer({
   const exit = () => {
     if (back) {
       history.go(-1)
-      history.replace(back)
     } else {
       history.replace(ROUTES.DASHBOARD)
     }
