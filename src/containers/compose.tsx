@@ -18,9 +18,7 @@ export default function ComposeContainer({
     offsetY: -0.5
   })
   const replyToPost = replyTo || originalPost?.replyTo
-
-  let submitButtonContent = originalPost ? 'Update ' : ''
-  submitButtonContent += replyToPost ? 'Reply' : 'Post'
+  const submitButtonContent = `${originalPost ? 'Update ' : ''}${replyToPost ? 'Reply' : 'Post'}`
 
   return (
     <div {...restProps}>
