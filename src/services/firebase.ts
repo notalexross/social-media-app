@@ -1629,7 +1629,8 @@ export async function getSuggestedUsers(
     exclude = [] as string[],
     max = 10,
     fractionLatestPosters = 0.5,
-    recentlySeenTimePeriod = 10 * 60 * 1000
+    recentlySeenTimePeriod = 10 * 60 * 1000,
+    cachedLatestPostersMaxAge = 10 * 60 * 1000
   } = {}
 ): Promise<User[]> {
   const numLatestPosters = Math.max(Math.min(Math.ceil(fractionLatestPosters * max), max), 0)
@@ -1648,7 +1649,7 @@ export async function getSuggestedUsers(
   if (suggestions.length < max) {
     suggestions.push(
       ...(await getCachedLatestPosters(key, {
-        maxAge: 10 * 60 * 10000,
+        maxAge: cachedLatestPostersMaxAge,
         exclude: [...exclude, ...suggestions.map(user => user.uid)],
         num: max - suggestions.length,
         buffer: 5,
