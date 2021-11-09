@@ -69,7 +69,12 @@ Post.DateCreated = function PostDateCreated({ linkClassName, ...restProps }: Pos
     return null
   }
 
-  const { id, createdAt, updatedAt } = post
+  const { id, createdAt } = post
+
+  let updatedAt: firebase.firestore.Timestamp | null | undefined
+  if ('updatedAt' in post) {
+    updatedAt = post.updatedAt
+  }
 
   const createdAtSpan = (
     <span className="inline-block">

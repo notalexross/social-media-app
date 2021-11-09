@@ -581,7 +581,7 @@ describe(`${editPost.name}`, () => {
     )
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(1)
     expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
   })
 })

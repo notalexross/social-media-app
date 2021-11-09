@@ -47,13 +47,13 @@ type PostPublic = {
   owner: string | null
   replyTo: string | null
   replies: string[]
-  updatedAt?: firebase.firestore.Timestamp | null
 }
 
 type PostContent = {
   attachment: string
   message: string
   owner: string
+  updatedAt?: firebase.firestore.Timestamp | null
 }
 
 type PostUpdatable = Partial<
@@ -919,9 +919,11 @@ function updatePostInDB(
 
   const postPublicUpdates: Partial<PostPublic> = postPublicKeys.reduce(callback, {})
   const postContentUpdates: Partial<PostContent> = postContentKeys.reduce(callback, {})
-  const updatedProperties = [...Object.keys(postPublicUpdates), ...Object.keys(postContentUpdates)]
+  const numPublicUpdates = Object.keys(postPublicUpdates).length
+  const numContentUpdates = Object.keys(postContentUpdates).length
+  const numUpdates = numPublicUpdates + numContentUpdates
 
-  if (updatedProperties.length) {
+  if (numUpdates) {
     return firestore.runTransaction(async transaction => {
       const postPublicDoc = await transaction.get(postPublicRef)
 
@@ -929,40 +931,41 @@ function updatePostInDB(
         throw new Error('Unable to update post as it does not exist.')
       }
 
-      const { replyTo } = postPublicDoc.data() as PostPublic
+      if (numPublicUpdates) {
+        const { replyTo } = postPublicDoc.data() as PostPublic
 
-      if ('deleted' in postPublicUpdates) {
-        if (postPublicUpdates.deleted) {
-          transaction.update(postPublicRef, { owner: null })
-        } else {
-          const { owner } = (await transaction.get(postContentRef)).data() as PostContent
-
-          transaction.update(postPublicRef, { owner })
-        }
-
-        if (replyTo) {
-          const { postPublicRef: replyToPostPublicRef } = getPostQueries(replyTo)
-
+        if ('deleted' in postPublicUpdates) {
           if (postPublicUpdates.deleted) {
-            transaction.update(replyToPostPublicRef, {
-              deletedReplies: FieldValue.arrayUnion(post.id)
-            })
+            transaction.update(postPublicRef, { owner: null })
           } else {
-            transaction.update(replyToPostPublicRef, {
-              deletedReplies: FieldValue.arrayRemove(post.id)
-            })
+            const { owner } = (await transaction.get(postContentRef)).data() as PostContent
+
+            transaction.update(postPublicRef, { owner })
+          }
+
+          if (replyTo) {
+            const { postPublicRef: replyToPostPublicRef } = getPostQueries(replyTo)
+
+            if (postPublicUpdates.deleted) {
+              transaction.update(replyToPostPublicRef, {
+                deletedReplies: FieldValue.arrayUnion(post.id)
+              })
+            } else {
+              transaction.update(replyToPostPublicRef, {
+                deletedReplies: FieldValue.arrayRemove(post.id)
+              })
+            }
           }
         }
+
+        transaction.update(postPublicRef, postPublicUpdates)
       }
 
-      if (updatedProperties.length === 1 && 'deleted' in postPublicUpdates) {
-        transaction.update(postPublicRef, postPublicUpdates)
-      } else {
-        transaction.update(postPublicRef, {
-          ...postPublicUpdates,
+      if (numContentUpdates) {
+        transaction.update(postContentRef, {
+          ...postContentUpdates,
           updatedAt: FieldValue.serverTimestamp()
         })
-        transaction.update(postContentRef, postContentUpdates)
       }
     })
   }
