@@ -48,6 +48,8 @@ export default function Compose({
   const initialAttachment = hasContent ? originalPost.attachment : undefined
 
   const [error, setError] = useState('')
+  const [savedMessage, setSavedMessage] = useState(initialMessage)
+  const [savedAttachment, setSavedAttachment] = useState<File | string | undefined>(initialMessage)
   const [message, setMessage] = useState(initialMessage)
   const [previewSrc, setPreviewSrc] = useState<string | undefined>(initialAttachment)
   const [attachment, setAttachment] = useState<File | string | undefined>(initialAttachment)
@@ -78,10 +80,10 @@ export default function Compose({
   }
 
   useEffect(() => {
-    const isSameMessage = message === initialMessage
-    const isSameAttachment = attachment === initialAttachment
+    const isSameMessage = message === savedMessage
+    const isSameAttachment = attachment === savedAttachment
     setHasChanges(!isSameMessage || !isSameAttachment)
-  }, [attachment, message, initialAttachment, initialMessage])
+  }, [attachment, message, savedAttachment, savedMessage])
 
   useEffect(() => {
     if (message.length > hardCharacterLimit) {
@@ -91,12 +93,19 @@ export default function Compose({
 
   useEffect(() => {
     if (didSend) {
+      if (originalPost) {
+        setSavedMessage(message)
+        setSavedAttachment(attachment)
+      } else {
+        setMessage('')
+        setAttachment(undefined)
+        setPreviewSrc(undefined)
+      }
+
       setError('')
-      setMessage('')
-      setAttachment(undefined)
-      setPreviewSrc(undefined)
     }
-  }, [didSend])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [didSend, originalPost])
 
   return (
     <ComposeContext.Provider
