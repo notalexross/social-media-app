@@ -57,13 +57,25 @@ EditUser.Form = function EditUserForm(props: React.ComponentPropsWithoutRef<'for
   const [error, setError] = useState('')
   const [didUpdate, setDidUpdate] = useState(false)
   const { fullName, email, username } = user || {}
-  const isLoaded = !!fullName && !!email && !!username
+  const isLoaded = fullName !== undefined && email !== undefined && username !== undefined
 
   useEffect(() => {
     if (isLoaded) {
-      setValues(state => ({ ...state, fullName, email, username }))
+      setValues(state => ({ ...state, fullName }))
     }
-  }, [isLoaded, email, fullName, username])
+  }, [isLoaded, fullName])
+
+  useEffect(() => {
+    if (isLoaded) {
+      setValues(state => ({ ...state, email }))
+    }
+  }, [isLoaded, email])
+
+  useEffect(() => {
+    if (isLoaded) {
+      setValues(state => ({ ...state, username }))
+    }
+  }, [isLoaded, username])
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = ({ target }) => {
     const { name, type } = target
