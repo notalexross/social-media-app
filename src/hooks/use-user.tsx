@@ -51,10 +51,15 @@ export default function useUser(
   const [user, setUser] = useState<User | undefined>(userState)
 
   useEffect(() => {
-    if (!userOrUidOrUsername) {
+    if (
+      !userOrUidOrUsername ||
+      (!isUser && by === 'uid' && user?.uid !== userOrUidOrUsername) ||
+      (!isUser && by === 'username' && user?.username !== userOrUidOrUsername)
+    ) {
       setUser(undefined)
     }
-  }, [userOrUidOrUsername])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [by, isUser, userOrUidOrUsername])
 
   useEffect(() => {
     if (userState) {

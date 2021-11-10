@@ -140,7 +140,10 @@ export default function HeaderContainer(): JSX.Element {
             Explore
           </Dropdown.Item>
           {username !== undefined ? (
-            <Dropdown.Item className={dropdownItemClassName} to={`${ROUTES.PROFILES}/${username}`}>
+            <Dropdown.Item
+              className={dropdownItemClassName}
+              to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
+            >
               Profile
             </Dropdown.Item>
           ) : null}

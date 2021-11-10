@@ -31,14 +31,14 @@ export default function ProfilePage(): JSX.Element {
   const linkClassName =
     'text-clr-primary hover:underline hover:text-clr-link-hover focus:text-clr-link-hover'
 
-  if (!uid) {
+  if (!username) {
     return <></>
   }
 
   const { createdAt, lastPostedAt, followersCount } = user || {}
   const created = createdAt && formatDateTime(new Date(timestampToMillis(createdAt)))[2]
   const lastPosted = lastPostedAt && formatDateTime(new Date(timestampToMillis(lastPostedAt)))[2]
-  const isCurrentUser = uid === currentUser.uid
+  const isCurrentUser = username === currentUser.username
   const likes = likedPosts?.slice().reverse()
 
   const isMainPath = pathname === `${ROUTES.PROFILES}/${username}`
@@ -160,8 +160,10 @@ export default function ProfilePage(): JSX.Element {
                 ) : null}
               </ul>
             </div>
-            {isPostsPath && <UserPostsTimelineContainer key={uid} uid={uid} postsPerPage={2} />}
-            {isLikesPath && (
+            {isPostsPath && uid && (
+              <UserPostsTimelineContainer key={uid} uid={uid} postsPerPage={2} />
+            )}
+            {isLikesPath && uid && (
               <PaginatedPostsTimelineContainer key={uid} postIds={likes} postsPerPage={2} />
             )}
             {isFollowingPath && (

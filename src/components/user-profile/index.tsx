@@ -127,7 +127,10 @@ UserProfile.Username = function UserProfileUsername({
       {noLinks ? (
         username
       ) : (
-        <StatefulLink className={linkClassName} to={`${ROUTES.PROFILES}/${username}`}>
+        <StatefulLink
+          className={linkClassName}
+          to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
+        >
           {username}
         </StatefulLink>
       )}
