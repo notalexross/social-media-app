@@ -115,7 +115,11 @@ UserProfile.Username = function UserProfileUsername({
   }
 
   if (!username) {
-    return <Skeleton width="15ch" {...restProps} />
+    return (
+      <span {...restProps}>
+        <Skeleton width="15ch" />
+      </span>
+    )
   }
 
   return (
@@ -155,7 +159,11 @@ UserProfile.FullName = function UserProfileFullName({
   }
 
   if (!fullName) {
-    return <Skeleton width="15ch" {...restProps} />
+    return (
+      <span {...restProps}>
+        <Skeleton width="15ch" />
+      </span>
+    )
   }
 
   return <span {...restProps}>{fullName}</span>
@@ -169,7 +177,11 @@ UserProfile.FollowButton = function UserProfileFollowButton(
   const { user } = useContext(UserProfileContext)
 
   if (user === undefined) {
-    return <Skeleton width="6ch" />
+    return (
+      <span {...props}>
+        <Skeleton width="6ch" />
+      </span>
+    )
   }
 
   const isSelf = user && uid !== undefined && uid === user.uid

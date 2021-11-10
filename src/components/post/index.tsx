@@ -135,7 +135,11 @@ Post.ReplyingTo = function PostReplyingTo({
       {...restProps}
     >
       Replying to&nbsp;
-      {replyingTo || <Skeleton width="15ch" {...restProps} />}
+      {replyingTo || (
+        <span {...restProps}>
+          <Skeleton width="15ch" />
+        </span>
+      )}
     </StatefulLink>
   )
 }
