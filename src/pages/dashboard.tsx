@@ -27,6 +27,7 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
             isComplete={isComplete}
             isLoadingPosts={isLoadingPosts}
             error={error}
+            showSkeletonWhenPostsNull
           />
         ) : (
           <div className="hidden col-span-3 lg:col-span-2 lg:block">
