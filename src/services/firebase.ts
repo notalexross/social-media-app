@@ -18,6 +18,7 @@ type UserPublic = {
   username: string
   usernameLowerCase: string
   lastPostedAt?: firebase.firestore.Timestamp
+  lastUpdatedAt?: firebase.firestore.Timestamp
 }
 
 type UserPrivate = {
@@ -30,7 +31,12 @@ type UserLikedPosts = { likedPosts: string[] }
 type UserCreatable = Partial<
   Omit<
     UserPublic & UserPrivate,
-    'createdAt' | 'deleted' | 'followersCount' | 'usernameLowerCase' | 'lastPostedAt'
+    | 'createdAt'
+    | 'deleted'
+    | 'followersCount'
+    | 'usernameLowerCase'
+    | 'lastPostedAt'
+    | 'lastUpdatedAt'
   >
 >
 type UserQuery = Promise<UserPublic | UserPrivate | UserFollowing | UserLikedPosts>
@@ -488,17 +494,13 @@ function updateEmailInDB(uid: string, email: string): Promise<void> {
     throw new Error('Invalid email supplied.')
   }
 
-  const { userPrivateRef } = getUserQueries(uid)
+  const batch = firestore.batch()
+  const { userPrivateRef, userPublicRef } = getUserQueries(uid)
 
-  return userPrivateRef
-    .update({
-      email,
-      lastUpdatedAt: FieldValue.serverTimestamp()
-    })
-    .catch(error => {
-      console.error(error)
-      throw error
-    })
+  batch.update(userPublicRef, { lastUpdatedAt: FieldValue.serverTimestamp() })
+  batch.update(userPrivateRef, { email })
+
+  return batch.commit()
 }
 
 async function updateUserInDB(
@@ -510,6 +512,7 @@ async function updateUserInDB(
     username?: string
   }
 ): Promise<void> {
+  const batch = firestore.batch()
   const { userPublicRef, userPrivateRef } = getUserQueries(uid)
   const publicKeys = ['avatar', 'deleted', 'username'] as const
   const privateKeys = ['fullName'] as const
@@ -524,6 +527,10 @@ async function updateUserInDB(
     {}
   )
 
+  const numPrivateUpdates = Object.keys(privateUpdates).length
+  const numPublicUpdates = Object.keys(publicUpdates).length
+  const numUpdates = numPrivateUpdates + numPublicUpdates
+
   if (publicUpdates.username) {
     if (!(await isUsernameAvailable(publicUpdates.username))) {
       throw new Error(`The username "${publicUpdates.username}" is already taken.`)
@@ -532,33 +539,22 @@ async function updateUserInDB(
     publicUpdates.usernameLowerCase = publicUpdates.username.toLowerCase()
   }
 
-  const promises: Promise<void>[] = []
-
-  if (Object.keys(publicUpdates).length) {
-    promises.push(
-      userPublicRef.update({
-        ...publicUpdates,
-        lastUpdatedAt: FieldValue.serverTimestamp()
-      })
-    )
+  if (numPrivateUpdates) {
+    batch.update(userPrivateRef, privateUpdates)
   }
 
-  if (Object.keys(privateUpdates).length) {
-    promises.push(
-      userPrivateRef.update({
-        ...privateUpdates,
-        lastUpdatedAt: FieldValue.serverTimestamp()
-      })
-    )
+  if (numPublicUpdates || numPrivateUpdates) {
+    batch.update(userPublicRef, {
+      ...publicUpdates,
+      lastUpdatedAt: FieldValue.serverTimestamp()
+    })
   }
 
-  if (!promises.length) {
+  if (!numUpdates) {
     throw new Error(`No valid updates were supplied for user with id "${uid}".`)
   }
 
-  await Promise.all(promises).catch(err => {
-    throw err
-  })
+  return batch.commit()
 }
 
 // prettier-ignore
