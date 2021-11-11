@@ -15,7 +15,7 @@ export default function usePagination<T extends unknown>(
   const [loadNextPage, setLoadNextPage] = useState(() => () => Promise.resolve())
   const [status, setStatus] = useState<PaginationStatus<T>>({
     entries: null,
-    isComplete: true,
+    isComplete: false,
     page: 0
   })
   const { entries, isComplete } = status

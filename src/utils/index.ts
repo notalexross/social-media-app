@@ -201,6 +201,8 @@ export function paginateArray<T extends unknown>(
       const entries = paginated.slice(0, page).flat(1)
       isComplete = paginated.length === page
       callback({ entries, isComplete, page })
+    } else if (page === 0) {
+      callback({ entries: [], isComplete, page })
     }
   }
 
