@@ -1426,13 +1426,16 @@ export function getMultiUserPosts(
           }
 
           postIdx += 1
-          const post = fetchedPostsSorted[postIdx]
-          const chunk = userChunks[post.chunkIndex]
-          chunk.numReturned += 1
 
-          const shouldChunkFetch = !chunk.isDone && chunk.numReturned >= chunk.numFetched - 1
-          if (shouldChunkFetch) {
-            chunksToFetch = [chunk]
+          if (fetchedPostsSorted.length > 0) {
+            const post = fetchedPostsSorted[postIdx]
+            const chunk = userChunks[post.chunkIndex]
+            chunk.numReturned += 1
+
+            const shouldChunkFetch = !chunk.isDone && chunk.numReturned >= chunk.numFetched - 1
+            if (shouldChunkFetch) {
+              chunksToFetch = [chunk]
+            }
           }
 
           isComplete = userChunks.every(chnk => chnk.isDone && chnk.numFetched === chnk.numReturned)
