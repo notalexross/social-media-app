@@ -7,6 +7,7 @@ import { UserContextProvider } from './context/user'
 import { ThemeContextProvider } from './context/theme'
 import * as ROUTES from './constants/routes'
 import { useKeyboardOutlineOnly } from './hooks'
+import { DemoBannerContainer } from './containers'
 
 const HeaderContainer = lazy(() => import('./containers/header'))
 const SignUpPage = lazy(() => import('./pages/sign-up'))
@@ -132,6 +133,7 @@ export default function App(): JSX.Element {
         >
           {tree}
         </SkeletonTheme>
+        <DemoBannerContainer />
       </ThemeContextProvider>
     </UserContextProvider>
   )

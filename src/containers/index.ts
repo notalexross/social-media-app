@@ -1,4 +1,5 @@
 export { default as ComposeContainer } from './compose'
+export { default as DemoBannerContainer } from './demo-banner'
 export { default as EditUserContainer } from './edit-user'
 export { default as FollowingContainer } from './following'
 export { default as HeaderContainer } from './header'
