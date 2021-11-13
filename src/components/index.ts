@@ -1,4 +1,5 @@
 export { default as Avatar } from './avatar'
+export { default as Banner } from './banner'
 export { default as Compose } from './compose'
 export { default as EditUser } from './edit-user'
 export { default as EmojiPicker } from './emoji-picker'
