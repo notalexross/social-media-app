@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { UserCircleIcon as UserIcon } from '@heroicons/react/outline'
 import Skeleton from 'react-loading-skeleton'
 import { updateAvatar } from '../../services/firebase'
@@ -16,19 +16,28 @@ function AvatarImageWrapper({
 }: AvatarImageWrapperProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const isMounted = useRef(true)
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = ({ target }) => {
     if (target.files?.length && uid) {
       setIsUpdating(true)
       updateAvatar(uid, target.files[0])
         .catch(console.error)
-        .finally(() => setIsUpdating(false))
+        .finally(() => isMounted.current && setIsUpdating(false))
     }
   }
 
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = () => {
     inputRef.current?.click()
   }
+
+  useEffect(() => {
+    isMounted.current = true
+
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
   return updatable && uid ? (
     <span className="hover:opacity-70">

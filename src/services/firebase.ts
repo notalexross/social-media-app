@@ -6,9 +6,11 @@ import {
   isValidSignInInputs,
   sortByTimestamp,
   chunkArray,
-  deepCloneObject
+  deepCloneObject,
+  resizeImage
 } from '../utils'
 import { SelfUpdatingCache } from '../classes'
+import { USER_AVATAR_PIXEL_LIMIT, USER_AVATAR_QUALITY } from '../constants/config'
 
 type UserPublic = {
   avatar: string | null
@@ -1049,40 +1051,6 @@ function updateLikeInDB(type: 'unlike' | 'like', likerUid: string, postId: strin
   })
 }
 
-async function uploadFile(path: string, file: File): Promise<string> {
-  try {
-    let fullPath = path
-    if (path.endsWith('/')) {
-      const uniqueId = firestore.collection('non-existent').doc().id
-      fullPath = `${path}${uniqueId}`
-    }
-
-    const storagePathRef = storage.ref().child(fullPath)
-
-    await storagePathRef.put(file)
-
-    return (await storagePathRef.getDownloadURL()) as string
-  } catch (error) {
-    console.error(error)
-    throw error
-  }
-}
-
-export async function updateAvatar(uid: string, imageFile: File): Promise<string> {
-  const { userPublicRef } = getUserQueries(uid)
-  const avatar = await uploadFile(`avatars/${uid}`, imageFile).catch(error => {
-    console.error(error)
-    throw error
-  })
-
-  await userPublicRef.update({ avatar }).catch(error => {
-    console.error(error)
-    throw error
-  })
-
-  return avatar
-}
-
 export function onAuthStateChanged(
   callback: (user: Partial<firebase.User>) => void
 ): firebase.Unsubscribe {
@@ -1201,7 +1169,35 @@ export async function editUser(updates: {
   return updateUserInDB(currentUser.uid, updates)
 }
 
-async function getAttachmentUrl(directory: string, attachment?: File | string | null) {
+async function uploadFile(path: string, file: Blob): Promise<string> {
+  try {
+    let fullPath = path
+    if (path.endsWith('/')) {
+      const uniqueId = firestore.collection('non-existent').doc().id
+      fullPath = `${path}${uniqueId}`
+    }
+
+    const storagePathRef = storage.ref().child(fullPath)
+
+    await storagePathRef.put(file)
+
+    return (await storagePathRef.getDownloadURL()) as string
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+export async function updateAvatar(uid: string, imageFile: File): Promise<string> {
+  const resizedImage = await resizeImage(imageFile, USER_AVATAR_PIXEL_LIMIT, USER_AVATAR_QUALITY)
+  const avatar = await uploadFile(`avatars/${uid}`, resizedImage)
+
+  await editUser({ avatar })
+
+  return avatar
+}
+
+async function getAttachmentUrl(directory: string, attachment?: Blob | string | null) {
   let url = ''
   if (attachment) {
     if (typeof attachment === 'string') {
@@ -1218,7 +1214,7 @@ async function getAttachmentUrl(directory: string, attachment?: File | string | 
 }
 
 type AddPostOptions = {
-  attachment?: File | string | null
+  attachment?: Blob | string | null
   message?: string
   replyTo?: string | null
 }
@@ -1241,7 +1237,7 @@ export async function addPost({
 
 type EditPostOptions = {
   deleted?: boolean
-  attachment?: File | string
+  attachment?: Blob | string
   message?: string
 }
 

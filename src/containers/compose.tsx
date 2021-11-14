@@ -2,6 +2,7 @@ import { EmojiHappyIcon, PaperClipIcon } from '@heroicons/react/outline'
 import type { PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import { Compose } from '../components'
 import { useResponsivePopper, useWindowDimensions } from '../hooks'
+import { POST_ATTACHMENT_PIXEL_LIMIT, POST_ATTACHMENT_QUALITY } from '../constants/config'
 
 type ComposeContainerProps = {
   replyTo?: string | null
@@ -28,6 +29,8 @@ export default function ComposeContainer({
         originalPost={originalPost}
         softCharacterLimit={2000}
         hardCharacterLimit={3000}
+        attachmentPixelLimit={POST_ATTACHMENT_PIXEL_LIMIT}
+        attachmentQuality={POST_ATTACHMENT_QUALITY}
       >
         <div className="w-full bg-clr-background">
           <Compose.AttachmentPreview

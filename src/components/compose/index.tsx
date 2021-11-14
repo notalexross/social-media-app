@@ -3,25 +3,28 @@ import type { PostWithReplyTo, PostWithUserDetails } from '../../services/fireba
 import type { IEmojiData } from '../emoji-picker'
 import EmojiPicker from '../emoji-picker'
 import FocusTrap from '../focus-trap'
-import { disableForm, enableElements, stringifyError } from '../../utils'
+import { disableForm, enableElements, resizeImage, stringifyError } from '../../utils'
 import { useProtectedFunctions } from '../../hooks'
 import * as ROUTES from '../../constants/routes'
 import StatefulLink from '../stateful-link'
 
 type ComposeContextValue = {
+  isMounted: React.MutableRefObject<boolean>
   error: string
   didSend: boolean
   postId: string | undefined
   message: string
   setMessage: React.Dispatch<React.SetStateAction<string>>
-  attachment: File | string | undefined
-  setAttachment: React.Dispatch<React.SetStateAction<File | string | undefined>>
+  attachment: Blob | string | undefined
+  setAttachment: React.Dispatch<React.SetStateAction<Blob | string | undefined>>
   previewSrc: string | undefined
   setPreviewSrc: React.Dispatch<React.SetStateAction<string | undefined>>
   showEmojiSelect: boolean
   setShowEmojiSelect: React.Dispatch<React.SetStateAction<boolean>>
   hasChanges: boolean
   softCharacterLimit: number
+  attachmentPixelLimit: number
+  attachmentQuality: number
 }
 
 const ComposeContext = createContext({} as ComposeContextValue)
@@ -31,6 +34,8 @@ type ComposeProps = {
   originalPost?: PostWithReplyTo | PostWithUserDetails
   softCharacterLimit?: number
   hardCharacterLimit?: number
+  attachmentPixelLimit?: number
+  attachmentQuality?: number
 } & React.ComponentPropsWithoutRef<'form'>
 
 export default function Compose({
@@ -39,6 +44,8 @@ export default function Compose({
   originalPost,
   softCharacterLimit = 150,
   hardCharacterLimit = 1150,
+  attachmentPixelLimit = 1920 * 1080,
+  attachmentQuality = 0.92,
   ...restProps
 }: ComposeProps): JSX.Element {
   const { addPost, editPost } = useProtectedFunctions()
@@ -49,14 +56,15 @@ export default function Compose({
 
   const [error, setError] = useState('')
   const [savedMessage, setSavedMessage] = useState(initialMessage)
-  const [savedAttachment, setSavedAttachment] = useState<File | string | undefined>(initialMessage)
+  const [savedAttachment, setSavedAttachment] = useState<Blob | string | undefined>(initialMessage)
   const [message, setMessage] = useState(initialMessage)
   const [previewSrc, setPreviewSrc] = useState<string | undefined>(initialAttachment)
-  const [attachment, setAttachment] = useState<File | string | undefined>(initialAttachment)
+  const [attachment, setAttachment] = useState<Blob | string | undefined>(initialAttachment)
   const [showEmojiSelect, setShowEmojiSelect] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [didSend, setDidSend] = useState(false)
   const [postId, setPostId] = useState<string | undefined>(originalPost?.id)
+  const isMounted = useRef(true)
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async event => {
     setDidSend(false)
@@ -107,9 +115,18 @@ export default function Compose({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [didSend, originalPost])
 
+  useEffect(() => {
+    isMounted.current = true
+
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
   return (
     <ComposeContext.Provider
       value={{
+        isMounted,
         error,
         didSend,
         postId,
@@ -122,7 +139,9 @@ export default function Compose({
         showEmojiSelect,
         setShowEmojiSelect,
         hasChanges,
-        softCharacterLimit
+        softCharacterLimit,
+        attachmentPixelLimit,
+        attachmentQuality
       }}
     >
       <form onSubmit={handleSubmit} {...restProps}>
@@ -342,14 +361,28 @@ Compose.AttachButton = function ComposeAttachButton({
   children,
   ...restProps
 }: React.ComponentPropsWithoutRef<'button'>) {
-  const { setAttachment, setPreviewSrc } = useContext(ComposeContext)
+  const {
+    setAttachment,
+    setPreviewSrc,
+    attachmentPixelLimit,
+    attachmentQuality,
+    isMounted
+  } = useContext(ComposeContext)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = ({ target }) => {
     if (target.files?.length) {
       const file = target.files[0]
-      setAttachment(file)
-      setPreviewSrc(URL.createObjectURL(file))
+
+      resizeImage(file, attachmentPixelLimit, attachmentQuality)
+        .then(blob => {
+          if (isMounted) {
+            const url = URL.createObjectURL(blob)
+            setPreviewSrc(url)
+            setAttachment(blob)
+          }
+        })
+        .catch(console.error)
     } else {
       setAttachment(undefined)
       setPreviewSrc(undefined)
