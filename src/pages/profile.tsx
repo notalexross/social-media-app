@@ -56,7 +56,7 @@ export default function ProfilePage(): JSX.Element {
   }
 
   return (
-    <main className="mx-4 lg:mx-4">
+    <main className="mx-2 lg:mx-4">
       <div className="mx-auto max-w-screen-lg">
         <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
           <div className="col-span-3 flex justify-center mb-2 border rounded bg-clr-secondary shadow sm:justify-start lg:mb-8">
