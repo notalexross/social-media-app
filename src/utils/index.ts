@@ -251,3 +251,42 @@ export function deepCloneObject<T extends unknown>(obj: T): T {
 
   return newObj
 }
+
+export function resizeImage(image: File, maxPixels = Infinity, quality = 0.92): Promise<Blob> {
+  const img = document.createElement('img')
+  img.src = URL.createObjectURL(image)
+  img.crossOrigin = 'anonymous'
+
+  return new Promise((resolve, reject) => {
+    img.onload = () => {
+      const { width, height } = img
+      const pixels = width * height
+      const scale = Math.min(Math.sqrt(maxPixels / pixels), 1)
+      const newWidth = Math.floor(scale * width)
+      const newHeight = Math.floor(scale * height)
+
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      canvas.width = newWidth
+      canvas.height = newHeight
+
+      ctx?.drawImage(img, 0, 0, newWidth, newHeight)
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            resolve(blob)
+          } else {
+            reject(blob)
+          }
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+
+    img.onerror = error => {
+      reject(error)
+    }
+  })
+}
