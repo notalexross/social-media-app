@@ -14,7 +14,7 @@ export default function HeaderContainer(): JSX.Element {
   const { pathname } = useLocation()
   const { theme, setTheme } = useContext(ThemeContext)
   const currentUser = useContext(UserContext)
-  const { user, username } = currentUser
+  const { user, username, isLoadingAuth } = currentUser
   const dropdownItemClassName =
     'block p-4 w-full font-bold hover:bg-clr-accent hover:text-clr-secondary focus:bg-clr-accent focus:text-clr-secondary'
 
@@ -68,8 +68,8 @@ export default function HeaderContainer(): JSX.Element {
                 New Post
               </StatefulLink>
               <div className="hidden items-center text-sm md:flex">
-                <ThemeSwitcher className="text-base" />
-                {user.uid !== undefined && (
+                {!isLoadingAuth && <ThemeSwitcher className="text-base" />}
+                {!isLoadingAuth && user.uid !== undefined && (
                   <Link
                     className="ml-3 h-8 w-8 hover:text-clr-link-hover focus:text-clr-link-hover"
                     to={ROUTES.DASHBOARD}
@@ -78,7 +78,7 @@ export default function HeaderContainer(): JSX.Element {
                     <HomeIcon />
                   </Link>
                 )}
-                {user.uid !== undefined && (
+                {!isLoadingAuth && user.uid !== undefined && (
                   <button
                     className="ml-3 h-8 w-8 font-bold hover:text-clr-link-hover focus:text-clr-link-hover"
                     type="button"
@@ -88,12 +88,12 @@ export default function HeaderContainer(): JSX.Element {
                     <LogoutIcon />
                   </button>
                 )}
-                {user.uid !== undefined && (
+                {!isLoadingAuth && user.uid !== undefined && (
                   <UserProfile className="ml-3" user={currentUser}>
                     <UserProfile.Avatar className="w-8" linkClassName="hover:opacity-70" />
                   </UserProfile>
                 )}
-                {user.uid === undefined && (
+                {!isLoadingAuth && user.uid === undefined && (
                   <Link
                     className="ml-6 px-5 py-1 rounded bg-clr-accent font-bold text-clr-secondary hover:bg-clr-accent-hover focus:bg-clr-accent-hover"
                     to={ROUTES.SIGN_IN}
@@ -102,7 +102,7 @@ export default function HeaderContainer(): JSX.Element {
                     Log In
                   </Link>
                 )}
-                {user.uid === undefined && (
+                {!isLoadingAuth && user.uid === undefined && (
                   <Link
                     className="ml-3 px-5 py-1 font-bold"
                     to={ROUTES.SIGN_UP}
@@ -139,7 +139,7 @@ export default function HeaderContainer(): JSX.Element {
           <Dropdown.Item className={dropdownItemClassName} to={ROUTES.EXPLORE}>
             Explore
           </Dropdown.Item>
-          {username !== undefined ? (
+          {!isLoadingAuth && username !== undefined ? (
             <Dropdown.Item
               className={dropdownItemClassName}
               to={`${ROUTES.PROFILES}/${username}${ROUTES.PROFILE_POSTS}`}
@@ -147,17 +147,17 @@ export default function HeaderContainer(): JSX.Element {
               Profile
             </Dropdown.Item>
           ) : null}
-          {user.uid !== undefined && (
+          {!isLoadingAuth && user.uid !== undefined && (
             <Dropdown.Item className={dropdownItemClassName} onClick={signOut}>
               Sign Out
             </Dropdown.Item>
           )}
-          {user.uid === undefined && (
+          {!isLoadingAuth && user.uid === undefined && (
             <Dropdown.Item className={dropdownItemClassName} to={ROUTES.SIGN_IN}>
               Log In
             </Dropdown.Item>
           )}
-          {user.uid === undefined && (
+          {!isLoadingAuth && user.uid === undefined && (
             <Dropdown.Item className={dropdownItemClassName} to={ROUTES.SIGN_UP}>
               Sign Up
             </Dropdown.Item>

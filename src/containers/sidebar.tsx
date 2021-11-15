@@ -9,14 +9,14 @@ export default function SidebarContainer(
   props: Omit<React.ComponentPropsWithoutRef<'div'>, 'children'>
 ): JSX.Element {
   const user = useContext(UserContext)
-  const { uid } = user
+  const { uid, isLoadingUser } = user
   const [, windowHeight] = useWindowDimensions()
 
   return (
     <div {...props}>
       <div className="border rounded bg-clr-secondary shadow">
         <div className="flex flex-col" style={{ maxHeight: `calc(${windowHeight}px - 2 * 1rem)` }}>
-          {uid ? (
+          {isLoadingUser || uid ? (
             <UserProfile className="flex items-center p-4" user={user}>
               <UserProfile.Avatar
                 className="flex-shrink-0 mr-3 w-12"

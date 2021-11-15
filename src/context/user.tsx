@@ -6,12 +6,18 @@ import useUser from '../hooks/use-user'
 
 type UserContextValue = {
   user: Partial<firebase.User>
+  isLoadingAuth: boolean
+  isLoadingUser: boolean
 } & Partial<User>
 
-const UserContext = createContext<UserContextValue>({ user: {} })
+const UserContext = createContext<UserContextValue>({
+  user: {},
+  isLoadingAuth: true,
+  isLoadingUser: true
+})
 
 function UserContextProvider({ children }: { children: React.ReactNode }): JSX.Element {
-  const user = useAuthListener()
+  const { user, isLoading: isLoadingAuth } = useAuthListener()
   const userDetails = useUser(user.uid, {
     subscribe: true,
     includePrivate: true,
@@ -19,7 +25,13 @@ function UserContextProvider({ children }: { children: React.ReactNode }): JSX.E
     includeLikedPosts: true
   })
 
-  return <UserContext.Provider value={{ user, ...userDetails }}>{children}</UserContext.Provider>
+  const isLoadingUser = isLoadingAuth || (user.uid !== undefined && !userDetails)
+
+  return (
+    <UserContext.Provider value={{ user, ...userDetails, isLoadingAuth, isLoadingUser }}>
+      {children}
+    </UserContext.Provider>
+  )
 }
 
 export { UserContext, UserContextProvider }

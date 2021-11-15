@@ -27,6 +27,7 @@ export default function ProfilePage(): JSX.Element {
     errorCallback: handleError
   })
   const { uid, likedPosts } = user || {}
+  const { isLoadingUser } = currentUser
   const currentUsername = user?.username || username
   const linkClassName =
     'text-clr-primary hover:underline hover:text-clr-link-hover focus:text-clr-link-hover'
@@ -51,7 +52,7 @@ export default function ProfilePage(): JSX.Element {
   const existsPath = isMainPath || isPostsPath || isLikesPath || isFollowingPath || isRecomPath
   const isValidPath = existsPath && (isCurrentUser || !isCurrentUserOnlyPath)
 
-  if (!isValidPath) {
+  if (!isValidPath && !isLoadingUser) {
     return <Redirect to={`${ROUTES.PROFILES}/${currentUsername}`} />
   }
 
