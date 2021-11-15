@@ -10,7 +10,13 @@ import {
   resizeImage
 } from '../utils'
 import { SelfUpdatingCache } from '../classes'
-import { USER_AVATAR_PIXEL_LIMIT, USER_AVATAR_QUALITY } from '../constants/config'
+import {
+  POST_MESSAGE_SOFT_CHARACTER_LIMIT,
+  USER_AVATAR_PIXEL_LIMIT,
+  USER_AVATAR_QUALITY,
+  USER_FULL_NAME_CHARACTER_LIMIT,
+  USER_USERNAME_CHARACTER_LIMIT
+} from '../constants/config'
 
 type UserPublic = {
   avatar: string | null
@@ -456,10 +462,20 @@ export async function isUsernameAvailable(username = ''): Promise<boolean> {
   return getUserId(username).then(user => user.uid === undefined)
 }
 
-function createUserInDB(
+async function createUserInDB(
   uid: string,
   { avatar = '', email = '', fullName = '', username = '' }: UserCreatable
 ): Promise<void> {
+  if (fullName.length > USER_FULL_NAME_CHARACTER_LIMIT) {
+    throw new Error(
+      `Username is longer than the ${USER_FULL_NAME_CHARACTER_LIMIT} character limit.`
+    )
+  }
+
+  if (username.length > USER_USERNAME_CHARACTER_LIMIT) {
+    throw new Error(`Username is longer than the ${USER_USERNAME_CHARACTER_LIMIT} character limit.`)
+  }
+
   const { userPublicRef, userPrivateRef, userFollowingRef, userLikedPostsRef } = getUserQueries(uid)
   const batch = firestore.batch()
 
@@ -485,10 +501,7 @@ function createUserInDB(
     postIds: []
   })
 
-  return batch.commit().catch(error => {
-    console.error(error)
-    throw error
-  })
+  return batch.commit()
 }
 
 function updateEmailInDB(uid: string, email: string): Promise<void> {
@@ -514,6 +527,16 @@ async function updateUserInDB(
     username?: string
   }
 ): Promise<void> {
+  if ((updates.fullName?.length || 0) > USER_FULL_NAME_CHARACTER_LIMIT) {
+    throw new Error(
+      `Username is longer than the ${USER_FULL_NAME_CHARACTER_LIMIT} character limit.`
+    )
+  }
+
+  if ((updates.username?.length || 0) > USER_USERNAME_CHARACTER_LIMIT) {
+    throw new Error(`Username is longer than the ${USER_USERNAME_CHARACTER_LIMIT} character limit.`)
+  }
+
   const batch = firestore.batch()
   const { userPublicRef, userPrivateRef } = getUserQueries(uid)
   const publicKeys = ['avatar', 'deleted', 'username'] as const
@@ -853,10 +876,14 @@ type CreatePostInDBOptions = {
   replyTo?: string | null
 } & ({ message: string } | { attachment: string })
 
-function createPostInDB(
+async function createPostInDB(
   uid: string,
   { attachment = '', message = '', replyTo = null }: CreatePostInDBOptions
 ): Promise<string> {
+  if (message.length > POST_MESSAGE_SOFT_CHARACTER_LIMIT) {
+    throw new Error(`Post is longer than the ${POST_MESSAGE_SOFT_CHARACTER_LIMIT} character limit.`)
+  }
+
   const post = postsRef.doc()
   const batch = firestore.batch()
 
@@ -896,13 +923,17 @@ function createPostInDB(
       })
   }
 
-  return Promise.reject(new Error('A post must have at least an attachment or a message.'))
+  throw new Error('A post must have at least an attachment or a message.')
 }
 
-function updatePostInDB(
+async function updatePostInDB(
   post: PostUpdatable & { id: string },
   updates: PostUpdatable
 ): Promise<void> {
+  if ((updates?.message?.length || 0) > POST_MESSAGE_SOFT_CHARACTER_LIMIT) {
+    throw new Error(`Post is longer than the ${POST_MESSAGE_SOFT_CHARACTER_LIMIT} character limit.`)
+  }
+
   const { postPublicRef, postContentRef } = getPostQueries(post.id)
   const postPublicKeys = ['deleted'] as const
   const postContentKeys = ['attachment', 'message'] as const
@@ -968,7 +999,7 @@ function updatePostInDB(
     })
   }
 
-  return Promise.reject(new Error(`No valid updates were supplied for post with id "${post.id}".`))
+  throw new Error(`No valid updates were supplied for post with id "${post.id}".`)
 }
 
 function updateFollowInDB(

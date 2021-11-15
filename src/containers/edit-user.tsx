@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { EditUser } from '../components'
+import { USER_FULL_NAME_CHARACTER_LIMIT, USER_USERNAME_CHARACTER_LIMIT } from '../constants/config'
 import { useUser } from '../hooks'
 
 export default function EditUserContainer(
@@ -26,7 +27,13 @@ export default function EditUserContainer(
   )
 
   return (
-    <EditUser className="mt-2" user={user} {...props}>
+    <EditUser
+      className="mt-2"
+      user={user}
+      fullNameCharacterLimit={USER_FULL_NAME_CHARACTER_LIMIT}
+      usernameCharacterLimit={USER_USERNAME_CHARACTER_LIMIT}
+      {...props}
+    >
       <h2 className="mb-4 font-bold text-lg">Update Details</h2>
       <EditUser.Form className="mt-4">
         <EditUser.LabelledInput

@@ -1,3 +1,5 @@
+import { USER_FULL_NAME_CHARACTER_LIMIT, USER_USERNAME_CHARACTER_LIMIT } from '../constants/config'
+
 export function isValidEmail(email: string | undefined): boolean {
   return !!(email?.match(/.@./g)?.length === 1)
 }
@@ -17,8 +19,10 @@ export function isValidSignUpInputs({
   const hasFullName = !!fullName
   const hasPassword = !!password
   const hasValidEmail = isValidEmail(email)
+  const hasValidUsername = hasUsername && username.length <= USER_USERNAME_CHARACTER_LIMIT
+  const hasValidFullName = hasFullName && fullName.length <= USER_FULL_NAME_CHARACTER_LIMIT
 
-  return hasUsername && hasFullName && hasPassword && hasValidEmail
+  return hasValidUsername && hasValidFullName && hasPassword && hasValidEmail
 }
 
 export function isValidSignInInputs({

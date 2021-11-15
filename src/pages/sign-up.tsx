@@ -5,6 +5,7 @@ import { isValidSignUpInputs } from '../utils'
 import { useTitle } from '../hooks'
 import * as ROUTES from '../constants/routes'
 import logo from '../images/logo.png'
+import { USER_FULL_NAME_CHARACTER_LIMIT, USER_USERNAME_CHARACTER_LIMIT } from '../constants/config'
 
 export default function SignUpPage(): JSX.Element {
   useTitle('Sign Up')
@@ -30,6 +31,20 @@ export default function SignUpPage(): JSX.Element {
       })
   }
 
+  const handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = ({ target }) => {
+    const { value } = target
+    if (value.length <= USER_USERNAME_CHARACTER_LIMIT) {
+      setUsername(target.value)
+    }
+  }
+
+  const handleFullNameChange: React.ChangeEventHandler<HTMLInputElement> = ({ target }) => {
+    const { value } = target
+    if (value.length <= USER_FULL_NAME_CHARACTER_LIMIT) {
+      setFullName(target.value)
+    }
+  }
+
   return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="w-full max-w-xs">
@@ -53,7 +68,7 @@ export default function SignUpPage(): JSX.Element {
               placeholder="Username"
               aria-label="enter your username"
               value={username}
-              onChange={({ target }) => setUsername(target.value)}
+              onChange={handleUsernameChange}
             />
             <input
               className="mb-2 px-4 py-2.5 border rounded bg-clr-input text-sm"
@@ -61,7 +76,7 @@ export default function SignUpPage(): JSX.Element {
               placeholder="Full name"
               aria-label="enter your full name"
               value={fullName}
-              onChange={({ target }) => setFullName(target.value)}
+              onChange={handleFullNameChange}
             />
             <input
               className="mb-2 px-4 py-2.5 border rounded bg-clr-input text-sm"

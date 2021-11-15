@@ -2,7 +2,12 @@ import { EmojiHappyIcon, PaperClipIcon } from '@heroicons/react/outline'
 import type { PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import { Compose } from '../components'
 import { useResponsivePopper, useWindowDimensions } from '../hooks'
-import { POST_ATTACHMENT_PIXEL_LIMIT, POST_ATTACHMENT_QUALITY } from '../constants/config'
+import {
+  POST_ATTACHMENT_PIXEL_LIMIT,
+  POST_ATTACHMENT_QUALITY,
+  POST_MESSAGE_HARD_CHARACTER_LIMIT,
+  POST_MESSAGE_SOFT_CHARACTER_LIMIT
+} from '../constants/config'
 
 type ComposeContainerProps = {
   replyTo?: string | null
@@ -27,8 +32,8 @@ export default function ComposeContainer({
         className="border rounded"
         replyTo={replyToPost}
         originalPost={originalPost}
-        softCharacterLimit={2000}
-        hardCharacterLimit={3000}
+        softCharacterLimit={POST_MESSAGE_SOFT_CHARACTER_LIMIT}
+        hardCharacterLimit={POST_MESSAGE_HARD_CHARACTER_LIMIT}
         attachmentPixelLimit={POST_ATTACHMENT_PIXEL_LIMIT}
         attachmentQuality={POST_ATTACHMENT_QUALITY}
       >

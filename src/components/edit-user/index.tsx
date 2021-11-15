@@ -15,17 +15,26 @@ type Values = {
 
 type EditUserContextValue = {
   user: User | undefined
+  fullNameCharacterLimit: number
+  usernameCharacterLimit: number
 }
 
 const EditUserContext = createContext<EditUserContextValue>({} as EditUserContextValue)
 
 type EditUserProps = {
   user: User | undefined
+  usernameCharacterLimit?: number
+  fullNameCharacterLimit?: number
 } & React.ComponentPropsWithoutRef<'div'>
 
-export default function EditUser({ user, ...restProps }: EditUserProps): JSX.Element {
+export default function EditUser({
+  user,
+  usernameCharacterLimit = 15,
+  fullNameCharacterLimit = 50,
+  ...restProps
+}: EditUserProps): JSX.Element {
   return (
-    <EditUserContext.Provider value={{ user }}>
+    <EditUserContext.Provider value={{ user, fullNameCharacterLimit, usernameCharacterLimit }}>
       <div {...restProps} />
     </EditUserContext.Provider>
   )
@@ -52,7 +61,7 @@ const initialValues = {
 }
 
 EditUser.Form = function EditUserForm(props: React.ComponentPropsWithoutRef<'form'>) {
-  const { user } = useContext(EditUserContext)
+  const { user, fullNameCharacterLimit, usernameCharacterLimit } = useContext(EditUserContext)
   const [values, setValues] = useState<Values>(initialValues)
   const [error, setError] = useState('')
   const [didUpdate, setDidUpdate] = useState(false)
@@ -78,10 +87,24 @@ EditUser.Form = function EditUserForm(props: React.ComponentPropsWithoutRef<'for
   }, [isLoaded, username])
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = ({ target }) => {
-    const { name, type } = target
-    const value = target[type === 'checkbox' ? 'checked' : 'value']
+    setValues(state => {
+      const { name, type } = target
+      const value = target[type === 'checkbox' ? 'checked' : 'value']
+      const currentValue = state[name as keyof Values]
+      const valuesAreStrings = typeof value === 'string' && typeof currentValue === 'string'
+      const fullNameCharacterLimitPassed =
+        name === 'fullName' && valuesAreStrings && value.length > fullNameCharacterLimit
+      const usernameCharacterLimitPassed =
+        name === 'username' && valuesAreStrings && value.length > usernameCharacterLimit
+      const isCharacterDeletion =
+        valuesAreStrings && value.length < currentValue.length && value.length >= 0
 
-    setValues(state => ({ ...state, [name]: value }))
+      if (isCharacterDeletion || (!fullNameCharacterLimitPassed && !usernameCharacterLimitPassed)) {
+        return { ...state, [name]: value }
+      }
+
+      return state
+    })
   }
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async event => {
