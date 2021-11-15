@@ -1,4 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import type { PostOrPostId, PostWithReplyTo, PostWithUserDetails } from '../services/firebase'
 import ComposeContainer from './compose'
 import MenuContainer from './menu'
@@ -6,6 +7,7 @@ import { UserContext } from '../context/user'
 import { Post, StatefulLink, UserProfile } from '../components'
 import { usePost } from '../hooks'
 import * as ROUTES from '../constants/routes'
+import { LocationState } from '../types'
 
 let Comments: (props: CommentsProps) => JSX.Element = () => <></>
 
@@ -33,6 +35,7 @@ export default function PostContainer({
   errorHandler,
   ...restProps
 }: PostContainerProps): JSX.Element {
+  const location = useLocation<LocationState>()
   const { uid } = useContext(UserContext)
   const postWithReplyTo = usePost(post, {
     fetchPublic: 'subscribe',
@@ -42,6 +45,14 @@ export default function PostContainer({
   })
 
   const isOwner = uid !== undefined && postWithReplyTo?.owner === uid
+  const { modal } = location.state || {}
+
+  let lineClamp = Infinity
+  if (isComment) {
+    lineClamp = 4
+  } else if (!isPostPage && !modal) {
+    lineClamp = 8
+  }
 
   return (
     <Post
@@ -102,7 +113,7 @@ export default function PostContainer({
             className="mt-1 whitespace-pre-wrap break-words"
             readMoreClassName="text-sm text-clr-primary text-opacity-75 hover:underline focus:underline"
             readMoreTextContent="Read more"
-            lineClamp={isComment ? 4 : Infinity}
+            lineClamp={lineClamp}
             fadeLines={2}
           />
           <div className="flex items-center mt-2">
