@@ -189,7 +189,7 @@ Post.Message = function PostMessage({
       observer.disconnect()
       window.removeEventListener('resize', callback)
     }
-  }, [post])
+  }, [])
 
   if (!post) {
     return (
