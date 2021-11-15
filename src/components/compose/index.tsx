@@ -79,6 +79,7 @@ export default function Compose({
         setPostId(await addPost({ message, replyTo, attachment }))
       }
 
+      setError('')
       setDidSend(true)
       enableElements(disabledElements)
     } catch (err) {
@@ -109,8 +110,6 @@ export default function Compose({
         setAttachment(undefined)
         setPreviewSrc(undefined)
       }
-
-      setError('')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [didSend, originalPost])
