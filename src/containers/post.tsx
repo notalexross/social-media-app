@@ -99,7 +99,7 @@ export default function PostContainer({
           <Post.ReplyingTo className="self-start text-sm text-clr-primary text-opacity-75 hover:underline focus:underline" />
           <Post.ViewAttachment className="self-start text-sm text-clr-primary text-opacity-75 hover:underline focus:underline" />
           <Post.Message
-            className="mt-1 whitespace-pre-wrap"
+            className="mt-1 whitespace-pre-wrap break-words"
             readMoreClassName="text-sm text-clr-primary text-opacity-75 hover:underline focus:underline"
             readMoreTextContent="Read more"
             lineClamp={isComment ? 4 : Infinity}
