@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import Skeleton from 'react-loading-skeleton'
 import { changeEmail, changePassword, editUser, User } from '../../services/firebase'
 import { disableForm, enableElements, stringifyError } from '../../utils'
@@ -65,6 +65,7 @@ EditUser.Form = function EditUserForm(props: React.ComponentPropsWithoutRef<'for
   const [values, setValues] = useState<Values>(initialValues)
   const [error, setError] = useState('')
   const [didUpdate, setDidUpdate] = useState(false)
+  const isMounted = useRef(true)
   const { fullName, email, username } = user || {}
   const isLoaded = fullName !== undefined && email !== undefined && username !== undefined
 
@@ -168,7 +169,9 @@ EditUser.Form = function EditUserForm(props: React.ComponentPropsWithoutRef<'for
             await changeEmail(values.email, values.currentPassword)
           }
 
-          setDidUpdate(true)
+          if (isMounted.current) {
+            setDidUpdate(true)
+          }
         } else {
           throw new Error('Password and email can only be updated independently.')
         }
@@ -177,11 +180,21 @@ EditUser.Form = function EditUserForm(props: React.ComponentPropsWithoutRef<'for
       }
     } catch (err: unknown) {
       console.error(err)
-      setError(stringifyError(err))
+      if (isMounted.current) {
+        setError(stringifyError(err))
+      }
     } finally {
       enableElements(disabledElements)
     }
   }
+
+  useEffect(() => {
+    isMounted.current = true
+
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
   return (
     <EditUserFormContext.Provider value={{ isLoaded, values, handleChange, error, didUpdate }}>
