@@ -33,7 +33,7 @@ const buildDOMTree = (location: Location<LocationState>) => {
 
   if (!isModal) {
     elements.push(
-      <Suspense key={elements.length} fallback={<h1>Loading...</h1>}>
+      <Suspense key={elements.length} fallback={null}>
         <Switch location={location}>
           <Redirect
             from={`${ROUTES.POSTS}/:postId/${ROUTES.EDIT}`}
