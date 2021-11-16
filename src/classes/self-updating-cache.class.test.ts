@@ -9,12 +9,21 @@ const getTestDataFn = jest.fn(getTestData)
 const cache = new SelfUpdatingCache('test', getTestDataFn)
 const initialDateNow = Date.parse('2021-07-31T16:00:00.000Z')
 
+let DateNowOriginal: typeof Date.now
 let dateNow = initialDateNow
-Date.now = () => dateNow
+
+beforeAll(() => {
+  DateNowOriginal = Date.now
+  Date.now = () => dateNow
+})
 
 beforeEach(async () => {
   dateNow = initialDateNow
   await cache.clear()
+})
+
+afterAll(() => {
+  Date.now = DateNowOriginal
 })
 
 describe(`${cache.set.name}`, () => {
