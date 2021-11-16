@@ -2,6 +2,7 @@ import firebase from 'firebase'
 import {
   isValidSignUpInputs,
   isValidSignInInputs,
+  buildCooldownEnforcer,
   timestampToMillis,
   sortBy,
   sortByTimestamp,
@@ -78,6 +79,64 @@ describe(`${isValidSignInInputs.name}`, () => {
     const result = isValidSignInInputs(options)
 
     expect(result).toBe(false)
+  })
+})
+
+describe(`${buildCooldownEnforcer.name}`, () => {
+  test('takes a set of cooldowns and returns a function that enforces cooldowns', () => {
+    const cooldowns = { createPost: 200 }
+
+    const result = buildCooldownEnforcer(cooldowns)
+
+    expect(result).toBeInstanceOf(Function)
+  })
+
+  describe('returned function', () => {
+    const initialDateNow = Date.parse('2021-07-31T16:00:00.000Z')
+    let DateNowOriginal: typeof Date.now
+    let dateNow = initialDateNow
+
+    beforeAll(() => {
+      DateNowOriginal = Date.now
+      Date.now = () => dateNow
+    })
+
+    beforeEach(() => {
+      dateNow = initialDateNow
+    })
+
+    afterAll(() => {
+      Date.now = DateNowOriginal
+    })
+
+    test('given called for the first time, does not throw an error', () => {
+      const cooldowns = { createPost: 1000 }
+      const enforceCooldown = buildCooldownEnforcer(cooldowns)
+
+      expect(() => enforceCooldown('createPost')).not.toThrowError()
+    })
+
+    test('given called again after cooldown expired, does not throw an error', () => {
+      const cooldowns = { createPost: 1000 }
+      const enforceCooldown = buildCooldownEnforcer(cooldowns)
+      const timeSinceLastCalled = 1000
+
+      enforceCooldown('createPost')
+      dateNow += timeSinceLastCalled
+
+      expect(() => enforceCooldown('createPost')).not.toThrowError()
+    })
+
+    test('given called again within cooldown period, throws an error', () => {
+      const cooldowns = { createPost: 1000 }
+      const enforceCooldown = buildCooldownEnforcer(cooldowns)
+      const timeSinceLastCalled = 999
+
+      enforceCooldown('createPost')
+      dateNow += timeSinceLastCalled
+
+      expect(() => enforceCooldown('createPost')).toThrowError()
+    })
   })
 })
 

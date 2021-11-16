@@ -7,11 +7,18 @@ import {
   sortByTimestamp,
   chunkArray,
   deepCloneObject,
-  resizeImage
+  resizeImage,
+  buildCooldownEnforcer
 } from '../utils'
 import { SelfUpdatingCache } from '../classes'
 import {
+  CREATE_POST_COOLDOWN,
+  CREATE_USER_COOLDOWN,
+  FOLLOW_USER_COOLDOWN,
+  LIKE_POST_COOLDOWN,
   POST_MESSAGE_SOFT_CHARACTER_LIMIT,
+  UPDATE_POST_COOLDOWN,
+  UPDATE_USER_COOLDOWN,
   USER_AVATAR_PIXEL_LIMIT,
   USER_AVATAR_QUALITY,
   USER_FULL_NAME_CHARACTER_LIMIT,
@@ -138,6 +145,14 @@ const auth = firebase.auth()
 const { FieldValue } = firebase.firestore
 const usersRef = firestore.collection('users')
 const postsRef = firestore.collection('posts')
+const enforceCooldown = buildCooldownEnforcer({
+  createPost: CREATE_POST_COOLDOWN,
+  updatePost: UPDATE_POST_COOLDOWN,
+  likePost: LIKE_POST_COOLDOWN,
+  createUser: CREATE_USER_COOLDOWN,
+  updateUser: UPDATE_USER_COOLDOWN,
+  followUser: FOLLOW_USER_COOLDOWN
+})
 
 function getUserQueries(uid: string) {
   const userPublicRef = usersRef.doc(uid)
@@ -478,6 +493,8 @@ async function createUserInDB(
     throw new Error(`Username is longer than the ${USER_USERNAME_CHARACTER_LIMIT} character limit.`)
   }
 
+  enforceCooldown('createUser')
+
   const { userPublicRef, userPrivateRef, userFollowingRef, userLikedPostsRef } = getUserQueries(uid)
   const batch = firestore.batch()
 
@@ -534,6 +551,8 @@ async function updateUserInDB(
   if ((updates.username?.length || 0) > USER_USERNAME_CHARACTER_LIMIT) {
     throw new Error(`Username is longer than the ${USER_USERNAME_CHARACTER_LIMIT} character limit.`)
   }
+
+  enforceCooldown('updateUser')
 
   const batch = firestore.batch()
   const { userPublicRef, userPrivateRef } = getUserQueries(uid)
@@ -885,6 +904,8 @@ async function createPostInDB(
     throw new Error(`Post is longer than the ${POST_MESSAGE_SOFT_CHARACTER_LIMIT} character limit.`)
   }
 
+  enforceCooldown('createPost')
+
   const post = postsRef.doc()
   const batch = firestore.batch()
 
@@ -954,6 +975,8 @@ async function updatePostInDB(
   const numUpdates = numPublicUpdates + numContentUpdates
 
   if (numUpdates) {
+    enforceCooldown('updatePost')
+
     return firestore.runTransaction(async transaction => {
       const postPublicDoc = await transaction.get(postPublicRef)
 
@@ -1003,14 +1026,16 @@ async function updatePostInDB(
   throw new Error(`No valid updates were supplied for post with id "${post.id}".`)
 }
 
-function updateFollowInDB(
+async function updateFollowInDB(
   type: 'unfollow' | 'follow',
   followerUid: string,
   followedUid: string
 ): Promise<void> {
   if (!followedUid.length) {
-    return Promise.reject(new Error('Invalid user ID supplied.'))
+    throw new Error('Invalid user ID supplied.')
   }
+
+  enforceCooldown('followUser')
 
   const batch = firestore.batch()
   const { userFollowingRef } = getUserQueries(followerUid)
@@ -1030,7 +1055,7 @@ function updateFollowInDB(
       uids: FieldValue.arrayUnion(followedUid)
     })
   } else {
-    return Promise.reject(new Error('Invalid type supplied.'))
+    throw new Error('Invalid type supplied.')
   }
 
   if (increment) {
@@ -1039,16 +1064,19 @@ function updateFollowInDB(
     })
   }
 
-  return batch.commit().catch(error => {
-    console.error(error)
-    throw error
-  })
+  return batch.commit()
 }
 
-function updateLikeInDB(type: 'unlike' | 'like', likerUid: string, postId: string): Promise<void> {
+async function updateLikeInDB(
+  type: 'unlike' | 'like',
+  likerUid: string,
+  postId: string
+): Promise<void> {
   if (!postId.length) {
-    return Promise.reject(new Error('Invalid post ID supplied.'))
+    throw new Error('Invalid post ID supplied.')
   }
+
+  enforceCooldown('likePost')
 
   const batch = firestore.batch()
   const { postPublicRef, postLikesRef } = getPostQueries(postId)
@@ -1068,7 +1096,7 @@ function updateLikeInDB(type: 'unlike' | 'like', likerUid: string, postId: strin
       postIds: FieldValue.arrayUnion(postId)
     })
   } else {
-    return Promise.reject(new Error('Invalid type supplied.'))
+    throw new Error('Invalid type supplied.')
   }
 
   if (increment) {
@@ -1077,10 +1105,7 @@ function updateLikeInDB(type: 'unlike' | 'like', likerUid: string, postId: strin
     })
   }
 
-  return batch.commit().catch(error => {
-    console.error(error)
-    throw error
-  })
+  return batch.commit()
 }
 
 export function onAuthStateChanged(

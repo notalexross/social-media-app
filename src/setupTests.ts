@@ -6,6 +6,8 @@ import '@testing-library/jest-dom'
 import 'fake-indexeddb/auto'
 import { usersByIdCache, usersByUsernameCache, latestPostersCache } from './services/firebase'
 
+jest.mock('./constants/config')
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation((query: string) => ({

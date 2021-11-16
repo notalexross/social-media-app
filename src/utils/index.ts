@@ -38,6 +38,33 @@ export function isValidSignInInputs({
   return hasPassword && hasValidEmail
 }
 
+export function buildCooldownEnforcer<T extends Record<string, number>>(
+  cooldowns: T
+): (action: keyof T) => void {
+  const keys = Object.keys(cooldowns) as (keyof T)[]
+  const recentActions = keys.reduce((acc, key) => {
+    acc[key] = {
+      cooldown: cooldowns[key],
+      last: 0
+    }
+
+    return acc
+  }, {} as { [action in keyof T]: { cooldown: number; last: number } })
+
+  return (action: keyof typeof cooldowns): void => {
+    const { cooldown, last } = recentActions[action]
+    const now = Date.now()
+    const timeRemaining = Math.max(Math.ceil((last + cooldown - now) / 1000), 0)
+    const units = `second${timeRemaining > 1 ? 's' : ''}.`
+
+    if (timeRemaining > 0) {
+      throw new Error(`You're going too fast. Please try again in ${timeRemaining} ${units}`)
+    }
+
+    recentActions[action].last = now
+  }
+}
+
 export function sortBy<T extends Record<string, unknown>>(
   array: T[],
   property: keyof T,
