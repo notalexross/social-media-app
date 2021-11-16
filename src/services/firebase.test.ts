@@ -493,10 +493,10 @@ describe(`${editUser.name}`, () => {
     expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
   })
 
-  test('given private details updated, calls firestore update method twice', async () => {
+  test('given private details updated, calls firestore update method once', async () => {
     await editUser({ fullName: 'NewForename NewSurname' })
 
-    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(1)
     expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
   })
 
@@ -504,7 +504,7 @@ describe(`${editUser.name}`, () => {
     await editUser({ username: 'NewUsername', fullName: 'NewForename NewSurname' })
 
     expect(mockFunctions.update).toHaveBeenCalledTimes(2)
-    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(1)
+    expect(mockFunctions.serverTimestamp).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -1089,7 +1089,7 @@ describe(`${changeEmail.name}`, () => {
     const result = changeEmail(newEmail, password)
 
     await expect(result).resolves.toBeUndefined()
-    expect(mockFunctions.update).toHaveBeenCalledTimes(2)
+    expect(mockFunctions.update).toHaveBeenCalledTimes(1)
     expect(mockFunctions.update).toBeCalledWith(expect.objectContaining({ email: newEmail }))
   })
 

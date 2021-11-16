@@ -32,6 +32,7 @@ type UserPublic = {
 type UserPrivate = {
   email: string
   fullName: string
+  lastUpdatedPrivateAt?: firebase.firestore.Timestamp
 }
 
 type UserFollowing = { following: string[] }
@@ -45,6 +46,7 @@ type UserCreatable = Partial<
     | 'usernameLowerCase'
     | 'lastPostedAt'
     | 'lastUpdatedAt'
+    | 'lastUpdatedPrivateAt'
   >
 >
 type UserQuery = Promise<UserPublic | UserPrivate | UserFollowing | UserLikedPosts>
@@ -509,13 +511,9 @@ function updateEmailInDB(uid: string, email: string): Promise<void> {
     throw new Error('Invalid email supplied.')
   }
 
-  const batch = firestore.batch()
-  const { userPrivateRef, userPublicRef } = getUserQueries(uid)
+  const { userPrivateRef } = getUserQueries(uid)
 
-  batch.update(userPublicRef, { lastUpdatedAt: FieldValue.serverTimestamp() })
-  batch.update(userPrivateRef, { email })
-
-  return batch.commit()
+  return userPrivateRef.update({ email, lastUpdatedPrivateAt: FieldValue.serverTimestamp() })
 }
 
 async function updateUserInDB(
@@ -565,10 +563,13 @@ async function updateUserInDB(
   }
 
   if (numPrivateUpdates) {
-    batch.update(userPrivateRef, privateUpdates)
+    batch.update(userPrivateRef, {
+      ...privateUpdates,
+      lastUpdatedPrivateAt: FieldValue.serverTimestamp()
+    })
   }
 
-  if (numPublicUpdates || numPrivateUpdates) {
+  if (numPublicUpdates) {
     batch.update(userPublicRef, {
       ...publicUpdates,
       lastUpdatedAt: FieldValue.serverTimestamp()
