@@ -37,7 +37,9 @@ export default function ProfilePage(): JSX.Element {
     return <></>
   }
 
-  const isCurrentUser = username === currentUser.username
+  const isCurrentUser =
+    username === currentUser.username || (uid !== undefined && uid === currentUser.uid)
+
   const { createdAt, lastPostedAt, followersCount } = isCurrentUser ? currentUser : user || {}
   const created = createdAt && formatDateTime(new Date(timestampToMillis(createdAt)))[2]
   const lastPosted = lastPostedAt && formatDateTime(new Date(timestampToMillis(lastPostedAt)))[2]
