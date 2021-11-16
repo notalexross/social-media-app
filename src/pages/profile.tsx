@@ -1,5 +1,6 @@
 import { useCallback, useContext } from 'react'
 import { Link, Redirect, useHistory, useLocation, useParams } from 'react-router-dom'
+import Skeleton from 'react-loading-skeleton'
 import { useTitle, useUser } from '../hooks'
 import { StatefulLink, UserProfile } from '../components'
 import {
@@ -36,10 +37,10 @@ export default function ProfilePage(): JSX.Element {
     return <></>
   }
 
-  const { createdAt, lastPostedAt, followersCount } = user || {}
+  const isCurrentUser = username === currentUser.username
+  const { createdAt, lastPostedAt, followersCount } = isCurrentUser ? currentUser : user || {}
   const created = createdAt && formatDateTime(new Date(timestampToMillis(createdAt)))[2]
   const lastPosted = lastPostedAt && formatDateTime(new Date(timestampToMillis(lastPostedAt)))[2]
-  const isCurrentUser = username === currentUser.username
   const likes = likedPosts?.slice().reverse()
 
   const isMainPath = pathname === `${ROUTES.PROFILES}/${username}`
@@ -83,26 +84,40 @@ export default function ProfilePage(): JSX.Element {
                 </div>
                 <div>
                   <div className="flex justify-center mb-2 sm:justify-start sm:mb-0">
-                    <p>
-                      <span className="font-bold">{followersCount}</span>
-                      <span>{` follower${followersCount === 1 ? '' : 's'}`}</span>
-                    </p>
-                    {isCurrentUser ? (
+                    {followersCount !== undefined ? (
+                      <p>
+                        <span className="font-bold">{followersCount}</span>
+                        <span>{` follower${followersCount === 1 ? '' : 's'}`}</span>
+                      </p>
+                    ) : (
+                      <Skeleton width="10ch" />
+                    )}
+                    {isCurrentUser && (
                       <p className="ml-4 hover:underline" title="Not visible to other users">
                         <span className="font-bold">{currentUser.following?.length || 0}</span>
                         <span>{' following'}</span>
                       </p>
-                    ) : null}
+                    )}
                   </div>
                   <div>
                     <p>
-                      <span className="font-bold">Created: </span>
-                      <span>{created}</span>
+                      {createdAt !== undefined ? (
+                        <>
+                          <span className="font-bold">Created: </span>
+                          <span>{created}</span>
+                        </>
+                      ) : (
+                        <Skeleton width="18ch" />
+                      )}
                     </p>
-                    <p>
-                      <span className="font-bold">Last Posted: </span>
-                      <span>{lastPosted}</span>
-                    </p>
+                    {createdAt !== undefined ? (
+                      <p>
+                        <span className="font-bold">Last Posted: </span>
+                        <span>{lastPosted || 'Never'}</span>
+                      </p>
+                    ) : (
+                      <Skeleton width="21ch" />
+                    )}
                   </div>
                 </div>
                 {isCurrentUser ? (
