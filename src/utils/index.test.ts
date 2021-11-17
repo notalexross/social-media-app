@@ -246,7 +246,7 @@ describe(`${formatDateTime.name}`, () => {
     test('returns formatted date in full, minus time', () => {
       const date = new Date('2021-07-31T16:00:00.000Z')
 
-      const [,, datePartial] = formatDateTime(date)
+      const [, , datePartial] = formatDateTime(date)
 
       expect(datePartial).toBe('Jul 31, 2021')
     })
@@ -308,16 +308,24 @@ describe(`${formatDateTime.name}`, () => {
         [new Date('2021-07-30T16:00:00.001Z'), '23h', '4:00 pm · Jul 30, 2021', 'Jul 30, 2021'],
         [new Date('2021-07-30T16:00:00.000Z'), 'Jul 30', '4:00 pm · Jul 30, 2021', 'Jul 30, 2021'],
         [new Date('2021-01-01T00:00:00.000Z'), 'Jan 1', '12:00 am · Jan 1, 2021', 'Jan 1, 2021'],
-        [new Date('2020-12-31T23:59:59.999Z'), 'Dec 31, 2020', '11:59 pm · Dec 31, 2020', 'Dec 31, 2020'],
+        [
+          new Date('2020-12-31T23:59:59.999Z'),
+          'Dec 31, 2020',
+          '11:59 pm · Dec 31, 2020',
+          'Dec 31, 2020'
+        ],
         [new Date('2021-07-31T12:00:00.000Z'), '4h', '12:00 pm · Jul 31, 2021', 'Jul 31, 2021'],
         [new Date('2021-07-31T00:00:00.000Z'), '16h', '12:00 am · Jul 31, 2021', 'Jul 31, 2021']
       ]
 
-      test.each(cases)('given %s, returns [%s, %s, %s]', (date, expTimeElapsed, expFullDate, expPartialDate) => {
-        const result = formatDateTime(date)
+      test.each(cases)(
+        'given %s, returns [%s, %s, %s]',
+        (date, expTimeElapsed, expFullDate, expPartialDate) => {
+          const result = formatDateTime(date)
 
-        expect(result).toEqual([expTimeElapsed, expFullDate, expPartialDate])
-      })
+          expect(result).toEqual([expTimeElapsed, expFullDate, expPartialDate])
+        }
+      )
     })
   })
 })
@@ -510,10 +518,12 @@ describe(`${paginateArray.name}`, () => {
     loadNextPage()
 
     expect(callback).toHaveBeenCalledTimes(2)
-    expect(callback).toHaveBeenCalledWith(expect.objectContaining({
-      entries: array.slice(0, 4),
-      page: 2
-    }))
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entries: array.slice(0, 4),
+        page: 2
+      })
+    )
   })
 
   test('page count increments on calling returned function', () => {

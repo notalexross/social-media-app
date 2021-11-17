@@ -11,7 +11,11 @@ function Route({ children }) {
 }
 
 function Link({ children, to, replace, ...restProps }) {
-  return <a href={to} {...restProps}>{children}</a>
+  return (
+    <a href={to} {...restProps}>
+      {children}
+    </a>
+  )
 }
 
 function Redirect() {
