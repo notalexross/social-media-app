@@ -4,7 +4,7 @@ import { signIn } from '../services/firebase'
 import { isValidSignInInputs } from '../utils'
 import { useTitle } from '../hooks'
 import * as ROUTES from '../constants/routes'
-import logo from '../images/logo.png'
+import { ReactComponent as Logo } from '../images/logo.svg'
 
 export default function SignInPage(): JSX.Element {
   useTitle('Login')
@@ -32,8 +32,8 @@ export default function SignInPage(): JSX.Element {
     <div className="flex justify-center items-center min-h-screen">
       <div className="w-full max-w-xs">
         <div className="mb-4 p-4 border rounded bg-clr-secondary">
-          <h1 className="mt-2 mb-4">
-            <img className="mx-auto w-36" src={logo} alt="Logo" />
+          <h1 className="-mb-2 opacity-90">
+            <Logo role="img" className="mx-auto w-36" />
           </h1>
           {error && (
             <p

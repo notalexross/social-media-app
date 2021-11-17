@@ -4,7 +4,7 @@ import { HomeIcon, LogoutIcon, MenuIcon } from '@heroicons/react/outline'
 import { signOut } from '../services/firebase'
 import { UserContext } from '../context/user'
 import * as ROUTES from '../constants/routes'
-import logo from '../images/logo.png'
+import { ReactComponent as Logo } from '../images/logo.svg'
 import { Dropdown, StatefulLink, ThemeSwitcher, UserProfile } from '../components'
 import { ThemeContext } from '../context/theme'
 import { useNonShiftingScrollbar } from '../hooks'
@@ -30,9 +30,9 @@ export default function HeaderContainer(): JSX.Element {
       >
         <div className="mx-4">
           <div className="flex items-center justify-between mx-auto max-w-screen-lg">
-            <h1 className="flex-shrink-0 mt-1">
+            <h1 className="flex-shrink-0 -mt-0.5 -mb-2.5">
               <Link to={ROUTES.DASHBOARD} aria-label="home">
-                <img className="h-7" src={logo} alt="Logo" />
+                <Logo role="img" className="h-11" />
               </Link>
             </h1>
             <div className="flex items-center justify-between w-full">
