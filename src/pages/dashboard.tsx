@@ -33,7 +33,7 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
     )
   } else if (!isLoadingAuth) {
     inner = (
-      <div className="hidden col-span-3 lg:col-span-2 lg:block">
+      <div className="col-span-3 lg:col-span-2">
         <p className="text-2xl text-center">Sign in to follow other users.</p>
       </div>
     )
@@ -45,11 +45,7 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
     <main className="mx-2 lg:mx-4">
       <div className="grid grid-cols-3 gap-x-4 mx-auto max-w-screen-lg">
         {inner}
-        <SidebarContainer
-          className={`self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1 ${
-            showTimeline || isLoadingAuth ? 'hidden lg:block' : ''
-          }`}
-        />
+        <SidebarContainer className="self-start order-first col-span-3 mb-2 lg:sticky lg:top-4 lg:order-1 lg:col-span-1 hidden lg:block" />
       </div>
     </main>
   )
