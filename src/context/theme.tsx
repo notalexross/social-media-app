@@ -32,6 +32,7 @@ function ThemeContextProvider({ children }: { children: React.ReactNode }): JSX.
   }, [mediaQuery])
 
   useEffect(() => {
+    // DO NOT DELETE THIS COMMENT (PurgeCSS): data-theme
     document.body.dataset.theme = theme
     window.localStorage.setItem('theme', theme)
   }, [theme])
