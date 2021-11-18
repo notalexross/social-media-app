@@ -16,6 +16,7 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
   )
   const { uid } = user
   const showTimeline = timeline === 'master' || (timeline === 'following' && uid !== undefined)
+  const hideSkeleton = timeline === 'following' && (uid === undefined || !following?.length)
 
   let inner: JSX.Element
   if (showTimeline) {
@@ -27,7 +28,7 @@ export default function DashboardPage({ timeline }: DashboardPageProps): JSX.Ele
         isComplete={isComplete}
         isLoadingPosts={isLoadingPosts}
         error={error}
-        showSkeletonWhenPostsNull
+        showSkeletonWhenPostsNull={!hideSkeleton}
       />
     )
   } else if (!isLoadingAuth) {
