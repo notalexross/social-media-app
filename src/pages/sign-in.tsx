@@ -47,7 +47,7 @@ export default function SignInPage(): JSX.Element {
           <form className="flex flex-col" onSubmit={handleSignIn}>
             <input
               className="mb-2 px-4 py-2.5 border rounded bg-clr-input text-sm"
-              type="text"
+              type="email"
               placeholder="Email address"
               aria-label="enter your email address"
               value={email}

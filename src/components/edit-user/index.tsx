@@ -227,11 +227,13 @@ EditUser.LabelledInput = function EditUserLabelledInput({
 }: EditUserLabelledInputProps) {
   const { isLoaded, values, handleChange } = useContext(EditUserFormContext)
 
-  let inputType: 'checkbox' | 'text' | 'password' = 'text'
+  let inputType: 'checkbox' | 'text' | 'email' | 'password' = 'text'
   let changeAttribute: 'checked' | 'value' = 'value'
   if (type === 'togglePassword') {
     inputType = 'checkbox'
     changeAttribute = 'checked'
+  } else if (type === 'email') {
+    inputType = 'email'
   } else if (type === 'password' || type === 'confirmPassword' || type === 'currentPassword') {
     inputType = values.togglePassword ? 'text' : 'password'
   }
