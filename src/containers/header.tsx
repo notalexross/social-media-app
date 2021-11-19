@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { HomeIcon, LogoutIcon, MenuIcon } from '@heroicons/react/outline'
+import { HomeIcon, LogoutIcon, MenuIcon, DocumentAddIcon } from '@heroicons/react/outline'
 import { signOut } from '../services/firebase'
 import { UserContext } from '../context/user'
 import * as ROUTES from '../constants/routes'
@@ -30,13 +30,20 @@ export default function HeaderContainer(): JSX.Element {
       >
         <div className="mx-4">
           <div className="flex items-center justify-between mx-auto max-w-screen-lg">
+            <StatefulLink
+              className="flex-shrink-0 h-8 w-8 hover:text-clr-link-hover focus:text-clr-link-hover md:hidden"
+              to={`${ROUTES.COMPOSE}`}
+              modal
+            >
+              <DocumentAddIcon />
+            </StatefulLink>
             <h1 className="flex-shrink-0 -mt-0.5 -mb-2.5">
               <Link to={ROUTES.DASHBOARD} aria-label="home">
                 <Logo role="img" className="h-11" />
               </Link>
             </h1>
-            <div className="flex items-center justify-between w-full">
-              <nav className="hidden ml-8 font-bold md:block">
+            <div className="hidden items-center justify-between w-full md:flex">
+              <nav className="ml-8 font-bold">
                 <ul className="flex">
                   <li>
                     <Link
@@ -61,7 +68,7 @@ export default function HeaderContainer(): JSX.Element {
                 </ul>
               </nav>
               <StatefulLink
-                className="block ml-4 mr-auto w-max py-1 px-5 rounded bg-clr-accent font-bold text-sm text-clr-secondary hover:bg-clr-accent-hover focus:bg-clr-accent-hover"
+                className="hidden ml-4 mr-auto w-max py-1 px-5 rounded bg-clr-accent font-bold text-sm text-clr-secondary md:block hover:bg-clr-accent-hover focus:bg-clr-accent-hover"
                 to={`${ROUTES.COMPOSE}`}
                 modal
               >
