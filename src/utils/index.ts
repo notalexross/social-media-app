@@ -55,10 +55,12 @@ export function buildCooldownEnforcer<T extends Record<string, number>>(
     const { cooldown, last } = recentActions[action]
     const now = Date.now()
     const timeRemaining = Math.max(Math.ceil((last + cooldown - now) / 1000), 0)
-    const units = `second${timeRemaining > 1 ? 's' : ''}.`
+    const units = `second${timeRemaining > 1 ? 's' : ''}`
 
     if (timeRemaining > 0) {
-      throw new Error(`You're going too fast. Please try again in ${timeRemaining} ${units}`)
+      const errorMessage = `You are going too fast. Please try again in ${timeRemaining} ${units}.`
+      alert(errorMessage)
+      throw new Error(errorMessage)
     }
 
     recentActions[action].last = now
