@@ -540,7 +540,8 @@ async function updateUserInDB(
     deleted?: boolean
     fullName?: string
     username?: string
-  }
+  },
+  ignoreCooldown = false
 ): Promise<void> {
   if ((updates.fullName?.length || 0) > USER_FULL_NAME_CHARACTER_LIMIT) {
     throw new Error(
@@ -552,7 +553,9 @@ async function updateUserInDB(
     throw new Error(`Username is longer than the ${USER_USERNAME_CHARACTER_LIMIT} character limit.`)
   }
 
-  enforceCooldown('updateUser')
+  if (!ignoreCooldown) {
+    enforceCooldown('updateUser')
+  }
 
   const batch = firestore.batch()
   const { userPublicRef, userPrivateRef } = getUserQueries(uid)
@@ -1211,19 +1214,22 @@ export async function changePassword(newPassword: string, currentPassword: strin
     })
 }
 
-export async function editUser(updates: {
-  avatar?: string
-  deleted?: boolean
-  fullName?: string
-  username?: string
-}): Promise<void> {
+export async function editUser(
+  updates: {
+    avatar?: string
+    deleted?: boolean
+    fullName?: string
+    username?: string
+  },
+  ignoreCooldown = false
+): Promise<void> {
   const { currentUser } = auth
 
   if (!currentUser) {
     throw new Error('No user.')
   }
 
-  return updateUserInDB(currentUser.uid, updates)
+  return updateUserInDB(currentUser.uid, updates, ignoreCooldown)
 }
 
 async function uploadFile(path: string, file: Blob): Promise<string> {
@@ -1246,10 +1252,12 @@ async function uploadFile(path: string, file: Blob): Promise<string> {
 }
 
 export async function updateAvatar(uid: string, imageFile: File): Promise<string> {
+  enforceCooldown('updateUser')
+
   const resizedImage = await resizeImage(imageFile, USER_AVATAR_PIXEL_LIMIT, USER_AVATAR_QUALITY)
   const avatar = await uploadFile(`avatars/${uid}`, resizedImage)
 
-  await editUser({ avatar })
+  await editUser({ avatar }, true)
 
   return avatar
 }
