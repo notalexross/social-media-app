@@ -28,7 +28,10 @@ function AvatarImageWrapper({
   }
 
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = () => {
-    inputRef.current?.click()
+    if (inputRef.current) {
+      inputRef.current.click()
+      inputRef.current.value = ''
+    }
   }
 
   useEffect(() => {
