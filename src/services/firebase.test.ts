@@ -1235,7 +1235,7 @@ describe(`${fetchPost.name}`, () => {
   test('on error, calls errorCallback', async () => {
     const callback = jest.fn()
     const errorCallback = jest.fn()
-    const error = new Error('Post with id "nonExistentId" does not exist')
+    const error = new Error('Post with id "nonExistentId" does not exist.')
     const options: FetchPostOptions = {
       existingPost: { id: post.id },
       fetchPublic: 'subscribe',

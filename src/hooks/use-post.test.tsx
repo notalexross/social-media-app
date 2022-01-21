@@ -100,7 +100,7 @@ describe('given post does not exist', () => {
     render(<Component postOrId={postId} options={options} callback={callback} />)
 
     await waitFor(() => {
-      expect(errorCallback).toHaveBeenCalledWith('Post with id "nonExistentPostId" does not exist')
+      expect(errorCallback).toHaveBeenCalledWith('Post with id "nonExistentPostId" does not exist.')
     })
   })
 })

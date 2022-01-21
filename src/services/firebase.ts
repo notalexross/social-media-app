@@ -237,10 +237,10 @@ function listenUserDetails<T extends 'public' | 'private' | 'following' | 'likes
     likes: 'userLikedPostsRef'
   } as const
   const errorMessages = {
-    public: `User with id "${uid}" does not exist`,
-    private: `No private details found for user with id "${uid}"`,
-    following: `No following details found for user with id "${uid}"`,
-    likes: `No liked posts details found for user with id "${uid}"`
+    public: `User with id "${uid}" does not exist.`,
+    private: `No private details found for user with id "${uid}".`,
+    following: `No following details found for user with id "${uid}".`,
+    likes: `No liked posts details found for user with id "${uid}".`
   } as const
 
   return getUserQueries(uid)[refNames[type]].onSnapshot(
@@ -624,8 +624,8 @@ function listenPostDetails<T extends 'public' | 'content'>(
     content: 'postContentRef'
   } as const
   const errorMessages = {
-    public: `Post with id "${postId}" does not exist`,
-    content: `No content found for post with id "${postId}"`
+    public: `Post with id "${postId}" does not exist.`,
+    content: `No content found for post with id "${postId}".`
   } as const
 
   return getPostQueries(postId)[refNames[type]].onSnapshot(
@@ -1393,7 +1393,7 @@ async function fetchPosts(
     const { docs, metadata } = await query.get()
 
     if (metadata.fromCache) {
-      throw new Error('Unable to get posts as currently offline')
+      throw new Error('Unable to get posts as currently offline.')
     }
 
     const chunkFetchedPosts = await Promise.all(
@@ -1557,7 +1557,7 @@ export function getAllUserPosts(
           const { docs, metadata } = await query.get()
 
           if (metadata.fromCache) {
-            throw new Error('Unable to get posts as currently offline')
+            throw new Error('Unable to get posts as currently offline.')
           }
 
           const newPosts = await Promise.all(

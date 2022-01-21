@@ -56,7 +56,7 @@ export default function useResponsivePopper<T extends HTMLElement, U extends HTM
           return [width + offset[0], height + offset[1]]
         default:
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          throw new Error(`${dir} is not a valid direction`)
+          throw new Error(`${dir} is not a valid direction.`)
       }
     }
 

@@ -18,7 +18,7 @@ const animation = (open: boolean, from: 'top' | 'right' | 'bottom' | 'left') => 
       transform = 'translate(-100%, 0)'
       break
     default:
-      throw new Error('Must specify a direction to transition from')
+      throw new Error('Must specify a direction to transition from.')
   }
 
   return keyframes`
