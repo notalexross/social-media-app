@@ -37,7 +37,8 @@
     "build": "craco build",
     "test": "env TZ=UTC craco test",
     "test:coverage": "env TZ=UTC craco test --coverage --watchAll",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint ."
   },
   "browserslist": {
     "production": [
