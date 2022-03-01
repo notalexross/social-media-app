@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: CICD
+on:
+  push:
+    branches:
+      - main
+jobs:
+  cicd:
+    uses: notalexross/cicd-github/.github/workflows/cicd.yml@main
+    secrets:
+      GIST_AUTH_TOKEN: ${{ secrets.GIST_AUTH_TOKEN }}
+      BADGES_GIST_ID: ${{ secrets.BADGES_GIST_ID }}
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      ENV: ${{ secrets.ENV }}
