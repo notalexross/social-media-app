@@ -4,11 +4,18 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        type: string
+        description: Branch, tag or SHA to checkout
+        required: false
 jobs:
   cicd:
     uses: notalexross/cicd-github/.github/workflows/cicd.yml@main
     with:
-      deploy_message: "Via GitHub: ${{ github.repository }}${{ github.event_name == 'push' && format('/commit/{0}', github.sha) || '' }}"
+      ref: ${{ github.event.inputs.ref }}
+      deploy_message: "Via GitHub: ${{ github.repository }}/commit/{0}"
       hash_filename: ${{ github.event.repository.id }}__hash
       badge_filename_template: ${{ github.event.repository.id }}__badge__{0}.json
     secrets:
