@@ -20,7 +20,7 @@ jobs:
       badge_filename_template: ${{ github.event.repository.id }}__badge__{0}.json
     secrets:
       GIST_AUTH_TOKEN: ${{ secrets.GIST_AUTH_TOKEN }}
-      BADGES_GIST_ID: ${{ secrets.BADGES_GIST_ID }}
+      GIST_ID: ${{ secrets.GIST_ID }}
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
       ENV: ${{ secrets.ENV }}
